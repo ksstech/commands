@@ -248,7 +248,7 @@ const char * const FlagNames[24] = {
 // ############################### General status reporting functions ##############################
 
 void	vControlReport(void) {
-	printfx("%CFW%C\t" VER_INFO " UART#%d/%u/%u/%u\n", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), attrRESET,
+	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), attrRESET,
 		configSTDIO_UART_CHAN, usartInfo[configSTDIO_UART_CHAN].Speed,
 		usartInfo[configSTDIO_UART_CHAN].RxSize, usartInfo[configSTDIO_UART_CHAN].TxSize) ;
 }
