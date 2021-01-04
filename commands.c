@@ -108,12 +108,12 @@ static	cli_t	sCLI ;
 static const char	HelpMessage[] = { "Single character commands\n"
 #if		defined(ESP_PLATFORM)
 	"\tc-A Boot OTA #1 FW as STA\n"
-#if 	(fotaMAX_OTA_PARTITIONS > 2)
+	#if (fotaMAX_OTA_PARTITIONS > 2)
 	"\tc-B Boot OTA #2 FW as STA\n"
-#endif
-#if 	(fotaMAX_OTA_PARTITIONS > 3)
+	#endif
+	#if (fotaMAX_OTA_PARTITIONS > 3)
 	"\tc-C Boot OTA #3 FW as STA\n"
-#endif
+	#endif
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
@@ -427,7 +427,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		switch (cCmd) {
 	// ########################### Unusual (possibly dangerous ) options
 
-	#if	defined(ESP_PLATFORM)
+#if		defined(ESP_PLATFORM)
 		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
 		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
 		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
@@ -448,12 +448,12 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
 			IF_SL_INFO(debugTRACK, "Reset config & restart") ;
 			break ;
-	#endif
+#endif
 
-	#if	(configPRODUCTION == 0)
+#if		(configPRODUCTION == 0)
 		case CHR_DC4:	while(1) ; break ;										// generate watchdog timeout
 		case CHR_NAK:	*((char *) 0xFFFFFFFF) = 1 ; break ;					// generate invalid memory access restart
-	#endif
+#endif
 
 	// ################################## Diagnostic related options
 
