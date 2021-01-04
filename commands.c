@@ -124,11 +124,11 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
 #endif
 
-#if		(configHAL_XXX_XXX_OUT > 0)
+#if		(configHAL_XXX_XXX_OUT > 0) && (configPRODUCTION == 0)
 	"\t(0-7) Trigger actuator channel 'x'\n"
 	"\t(A)ctuators reload\n"
 
-#elif	(halHAS_M90E26 > 0)
+#elif	(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
 	"\t(0-2) load predefined config 'x'\n"
 	"\t(A)utomatic adjustment\n"
 #endif
@@ -136,13 +136,13 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tre(B)oot\n"
 
 	"\t(D)ebug various\n"
-#if		(halHAS_M90E26 > 0)
+#if		(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
 	"\t    Calibrate M90E26's\n"
 #endif
-#if		(halHAS_M90E36 > 0)
+#if		(halHAS_M90E36 > 0) && (configPRODUCTION == 0)
 	"\t    Calibrate M90E36's\n"
 #endif
-#if		(halHAS_DS248X > 0)
+#if		(halHAS_DS248X > 0) && (configPRODUCTION == 0)
 	"\t    Scan 1W Channels\n"
 #endif
 
@@ -158,7 +158,7 @@ static const char	HelpMessage[] = { "Single character commands\n"
 #endif
 	"\t(b)lob report\n"
 
-#if	(halHAS_DS248X > 0)
+#if	(halHAS_DS248X > 0) && (configPRODUCTION == 0)
 	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
 #endif
 
@@ -191,10 +191,10 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
 	"Extended commands, prefix with 'z'\n"
-#if		(halHAS_DS18X20 > 0)
+#if		(halHAS_DS18X20 > 0) && (configPRODUCTION == 0)
 	"\tDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
 #endif
-#if		(halHAS_M90E26 > 0)
+#if		(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
 	"\tM90C chan reg value\t{configure a register [+CRC]}\n"
 	"\tM90D\t\t\t{delete the NVS blob}\n"
 	"\tM90L chan value\t\t{set Live gain}\n"
@@ -205,7 +205,9 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tM90Z chan\t\t{reset to defaults}\n"
 #endif
 	"\tMQTT addr port\t\t{en/disable local broker}\n"
+#if		 (configPRODUCTION == 0)
 	"\tPEEK addr length\t\{dump section of memory}\n"
+#endif
 	"\tWIFI ssid pswd\t\t{set wifi credentials}\n"
 	"\tNWMO mode (0->3)\t\{set network mode}\n"
 #if		(configCONSOLE_UART > 0)
@@ -457,6 +459,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 	// ################################## Diagnostic related options
 
+#if	(configPRODUCTION == 0)
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -465,29 +468,31 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-#if		(ESP32_VARIANT == ESP32_VAR_AC00) || (ESP32_VARIANT == ESP32_VAR_AC01)
+	#if		(ESP32_VARIANT == ESP32_VAR_AC00) || (ESP32_VARIANT == ESP32_VAR_AC01)
 			xActuatorLoad(cCmd - CHR_0 + 8, 1, 0, 6000, 0, 0) ;
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 
-#elif	(ESP32_VARIANT == ESP32_VAR_WROVERKIT) || (ESP32_VARIANT == ESP32_VAR_DOITDEVKIT)
+	#elif	(ESP32_VARIANT == ESP32_VAR_WROVERKIT) || (ESP32_VARIANT == ESP32_VAR_DOITDEVKIT)
 			if (cCmd - CHR_0 < configHAL_GPIO_DIG_OUT) {
 				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
 			} else {
 				PRINT("%c", CHR_BEL) ;
 			}
-#elif	(ESP32_VARIANT == ESP32_VAR_EM1P2)
+	#elif	(ESP32_VARIANT == ESP32_VAR_EM1P2)
 			if (cCmd - CHR_0 < CALIB_NUM) {
 				m90e26Report() ;
 				m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
 				m90e26LoadNVSConfig(1, cCmd - CHR_0) ;
 				m90e26Report() ;
 			}
-#endif
+	#endif
 			break ;
 
-#if		(ESP32_VARIANT==ESP32_VAR_AC00 || ESP32_VARIANT==ESP32_VAR_AC01 || ESP32_VARIANT==ESP32_VAR_WROVERKIT || ESP32_VARIANT==ESP32_VAR_DOITDEVKIT)
+	#if	(ESP32_VARIANT==ESP32_VAR_AC00 || ESP32_VARIANT==ESP32_VAR_AC01 || ESP32_VARIANT==ESP32_VAR_WROVERKIT || ESP32_VARIANT==ESP32_VAR_DOITDEVKIT)
 		case CHR_A:	vActuatorsIdent() ;								break ;
+	#endif
 #endif
+
 		case CHR_B:	xRtosSetStatus(flagAPP_RESTART) ;				break ;
 #if		(halHAS_DS18X20 > 0)
 //		case CHR_D:	ds18x20ReadConvertAll(NULL) ;					break ;
