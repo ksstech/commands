@@ -117,18 +117,18 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
-	#if	(configPRODUCTION == 0)
-	"\tc-T Generate WatchDog timeout\n"
+	#if	!defined(NDEBUG) || defined(DEBUG)
+		"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
 	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
 #endif
 
-#if		(configHAL_XXX_XXX_OUT > 0) && (configPRODUCTION == 0)
+#if		(configHAL_XXX_XXX_OUT > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t(0-7) Trigger actuator channel 'x'\n"
 	"\t(A)ctuators reload\n"
 
-#elif	(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
+#elif	(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t(0-2) load predefined config 'x'\n"
 	"\t(A)utomatic adjustment\n"
 #endif
@@ -136,13 +136,13 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tre(B)oot\n"
 
 	"\t(D)ebug various\n"
-#if		(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
+#if		(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t    Calibrate M90E26's\n"
 #endif
-#if		(halHAS_M90E36 > 0) && (configPRODUCTION == 0)
+#if		(halHAS_M90E36 > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t    Calibrate M90E36's\n"
 #endif
-#if		(halHAS_DS248X > 0) && (configPRODUCTION == 0)
+#if		(halHAS_DS248X > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t    Scan 1W Channels\n"
 #endif
 
@@ -158,7 +158,7 @@ static const char	HelpMessage[] = { "Single character commands\n"
 #endif
 	"\t(b)lob report\n"
 
-#if	(halHAS_DS248X > 0) && (configPRODUCTION == 0)
+#if	(halHAS_DS248X > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
 #endif
 
@@ -191,10 +191,10 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
 	"Extended commands, prefix with 'z'\n"
-#if		(halHAS_DS18X20 > 0) && (configPRODUCTION == 0)
+#if		(halHAS_DS18X20 > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\tDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
 #endif
-#if		(halHAS_M90E26 > 0) && (configPRODUCTION == 0)
+#if		(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
 	"\tM90C chan reg value\t{configure a register [+CRC]}\n"
 	"\tM90D\t\t\t{delete the NVS blob}\n"
 	"\tM90L chan value\t\t{set Live gain}\n"
@@ -205,7 +205,7 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tM90Z chan\t\t{reset to defaults}\n"
 #endif
 	"\tMQTT addr port\t\t{en/disable local broker}\n"
-#if		 (configPRODUCTION == 0)
+#if		 (!defined(NDEBUG) || defined(DEBUG))
 	"\tPEEK addr length\t\{dump section of memory}\n"
 #endif
 	"\tWIFI ssid pswd\t\t{set wifi credentials}\n"
@@ -452,14 +452,14 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 #endif
 
-#if		(configPRODUCTION == 0)
+#if		(!defined(NDEBUG) || defined(DEBUG))
 		case CHR_DC4:	while(1) ; break ;										// generate watchdog timeout
 		case CHR_NAK:	*((char *) 0xFFFFFFFF) = 1 ; break ;					// generate invalid memory access restart
 #endif
 
 	// ################################## Diagnostic related options
 
-#if	(configPRODUCTION == 0)
+#if		(!defined(NDEBUG) || defined(DEBUG))
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
