@@ -285,8 +285,8 @@ void	vFlagsReport(cli_t * psCLI) {
 			// Mask is bottom 24 bits max FreeRTOS limit
 			char * pcBuf = pcBitMapDecodeChanges(Fprv, Fcur, 0x00FFFFFF, FlagNames) ;
 			SL_LOG(SL_SEV_WARNING, pcBuf) ;
-			Fprv = Fcur ;
 			free(pcBuf) ;
+			Fprv = Fcur ;
 		}
 	}
 }
