@@ -250,15 +250,15 @@ const char * const FlagNames[24] = {
 // ############################### General status reporting functions ##############################
 
 void	vControlReport(void) {
-	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), attrRESET,
+	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
 		configSTDIO_UART_CHAN, usartInfo[configSTDIO_UART_CHAN].Speed,
 		usartInfo[configSTDIO_UART_CHAN].RxSize, usartInfo[configSTDIO_UART_CHAN].TxSize) ;
 }
 
 void	vIrmacosReport(void) {
 	printfx_lock() ;
-	printfx_nolock("%C%s%C\tSe=%u [St=%u]  M=%u  O=%u",
-		xpfSGR(attrRESET, colourFG_CYAN, 0, 0), "Misc", attrRESET,
+	printfx_nolock("%CMisc%C\tSe=%u [St=%u]  M=%u  O=%u",
+		xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
 		SenseCount, StatsCount, ModeCount, OtherCount) ;
 #if		(configUSE_RULES == 1) && (configUSE_IDENT == 0)
 	printfx_nolock("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
@@ -293,10 +293,10 @@ void	vFlagsReport(cli_t * psCLI) {
 
 void	vGeoLocReport(void) {
 	printfx_lock() ;
-	printfx_nolock("%CLocInfo%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), attrRESET) ;
+	printfx_nolock("%CLocInfo%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
 	printfx_nolock("Lat=%f  Lon=%f  Alt=%f  Acc=%f  Res=%f\n", sNVSvars.GeoLocation[Latitude], sNVSvars.GeoLocation[Longitude],
 			sNVSvars.GeoLocation[Altitude], sNVSvars.GeoLocation[Accuracy], sNVSvars.GeoLocation[Resolution]) ;
-	printfx_nolock("%CTZ Info%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), attrRESET) ;
+	printfx_nolock("%CTZ Info%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
 	printfx_nolock("TZid=%s  TZname=%s  Ofst=%ds  DST=%ds\n", sNVSvars.TimeZoneId, sNVSvars.TimeZoneName, sNVSvars.timezone, sNVSvars.daylight) ;
 	printfx_unlock() ;
 }
