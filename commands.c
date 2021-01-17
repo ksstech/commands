@@ -27,7 +27,12 @@
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
-#include	"task_mqtt_cmds.h"							// x_struct_union x_time x_definitions stdint.h time.h
+#if		(CONFIG_AEP_USED == 1)
+	#include	"task_sitewhere_cmds.h"					// x_struct_union x_time x_definitions stdint.h time.h
+#elif	(CONFIG_AEP_USED == 2)
+	#include	"task_thingsboard_cmds.h"				// x_struct_union x_time x_definitions stdint.h time.h
+#endif
+
 #include	"hal_usart.h"
 #include	"hal_nvs.h"
 
@@ -413,8 +418,6 @@ int32_t	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
 
 void	halWL_Report(void) ;
 void	halWL_ReportLx(void) ;
-void	vMqttReRegister(void) ;
-void	vMqttReport(void) ;
 void	vTaskSensorsReport(void) ;
 void	vControlReportTimeout(void) ;
 
@@ -502,8 +505,11 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
 			VarsFlag |= varFLAG_FLAGS ;
 			break ;
-
-		case CHR_I:	vMqttReRegister() ;								break ;
+#if		(CONFIG_AEP_USED == 1)
+		case CHR_I:	{ void vSiteWhereReRegister(void); vSiteWhereReRegister();	break; }
+#elif	(CONFIG_AEP_USED == 2)
+		case CHR_I:	{ void vThingsBoardReRegister(void); vThingsBoardReRegister(); break; }
+#endif
 		case CHR_T:	vSysTimerShow(0xFFFFFFFF) ; 					break ;
 		case CHR_U:	xRtosSetStatus(flagAPP_UPGRADE) ;				break ;
 
@@ -581,7 +587,11 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
-			vMqttReport() ;
+	#if		(CONFIG_AEP_USED == 1)
+			void vSiteWhereReport(void) ; vSiteWhereReport() ;
+	#elif	(CONFIG_AEP_USED == 2)
+			void vThingsBoardReport(void) ; vThingsBoardReport() ;
+	#endif
 			vIrmacosReport() ;
 			vControlReportTimeout() ;
 			break ;
