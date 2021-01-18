@@ -27,9 +27,9 @@
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
-#if		(CONFIG_AEP_USED == 1)
+#if		(SW_AEP == 1)
 	#include	"task_sitewhere_cmds.h"					// x_struct_union x_time x_definitions stdint.h time.h
-#elif	(CONFIG_AEP_USED == 2)
+#elif	(SW_AEP == 2)
 	#include	"task_thingsboard_cmds.h"				// x_struct_union x_time x_definitions stdint.h time.h
 #endif
 
@@ -92,7 +92,7 @@ int32_t CmndPEEK(cli_t * psCLI) ;
 
 cmnd_t sCLIlist[] = {
 	{ "PEEK", CmndPEEK }, { "WIFI", CmndWIFI }, { "NWMO", CmndNWMO }, { "MQTT", CmndMQTT },
-#if		(ESP32_VARIANT == ESP32_VAR_EM1P2)
+#if		(HW_VARIANT == HW_EM1P2)
 	{ "M90C", CmndM90C }, { "M90D", CmndM90D }, { "M90L", CmndM90L }, { "M90N", CmndM90N },
 	{ "M90O", CmndM90O }, { "M90P", CmndM90P }, { "M90S", CmndM90S }, { "M90Z", CmndM90Z },
 #endif
@@ -471,17 +471,17 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-	#if		(ESP32_VARIANT == ESP32_VAR_AC00) || (ESP32_VARIANT == ESP32_VAR_AC01)
+	#if		(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 			xActuatorLoad(cCmd - CHR_0 + 8, 1, 0, 6000, 0, 0) ;
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 
-	#elif	(ESP32_VARIANT == ESP32_VAR_WROVERKIT) || (ESP32_VARIANT == ESP32_VAR_DOITDEVKIT)
+	#elif	(HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
 			if (cCmd - CHR_0 < configHAL_GPIO_DIG_OUT) {
 				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
 			} else {
 				PRINT("%c", CHR_BEL) ;
 			}
-	#elif	(ESP32_VARIANT == ESP32_VAR_EM1P2)
+	#elif	(HW_VARIANT == HW_EM1P2)
 			if (cCmd - CHR_0 < CALIB_NUM) {
 				m90e26Report() ;
 				m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
@@ -491,7 +491,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	#endif
 			break ;
 
-	#if	(ESP32_VARIANT==ESP32_VAR_AC00 || ESP32_VARIANT==ESP32_VAR_AC01 || ESP32_VARIANT==ESP32_VAR_WROVERKIT || ESP32_VARIANT==ESP32_VAR_DOITDEVKIT)
+	#if	(HW_VARIANT==HW_AC00 || HW_VARIANT==HW_AC01 || HW_VARIANT==HW_WROVERKIT || HW_VARIANT==HW_DOITDEVKIT)
 		case CHR_A:	vActuatorsIdent() ;								break ;
 	#endif
 #endif
@@ -505,9 +505,9 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
 			VarsFlag |= varFLAG_FLAGS ;
 			break ;
-#if		(CONFIG_AEP_USED == 1)
+#if		(SW_AEP == 1)
 		case CHR_I:	{ void vSiteWhereReRegister(void); vSiteWhereReRegister();	break; }
-#elif	(CONFIG_AEP_USED == 2)
+#elif	(SW_AEP == 2)
 		case CHR_I:	{ void vThingsBoardReRegister(void); vThingsBoardReRegister(); break; }
 #endif
 		case CHR_T:	vSysTimerShow(0xFFFFFFFF) ; 					break ;
@@ -528,7 +528,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
 			SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
-	#if		(ESP32_VARIANT == ESP32_VAR_EM1P2)
+	#if		(HW_VARIANT == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
 	#endif
@@ -587,9 +587,9 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
-	#if		(CONFIG_AEP_USED == 1)
+	#if		(SW_AEP == 1)
 			void vSiteWhereReport(void) ; vSiteWhereReport() ;
-	#elif	(CONFIG_AEP_USED == 2)
+	#elif	(SW_AEP == 2)
 			void vThingsBoardReport(void) ; vThingsBoardReport() ;
 	#endif
 			vIrmacosReport() ;
