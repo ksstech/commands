@@ -311,8 +311,8 @@ void	vGeoLocReport(void) {
 int32_t CmndParseAddrMEM(cli_t * psCLI, uint32_t * pAddr) {
 	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !INRANGE_MEM(*pAddr), " erRANGE") ;
-	if (pTmp != pcFAILURE && INRANGE_MEM(*pAddr)) {
+	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
+	if (pTmp != pcFAILURE && (halCONFIG_inMEM(*pAddr) == false)) {
 		psCLI->pcParse = pTmp ;
 		return erSUCCESS ;
 	}
@@ -322,8 +322,8 @@ int32_t CmndParseAddrMEM(cli_t * psCLI, uint32_t * pAddr) {
 int32_t CmndParseAddrFLASH(cli_t * psCLI, uint32_t * pAddr) {
 	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !INRANGE_FLASH(*pAddr), " erRANGE") ;
-	if (pTmp != pcFAILURE && INRANGE_FLASH(*pAddr)) {
+	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
+	if (pTmp != pcFAILURE && halCONFIG_inFLASH(*pAddr)) {
 		psCLI->pcParse = pTmp ;
 		return erSUCCESS ;
 	}
@@ -333,8 +333,8 @@ int32_t CmndParseAddrFLASH(cli_t * psCLI, uint32_t * pAddr) {
 int32_t CmndParseAddrSRAM(cli_t * psCLI, uint32_t * pAddr) {
 	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !INRANGE_SRAM(*pAddr), " erRANGE") ;
-	if ((pTmp != pcFAILURE) && INRANGE_SRAM(*pAddr)) {
+	IF_PRINT(debugCMND && !halCONFIG_inSRAM(*pAddr), " erRANGE") ;
+	if ((pTmp != pcFAILURE) && halCONFIG_inSRAM(*pAddr)) {
 		psCLI->pcParse = pTmp ;
 		return erSUCCESS ;
 	}
