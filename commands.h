@@ -30,9 +30,10 @@ extern	const char * const FlagNames[] ;
 void	vIrmacosReport(void) ;
 void	vGeoLocReport(void) ;
 
-int32_t	CmndParseAddrMEM(cli_t * psCLI, uint32_t * pAddr) ;
-int32_t	CmndParseAddrFLASH(cli_t * psCLI, uint32_t * pAddr) ;
-int32_t	CmndParseAddrSRAM(cli_t * psCLI, uint32_t * pAddr) ;
+int32_t	CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) ;
+int32_t	CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) ;
+int32_t	CmndParseAddrSRAM(cli_t * psCLI, void ** pAddr) ;
+
 /**
  * CmndMatch() - Scan through a table of [sub]commands trying to find matching name
  * @return	Index into the table
