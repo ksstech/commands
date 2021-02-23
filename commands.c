@@ -260,25 +260,23 @@ void	vControlReport(void) {
 }
 
 void	vIrmacosReport(void) {
-	printfx_lock() ;
-	printfx_nolock("%CMisc%C\tSe=%u [St=%u]  M=%u  O=%u",
+	printfx("%CMisc%C\tSe=%u [St=%u]  M=%u  O=%u",
 		xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
 		SenseCount, StatsCount, ModeCount, OtherCount) ;
 #if		(configUSE_RULES == 1) && (configUSE_IDENT == 0)
-	printfx_nolock("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
+	printfx("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
 #elif	(configUSE_RULES == 1) && (configUSE_IDENT == 1)
-	printfx_nolock("  R=%u/%u[%u]", RulesCount, RulesSizeReq, RulesTableSize) ;
-	printfx_nolock("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
+	printfx("  R=%u/%u[%u]", RulesCount, RulesSizeReq, RulesTableSize) ;
+	printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
 #endif
 
 #if		defined(ESP_PLATFORM)
-	printfx_nolock("\tcntVars=%u  cntWifi=%u  Reboots=%u\n",
+	printfx(" =>\tcntVars=%u  cntWifi=%u  Reboots=%u\n",
 		sNVSvars.countVars, sNVSvars.countWifi, halCONFIG_RebootCounterRead()) ;
 #endif
 #if		(halHAS_PCA9555 > 0)
-	printfx_nolock("\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
+	printfx(" =>\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
 #endif
-	printfx_unlock() ;
 }
 
 void	vFlagsReport(cli_t * psCLI) {
@@ -296,13 +294,11 @@ void	vFlagsReport(cli_t * psCLI) {
 }
 
 void	vGeoLocReport(void) {
-	printfx_lock() ;
-	printfx_nolock("%CLocInfo%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
-	printfx_nolock("Lat=%f  Lon=%f  Alt=%f  Acc=%f  Res=%f\n", sNVSvars.GeoLocation[Latitude], sNVSvars.GeoLocation[Longitude],
+	printfx("%CLocInfo%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
+	printfx("Lat=%f  Lon=%f  Alt=%f  Acc=%f  Res=%f\n", sNVSvars.GeoLocation[Latitude], sNVSvars.GeoLocation[Longitude],
 			sNVSvars.GeoLocation[Altitude], sNVSvars.GeoLocation[Accuracy], sNVSvars.GeoLocation[Resolution]) ;
-	printfx_nolock("%CTZ Info%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
-	printfx_nolock("TZid=%s  TZname=%s  Ofst=%ds  DST=%ds\n", sNVSvars.TimeZoneId, sNVSvars.TimeZoneName, sNVSvars.timezone, sNVSvars.daylight) ;
-	printfx_unlock() ;
+	printfx("%CTZ Info%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
+	printfx("TZid=%s  TZname=%s  Ofst=%ds  DST=%ds\n", sNVSvars.TimeZoneId, sNVSvars.TimeZoneName, sNVSvars.timezone, sNVSvars.daylight) ;
 }
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
