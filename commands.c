@@ -20,7 +20,6 @@
 #include	"systiming.h"
 #include	"x_telnet_server.h"
 
-#include	"hal_debug.h"
 #include 	"hal_mcu.h"									// halMCU_Report()
 #include	"hal_fota.h"
 #include	"hal_storage.h"
