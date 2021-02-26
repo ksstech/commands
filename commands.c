@@ -267,7 +267,13 @@ void	vIrmacosReport(void) {
 	printfx("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
 #elif	(configUSE_RULES == 1) && (configUSE_IDENT == 1)
 	printfx("  R=%u/%u[%u]", RulesCount, RulesSizeReq, RulesTableSize) ;
-	printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
+	#if (SW_AEP == 1)
+		printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
+	#elif (SW_AEP == 2)
+//		printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
+	#else
+		#error !!!
+	#endif
 #endif
 
 #if		defined(ESP_PLATFORM)
@@ -556,8 +562,8 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_h:	PRINT(HelpMessage) ;			break ;
 
-	#if		(configUSE_IDENT == 1)
-		case CHR_i:	vIdentityReportAll() ;							break ;
+	#if		(configUSE_IDENT == 1) && (SW_AEP == 1)
+		case CHR_i:	vIdentityReportAll() ;			break ;
 	#endif
 
 		case CHR_l:	vGeoLocReport() ;				break ;
