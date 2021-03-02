@@ -23,6 +23,7 @@
 #include 	"hal_mcu.h"									// halMCU_Report()
 #include	"hal_fota.h"
 #include	"hal_storage.h"
+#include	"hal_variables.h"
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
@@ -33,7 +34,6 @@
 #endif
 
 #include	"hal_usart.h"
-#include	"hal_nvs.h"
 
 #if		(configUSE_RULES > 0)
 	#include	"rules_decode.h"
@@ -277,8 +277,8 @@ void	vIrmacosReport(void) {
 #endif
 
 #if		defined(ESP_PLATFORM)
-	printfx(" =>\tcntVars=%u  cntWifi=%u  Reboots=%u\n",
-		sNVSvars.countVars, sNVSvars.countWifi, halCONFIG_RebootCounterRead()) ;
+	printfx("\tcntVars=%u  cntWifi=%u  Reboots=%u\n",
+		sNVSvars.countVars, sNVSvars.countWifi, halVARS_RebootCounterRead()) ;
 #endif
 #if		(halHAS_PCA9555 > 0)
 	printfx(" =>\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
