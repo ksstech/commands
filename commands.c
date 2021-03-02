@@ -254,14 +254,14 @@ const char * const FlagNames[24] = {
 // ############################### General status reporting functions ##############################
 
 void	vControlReport(void) {
-	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
+	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
 		configSTDIO_UART_CHAN, usartInfo[configSTDIO_UART_CHAN].Speed,
 		usartInfo[configSTDIO_UART_CHAN].RxSize, usartInfo[configSTDIO_UART_CHAN].TxSize) ;
 }
 
 void	vIrmacosReport(void) {
 	printfx("%CMisc%C\tSe=%u [St=%u]  M=%u  O=%u",
-		xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
+		xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
 		SenseCount, StatsCount, ModeCount, OtherCount) ;
 #if		(configUSE_RULES == 1) && (configUSE_IDENT == 0)
 	printfx("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
@@ -281,7 +281,7 @@ void	vIrmacosReport(void) {
 		sNVSvars.countVars, sNVSvars.countWifi, halVARS_RebootCounterRead()) ;
 #endif
 #if		(halHAS_PCA9555 > 0)
-	printfx(" =>\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
+	printfx("\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
 #endif
 }
 
@@ -300,10 +300,10 @@ void	vFlagsReport(cli_t * psCLI) {
 }
 
 void	vGeoLocReport(void) {
-	printfx("%CLocInfo%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
+	printfx("%CLocInfo%C\t", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
 	printfx("Lat=%f  Lon=%f  Alt=%f  Acc=%f  Res=%f\n", sNVSvars.GeoLocation[Latitude], sNVSvars.GeoLocation[Longitude],
 			sNVSvars.GeoLocation[Altitude], sNVSvars.GeoLocation[Accuracy], sNVSvars.GeoLocation[Resolution]) ;
-	printfx("%CTZ Info%C\t", xpfSGR(attrRESET, colourFG_CYAN, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
+	printfx("%CTZ Info%C\t", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
 	printfx("TZid=%s  TZname=%s  Ofst=%ds  DST=%ds\n", sNVSvars.TimeZoneId, sNVSvars.TimeZoneName, sNVSvars.timezone, sNVSvars.daylight) ;
 }
 
