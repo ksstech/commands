@@ -27,8 +27,7 @@ extern	const char * const FlagNames[] ;
 // ################################### GLOBAL Function Prototypes ##################################
 
 
-void	vIrmacosReport(void) ;
-void	vGeoLocReport(void) ;
+void	halVARS_ReportSystem(void) ;
 
 int32_t	CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) ;
 int32_t	CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) ;

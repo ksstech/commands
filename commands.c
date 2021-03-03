@@ -1,6 +1,7 @@
 /*
  * commands.c - command interpreter
  */
+
 #include	"hal_config.h"
 
 #include	"commands.h"
@@ -11,7 +12,7 @@
 #include	"identity.h"
 
 #include	"x_http_server.h"
-#include	"x_string_general.h"						// pcBitMapDecode()
+#include	"x_string_general.h"						// xstrncmp()
 #include	"x_string_to_values.h"
 #include	"x_errors_events.h"
 #include	"x_builddefs.h"
@@ -20,6 +21,7 @@
 #include	"systiming.h"
 #include	"x_telnet_server.h"
 
+#include	"hal_usart.h"
 #include 	"hal_mcu.h"									// halMCU_Report()
 #include	"hal_fota.h"
 #include	"hal_storage.h"
@@ -32,8 +34,6 @@
 #elif	(SW_AEP == 2)
 	#include	"task_thingsboard_cmds.h"				// x_struct_union x_time x_definitions stdint.h time.h
 #endif
-
-#include	"hal_usart.h"
 
 #if		(configUSE_RULES > 0)
 	#include	"rules_decode.h"
@@ -59,8 +59,6 @@
 #if		(halHAS_ONEWIRE > 0)
 	#include	"onewire_platform.h"
 #endif
-
-#include	"lwip/init.h"							// LWIP_VERSION_STRING
 
 #include	<string.h>
 
@@ -223,89 +221,8 @@ static const char	HelpMessage[] = { "Single character commands\n"
 		"\n"
 } ;
 
-// Completely static values, not persisted in NVS
-const char * const FlagNames[24] = {
-	[0]		= "L1",
-	[1]		= "L2sta",
-	[2]		= "L3sta",
-	[3]		= "L2ap",
-	[4]		= "L3ap",
-	[5]		= "LxFAIL",
-	[6]		= "SNTP",
-	[7]		= "MQTT",
-	[8]		= "TNETS",
-	[9]		= "TNETC",
-	[10]	= "HTTPS",
-	[11]	= "HTTPC",
-	[12]	= "SLOG",
-	[13]	= "",
-	[14]	= "",
-	[15]	= "",
-	[16]	= "RVRT",
-	[17]	= "TIMER",
-	[18]	= "UpGRD",
-	[19]	= "RSTRT",
-	[20]	= "RGSTR",
-	[21]	= "RULES",
-	[22]	= "IDENT",
-	[23]	= "i2cOK",
-} ;
-
 // ############################### General status reporting functions ##############################
 
-void	vControlReport(void) {
-	printfx("%CFW%C\t" VER_INFO " UART#%d %u Rx=%u Tx=%u\n", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
-		configSTDIO_UART_CHAN, usartInfo[configSTDIO_UART_CHAN].Speed,
-		usartInfo[configSTDIO_UART_CHAN].RxSize, usartInfo[configSTDIO_UART_CHAN].TxSize) ;
-}
-
-void	vIrmacosReport(void) {
-	printfx("%CMisc%C\tSe=%u [St=%u]  M=%u  O=%u",
-		xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0),
-		SenseCount, StatsCount, ModeCount, OtherCount) ;
-#if		(configUSE_RULES == 1) && (configUSE_IDENT == 0)
-	printfx("  R=%u/%u[%u]\n", RulesCount, RulesSizeReq, RulesTableSize) ;
-#elif	(configUSE_RULES == 1) && (configUSE_IDENT == 1)
-	printfx("  R=%u/%u[%u]", RulesCount, RulesSizeReq, RulesTableSize) ;
-	#if (SW_AEP == 1)
-		printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
-	#elif (SW_AEP == 2)
-//		printfx("  I=%u/%u[%u]\n", IdentCount, IdentSizeReq, IdentTableSize) ;
-	#else
-		#error !!!
-	#endif
-#endif
-
-#if		defined(ESP_PLATFORM)
-	printfx("\tcntVars=%u  cntWifi=%u  Reboots=%u\n",
-		sNVSvars.countVars, sNVSvars.countWifi, halVARS_RebootCounterRead()) ;
-#endif
-#if		(halHAS_PCA9555 > 0)
-	printfx("\tPCA9555 Checks  OK=%d  Fail=%d\n", pcaSuccessCount, pcaResetCount) ;
-#endif
-}
-
-void	vFlagsReport(cli_t * psCLI) {
-	static	uint32_t Fprv = 0 ;
-	if (sNVSvars.fFlags || psCLI->bForce) {
-		uint32_t	Fcur = xEventGroupGetBits(xEventStatus) ;
-		if (Fprv != Fcur || psCLI->bForce) {
-			// Mask is bottom 24 bits max FreeRTOS limit
-			char * pcBuf = pcBitMapDecodeChanges(Fprv, Fcur, 0x00FFFFFF, FlagNames) ;
-			SL_LOG(SL_SEV_WARNING, pcBuf) ;
-			free(pcBuf) ;
-			Fprv = Fcur ;
-		}
-	}
-}
-
-void	vGeoLocReport(void) {
-	printfx("%CLocInfo%C\t", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
-	printfx("Lat=%f  Lon=%f  Alt=%f  Acc=%f  Res=%f\n", sNVSvars.GeoLocation[Latitude], sNVSvars.GeoLocation[Longitude],
-			sNVSvars.GeoLocation[Altitude], sNVSvars.GeoLocation[Accuracy], sNVSvars.GeoLocation[Resolution]) ;
-	printfx("%CTZ Info%C\t", xpfSGR(colourFG_CYAN, 0, 0, 0), xpfSGR(attrRESET, 0, 0, 0)) ;
-	printfx("TZid=%s  TZname=%s  Ofst=%ds  DST=%ds\n", sNVSvars.TimeZoneId, sNVSvars.TimeZoneName, sNVSvars.timezone, sNVSvars.daylight) ;
-}
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
@@ -425,7 +342,7 @@ void	vControlReportTimeout(void) ;
 
 void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho ;
-	vFlagsReport(&sCLI) ;
+	halVARS_ReportFlags(&sCLI) ;
 	if (cCmd == CHR_NUL)
 		return ;
 	if (sCLI.bMode) {
@@ -556,7 +473,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_f:
 			sCLI.bForce	= 1 ;
-			vFlagsReport(&sCLI) ;
+			halVARS_ReportFlags(&sCLI) ;
 			sCLI.bForce	= 0 ;
 			break ;
 
@@ -566,7 +483,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_i:	vIdentityReportAll() ;			break ;
 	#endif
 
-		case CHR_l:	vGeoLocReport() ;				break ;
+		case CHR_l:	halVARS_ReportGeoloc() ;		break ;
 		case CHR_m:	vRtosReportMemory() ;			break ;
 		case CHR_n:	xNetReportStats() ;				break ;
 
@@ -584,7 +501,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_v:
 			halMCU_Report() ;
-			vControlReport() ;
+			halVARS_ReportFirmware() ;
 			halWL_ReportLx() ;
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
@@ -594,7 +511,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	#elif	(SW_AEP == 2)
 			void vThingsBoardReport(void) ; vThingsBoardReport() ;
 	#endif
-			vIrmacosReport() ;
+			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
 
@@ -611,5 +528,5 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		default:	PRINT("key=0x%03X\r", cCmd) ;
 		}
 	}
-	vFlagsReport(&sCLI) ;
+	halVARS_ReportFlags(&sCLI) ;
 }
