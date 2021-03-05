@@ -509,7 +509,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	#if		(SW_AEP == 1)
 			void vSiteWhereReport(void) ; vSiteWhereReport() ;
 	#elif	(SW_AEP == 2)
-			void vThingsBoardReport(void) ; vThingsBoardReport() ;
+			void vTB_Report(void) ; vTB_Report() ;
 	#endif
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
