@@ -9,7 +9,7 @@
 #include	"FreeRTOS_Support.h"						// freertos statistics x_complex_vars x_struct_unions x_time x_definitions stdint time
 #include	"paho_support.h"
 #include	"actuators.h"
-#include	"identity.h"
+
 #if		(SW_AEP == 1)
 	#include	"identity.h"
 	#include	"ident1.h"
