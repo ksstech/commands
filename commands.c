@@ -427,7 +427,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 #if		(SW_AEP == 1)
 		case CHR_I:	{ void vSiteWhereReRegister(void); vSiteWhereReRegister();	break; }
 #elif	(SW_AEP == 2)
-		case CHR_I:	{ void vThingsBoardReRegister(void); vThingsBoardReRegister(); break; }
+		case CHR_I:	{ void vTB_ReRegister(void); vTB_ReRegister();	break; }
 #endif
 		case CHR_T:	vSysTimerShow(0xFFFFFFFF) ; 					break ;
 		case CHR_U:	xRtosSetStatus(flagAPP_UPGRADE) ;				break ;
