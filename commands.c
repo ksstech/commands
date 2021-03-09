@@ -230,7 +230,7 @@ int32_t CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) {
 	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
 	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
-	if (pTmp != pcFAILURE && (halCONFIG_inMEM(*pAddr) == false)) {
+	if (pTmp != pcFAILURE && (halCONFIG_inMEM(*pAddr) == 0)) {
 		psCLI->pcParse = pTmp ;
 		return erSUCCESS ;
 	}
@@ -277,7 +277,7 @@ int32_t CmndPEEK(cli_t * psCLI) {
 int32_t	xCLImatch(cli_t * psCLI) {
 	for (int32_t Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
 		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SIZEOF_MEMBER(cmnd_t, cmnd)) ;
-		if (xstrncmp(psCLI->pcParse, psCLI->pasList[Idx].cmnd, Len, false) == true) {
+		if (xstrncmp(psCLI->pcParse, psCLI->pasList[Idx].cmnd, Len, 0) == 1) {
 			psCLI->pcParse += Len ;
 			return Idx ;
 		}
