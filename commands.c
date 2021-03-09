@@ -479,7 +479,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_h:	PRINT(HelpMessage) ;			break ;
 
-	#if		(configUSE_IDENT == 1) && (SW_AEP == 1)
+	#if		(configUSE_IDENT == 1)
 		case CHR_i:	vIdentityReportAll() ;			break ;
 	#endif
 
