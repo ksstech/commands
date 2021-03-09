@@ -10,6 +10,13 @@
 #include	"paho_support.h"
 #include	"actuators.h"
 #include	"identity.h"
+#if		(SW_AEP == 1)
+	#include	"identity.h"
+	#include	"ident1.h"
+#elif	(SW_AEP == 2)
+	#include	"identity.h"
+	#include	"ident2.h"
+#endif
 
 #include	"x_http_server.h"
 #include	"x_string_general.h"						// xstrncmp()
