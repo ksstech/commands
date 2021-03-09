@@ -425,7 +425,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			VarsFlag |= varFLAG_FLAGS ;
 			break ;
 #if		(SW_AEP == 1)
-		case CHR_I:	{ void vSiteWhereReRegister(void); vSiteWhereReRegister();	break; }
+		case CHR_I:	{ void vSW_ReRegister(void); vSW_ReRegister();	break; }
 #elif	(SW_AEP == 2)
 		case CHR_I:	{ void vTB_ReRegister(void); vTB_ReRegister();	break; }
 #endif
