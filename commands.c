@@ -309,36 +309,38 @@ int32_t	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
 	int32_t iRV = erSUCCESS ;
 	if (cCmd == CHR_CR || cCmd == CHR_NUL) {			// terminating char received
 		*psCLI->pcStore	= CHR_NUL ;
-		if (psCLI->bEcho)
+		if (psCLI->bEcho) {
 			printfx("\n") ;
+		}
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
 		if (iRV != erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
 			if (psCLI->bEcho && iRV != erSUCCESS)		// successful ?
 				printfx("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
-		} else
+		} else {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
+		}
 		vCLIreset(psCLI) ;
-
 	} else if (cCmd == CHR_BS && psCLI->pcStore > psCLI->pcBeg) {
 		--psCLI->pcStore ;
-		if (psCLI->bEcho)
+		if (psCLI->bEcho) {
 			printfx("%s", caBS) ;
-
+		}
 	} else if (cCmd == CHR_ESC) {
-		if (psCLI->bEcho)
+		if (psCLI->bEcho) {
 			printfx("\r%*.s\r", psCLI->u8BSize, "") ;
+		}
 		vCLIreset(psCLI) ;
-
 	} else if (isprint(cCmd)) {
-		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1))	// plan for terminating NUL
+		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1)) {	// plan for terminating NUL
 			*psCLI->pcStore++ = cCmd ;					// store character
-		else
+		} else {
 			printfx("%c", CHR_BEL) ;
-
+		}
 	}
-	if (psCLI->bEcho && (psCLI->pcStore > psCLI->pcBeg))
+	if (psCLI->bEcho && (psCLI->pcStore > psCLI->pcBeg)) {
 		printfx("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg) ;
+	}
 	return iRV ;
 }
 
@@ -356,7 +358,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		xCommandBuffer(&sCLI, cCmd) ;
 	} else {
 		switch (cCmd) {
-	// ########################### Unusual (possibly dangerous ) options
+	// ########################### Unusual (possibly dangerous) options
 
 #if		defined(ESP_PLATFORM)
 		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A

@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include	"x_struct_union.h"							// +x_time +x_definitions.h +stdint.h +time.h
+#include	"x_struct_union.h"							// x_time x_definitions stdint time
+
 #include	<stdbool.h>
 
 #ifdef __cplusplus
