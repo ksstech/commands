@@ -19,6 +19,23 @@ extern "C" {
 
 // ########################################## structures ###########################################
 
+typedef struct __attribute__((packed)) cli_t {
+	char *			pcBeg ;								// Buffer beginning
+	char *			pcStore ;							// Buffer position
+	char *			pcParse ;
+	struct cmnd_t *	pasList ;							// Command List
+	z64_t			z64Var ;
+	uint8_t			u8BSize ;
+	uint8_t			u8LSize ;							// Command List Size
+	uint8_t			bMode	: 1 ;						// Long mode
+	uint8_t			bEcho	: 1 ;
+	uint8_t			bForce	: 1 ;						// force flags display
+} cli_t ;
+
+typedef	struct	cmnd_t {
+	const char	cmnd[4] ;
+	int32_t	(* const hdlr) (cli_t *) ;
+} cmnd_t ;
 
 // ###################################### Global variables #########################################
 

@@ -234,7 +234,7 @@ static const char	HelpMessage[] = { "Single character commands\n"
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 int32_t CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
+	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
 	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
 	if (pTmp != pcFAILURE && (halCONFIG_inMEM(*pAddr) == 0)) {
@@ -245,7 +245,7 @@ int32_t CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) {
 }
 
 int32_t CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
+	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
 	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
 	if (pTmp != pcFAILURE && halCONFIG_inFLASH(*pAddr)) {
@@ -256,7 +256,7 @@ int32_t CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) {
 }
 
 int32_t CmndParseAddrSRAM(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (p32_t) pAddr, vfUXX, vs32B, sepSPACE) ;
+	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
 	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
 	IF_PRINT(debugCMND && !halCONFIG_inSRAM(*pAddr), " erRANGE") ;
 	if ((pTmp != pcFAILURE) && halCONFIG_inSRAM(*pAddr)) {
@@ -271,7 +271,7 @@ int32_t CmndPEEK(cli_t * psCLI) {
 	uint32_t	Size ;
 	int32_t iRV = CmndParseAddrMEM(psCLI, &Addr) ;
 	if (iRV != erFAILURE) {
-		char * pTmp = pcStringParseValueRange(psCLI->pcParse, (p32_t) &Size, vfUXX, vs32B, sepSPACE, (x32_t) 1, (x32_t) 1024) ;
+		char * pTmp = pcStringParseValueRange(psCLI->pcParse, (px_t) &Size, vfUXX, vs32B, sepSPACE, (x32_t) 1, (x32_t) 1024) ;
 		if (pTmp != pcFAILURE) {
 			PRINT("PEEK %p %u\n%'+b", Addr, Size, Size, Addr) ;
 			psCLI->pcParse = pTmp ;
