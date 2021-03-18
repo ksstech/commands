@@ -516,7 +516,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
 	#if		(SW_AEP == 1)
-			void vSiteWhereReport(void) ; vSiteWhereReport() ;
+			void vSW_Report(void) ; vSW_Report() ;
 	#elif	(SW_AEP == 2)
 			void vTB_Report(void) ; vTB_Report() ;
 	#endif
