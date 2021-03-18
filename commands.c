@@ -7,7 +7,6 @@
 #include	"commands.h"
 
 #include	"FreeRTOS_Support.h"						// freertos statistics x_complex_vars x_struct_unions x_time x_definitions stdint time
-#include	"paho_support.h"
 #include	"actuators.h"
 
 #if		(SW_AEP == 1)
@@ -36,11 +35,7 @@
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
-#if		(SW_AEP == 1)
-	#include	"task_sitewhere_cmds.h"					// x_struct_union x_time x_definitions stdint.h time.h
-#elif	(SW_AEP == 2)
-	#include	"task_thingsboard_cmds.h"				// x_struct_union x_time x_definitions stdint.h time.h
-#endif
+#include	"paho_mqtt.h"
 
 #if		(configUSE_RULES > 0)
 	#include	"rules_decode.h"
