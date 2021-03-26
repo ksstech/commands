@@ -324,10 +324,14 @@ int32_t	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
 		}
 		vCLIreset(psCLI) ;
-	} else if (cCmd == CHR_BS && psCLI->pcStore > psCLI->pcBeg) {
-		--psCLI->pcStore ;
-		if (psCLI->bEcho) {
-			printfx("%s", caBS) ;
+	} else if (cCmd == CHR_BS) {
+		if (psCLI->pcStore > psCLI->pcBeg) {
+			--psCLI->pcStore ;
+			if (psCLI->bEcho) {
+				printfx("%s", caBS) ;
+			}
+		} else {
+			// nothing in buffer so ignore
 		}
 	} else if (cCmd == CHR_ESC) {
 		if (psCLI->bEcho) {
