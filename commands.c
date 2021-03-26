@@ -403,7 +403,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	#endif
 			break ;
 
-	#if	(HW_VARIANT==HW_AC00 || HW_VARIANT==HW_AC01 || HW_VARIANT==HW_WROVERKIT || HW_VARIANT==HW_DOITDEVKIT)
+	#if	(configHAL_XXX_XXX_OUT > 0)
 		case CHR_A:	vActuatorsIdent() ;								break ;
 		case CHR_a:	vTaskActuatorReport() ;							break ;
 	#endif
