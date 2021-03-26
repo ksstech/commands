@@ -180,7 +180,7 @@ static const char	HelpMessage[] = {
 	"\t(d)ebug SSD1306 config\n"
 #endif
 
-#if		(configUSE_IDENT == 1)
+#if		(configUSE_IDENT > 0)
 	"\t(I)nit rules & ident\n"
 	"\t(i)dent table\n"
 #endif
