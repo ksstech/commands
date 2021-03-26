@@ -273,7 +273,7 @@ int32_t CmndPEEK(cli_t * psCLI) {
 	if (iRV != erFAILURE) {
 		char * pTmp = pcStringParseValueRange(psCLI->pcParse, (px_t) &Size, vfUXX, vs32B, sepSPACE, (x32_t) 1, (x32_t) 1024) ;
 		if (pTmp != pcFAILURE) {
-			PRINT("PEEK %p %u\n%'+b", Addr, Size, Size, Addr) ;
+			printfx("PEEK %p %u\n%'+B", Addr, Size, Size, Addr) ;
 			psCLI->pcParse = pTmp ;
 			return erSUCCESS ;
 		}
@@ -387,7 +387,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			if (cCmd - CHR_0 < configHAL_GPIO_DIG_OUT) {
 				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
 			} else {
-				PRINT("%c", CHR_BEL) ;
+				printfx("%c", CHR_BEL) ;
 			}
 	#elif	(HW_VARIANT == HW_EM1P2)
 			if (cCmd - CHR_0 < CALIB_NUM) {
@@ -553,7 +553,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 #endif
 
-		default:	PRINT("key=0x%03X\r", cCmd) ;
+		default:	printfx("key=0x%03X\r", cCmd) ;
 		}
 	}
 	halVARS_ReportFlags(&sCLI) ;
