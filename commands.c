@@ -2,20 +2,17 @@
  * commands.c - command interpreter
  */
 
-#include	"hal_config.h"
-
+#include	"hal_variables.h"
 #include	"commands.h"
 
 #include	"FreeRTOS_Support.h"						// freertos statistics x_complex_vars x_struct_unions x_time x_definitions stdint time
 #include	"actuators.h"
 
-#if		(SW_AEP == 1)
-	#include	"identity.h"
-	#include	"ident1.h"
-#elif	(SW_AEP == 2)
-	#include	"identity.h"
-	#include	"ident2.h"
-#endif
+#include	"task_sitewhere.h"
+#include	"ident1.h"
+
+#include	"task_thingsboard.h"
+#include	"ident2.h"
 
 #include	"x_http_server.h"
 #include	"x_string_general.h"						// xstrncmp()
@@ -31,7 +28,6 @@
 #include 	"hal_mcu.h"									// halMCU_Report()
 #include	"hal_fota.h"
 #include	"hal_storage.h"
-#include	"hal_variables.h"
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
@@ -91,25 +87,60 @@ int32_t CmndPEEK(cli_t * psCLI) ;
 
 cmnd_t sCLIlist[] = {
 	{ "PEEK", CmndPEEK }, { "WIFI", CmndWIFI }, { "NWMO", CmndNWMO }, { "MQTT", CmndMQTT },
+	{ "CMND", CmndCMND },
 #if		(HW_VARIANT == HW_EM1P2)
 	{ "M90C", CmndM90C }, { "M90D", CmndM90D }, { "M90L", CmndM90L }, { "M90N", CmndM90N },
 	{ "M90O", CmndM90O }, { "M90P", CmndM90P }, { "M90S", CmndM90S }, { "M90Z", CmndM90Z },
 #endif
+
 #if		(halHAS_DS18X20 > 0)
 	{ "DS18", CmndDS18 },
 #endif
+
 #if		(configCONSOLE_UART > 0)
 	{ "UART", CmndUART },
 #endif
-#if		(configUSE_RULES > 0)
-	{ "CMND", CmndCMND },
-#endif
+
 } ;
 
 static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
 static	cli_t	sCLI ;
 
-static const char	HelpMessage[] = { "Single character commands\n"
+static const char	HelpMessage[] = {
+	"Single character commands\n"
+#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\tre(B)oot\n"
+	"\t(F)lag changes dis/enable\n"
+	"\t(T)imer/Scatter Info\n"
+	"\t(U)pgrade Firmware\n"
+
+	#if	(configHAL_XXX_XXX_OUT > 0)
+	"\t(0-7) Trigger actuator channel 'x'\n"
+	"\t(A)ctuators reload\n"
+	#endif
+
+	#if	(halHAS_M90E26 > 0) || (halHAS_M90E36 > 0)
+	"\t(A)utomatic adjustment\n"
+		#if	(halHAS_M90E36 > 0)
+		"\t    Calibrate M90E26's\n"
+		#endif
+		#if	(halHAS_M90E36 > 0)
+		"\t    Calibrate M90E36's\n"
+		#endif
+	"\t(0-2) load predefined config 'x'\n"
+	#endif
+
+	#if	(halHAS_DS248X > 0)
+	"\t(D)ebug 1W Channels\n"
+	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
+	#endif
+
+	#if	defined(ESP_PLATFORM)
+	"\tc-T Generate WatchDog timeout\n"
+	"\tc-U generate Invalid memory access crash\n"
+	#endif
+#endif
+
 #if		defined(ESP_PLATFORM)
 	"\tc-A Boot OTA #1 FW as STA\n"
 	#if (fotaMAX_OTA_PARTITIONS > 2)
@@ -121,84 +152,69 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
-	#if	!defined(NDEBUG) || defined(DEBUG)
-		"\tc-T Generate WatchDog timeout\n"
-	"\tc-U generate Invalid memory access crash\n"
-	#endif
 	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
 #endif
 
-#if		(configHAL_XXX_XXX_OUT > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t(0-7) Trigger actuator channel 'x'\n"
-	"\t(A)ctuators reload\n"
-
-#elif	(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t(0-2) load predefined config 'x'\n"
-	"\t(A)utomatic adjustment\n"
-#endif
-
-	"\tre(B)oot\n"
-
-	"\t(D)ebug various\n"
-#if		(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t    Calibrate M90E26's\n"
-#endif
-#if		(halHAS_M90E36 > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t    Calibrate M90E36's\n"
-#endif
-#if		(halHAS_DS248X > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t    Scan 1W Channels\n"
-#endif
-
-	"\t(F)lag changes dis/enable\n"
-	"\t(I)nit rules & ident\n"
-	"\t(T)imer/Scatter Info\n"
-	"\t(U)pgrade Firmware\n"
-
 // ##################### non lethal command options
 
-#if		(configHAL_XXX_XXX_OUT > 0)
-	"\t(a)ctuators status\n"
-#endif
 	"\t(b)lob report\n"
-
-#if	(halHAS_DS248X > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
-#endif
-
-	"\t(d)ebug reports\n"
-#if		(halHAS_DS248X > 0)
-	"\t    DS248X Configuration\n"
-
-#elif	(halHAS_M90E26 > 0)
-	"\t    M90E26 config\n"
-	"\t    SSD1306 config\n"
-#endif
-
 	"\t(f)lags Status\n"
 	"\t(h)elp screen display\n"
-#if		(configUSE_IDENT == 1)
-	"\t(i)dent table\n"
-#endif
 	"\t(l)ocation info\n"
 	"\t(m)emory info\n"
 	"\t(n)etwork (IP4) info\n"
-#if		(halHAS_ONEWIRE > 0)
-	"\t(o)newire info\n"
-#endif
-#if		defined(ESP_PLATFORM)
-	"\t(p)artitions report\n"
-#endif
 	"\t(r)ules display\n"
 	"\t(s)ensors statistics\n"
 	"\t(t)asks statistics\n"
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
-	"Extended commands, prefix with 'z'\n"
-#if		(halHAS_DS18X20 > 0) && (!defined(NDEBUG) || defined(DEBUG))
-	"\tDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
+
+#if		(configHAL_XXX_XXX_OUT > 0)
+	"\t(a)ctuators status\n"
 #endif
-#if		(halHAS_M90E26 > 0) && (!defined(NDEBUG) || defined(DEBUG))
+
+
+#if		(halHAS_M90E26 > 0)
+	"\t ### M90E26 ###\n"
+	"\t(d)ebug M90E26 config\n"
+	"\t(d)ebug SSD1306 config\n"
+#endif
+
+#if		(configUSE_IDENT == 1)
+	"\t(I)nit rules & ident\n"
+	"\t(i)dent table\n"
+#endif
+
+#if		(halHAS_ONEWIRE > 0)
+	"\t ### 1-WIRE ###\n"
+	#if	(halHAS_DS248X > 0)
+	"\t(d)ebug DS248X Configuration\n"
+	#endif
+		"\t(o)newire info\n"
+#endif
+
+#if		defined(ESP_PLATFORM)
+	"\t(p)artitions report\n"
+#endif
+
+	"\nExtended commands, prefix with 'z'\n"
+	"\tMQTT addr port\t\t{en/disable local broker}\n"
+	"\tWIFI ssid pswd\t\t{set wifi credentials}\n"
+	"\tNWMO mode (0->3)\t\{set network mode}\n"
+	"\tRULE {sense|mode|rule text to decode}\n"
+
+#if		(configCONSOLE_UART > 0)
+	"\tUART chan speed\t\t{set baudrate}\n"
+#endif
+
+#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\tPEEK addr length\t\{dump section of memory}\n"
+
+	#if	(halHAS_DS18X20 > 0)
+	"\tDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
+	#endif
+
+	#if	(halHAS_M90E26 > 0)
 	"\tM90C chan reg value\t{configure a register [+CRC]}\n"
 	"\tM90D\t\t\t{delete the NVS blob}\n"
 	"\tM90L chan value\t\t{set Live gain}\n"
@@ -207,20 +223,9 @@ static const char	HelpMessage[] = { "Single character commands\n"
 	"\tM90P chan\t\t{Power OFFSET adjust}\n"
 	"\tM90S chan index\t\t{save config to blob #}\n"
 	"\tM90Z chan\t\t{reset to defaults}\n"
+	#endif
 #endif
-	"\tMQTT addr port\t\t{en/disable local broker}\n"
-#if		 (!defined(NDEBUG) || defined(DEBUG))
-	"\tPEEK addr length\t\{dump section of memory}\n"
-#endif
-	"\tWIFI ssid pswd\t\t{set wifi credentials}\n"
-	"\tNWMO mode (0->3)\t\{set network mode}\n"
-#if		(configCONSOLE_UART > 0)
-	"\tUART chan speed\t\t{set baudrate}\n"
-#endif
-#if		(configUSE_RULES > 0)
-	"\tRULE {sense|mode|rule text to decode}\n"
-#endif
-		"\n"
+	"\n"
 } ;
 
 // ############################### General status reporting functions ##############################
@@ -308,10 +313,13 @@ int32_t	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
 			printfx("\n") ;
 		}
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
-		if (iRV != erFAILURE) {							// successful ?
+		if (iRV > erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
-			if (psCLI->bEcho && iRV != erSUCCESS)		// successful ?
+			if (psCLI->bEcho && iRV < erSUCCESS) {		// Failed ?
 				printfx("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
+			} else {
+				// command was successful
+			}
 		} else {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
 		}
@@ -347,45 +355,22 @@ void	vControlReportTimeout(void) ;
 void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho ;
 	halVARS_ReportFlags(&sCLI) ;
-	if (cCmd == CHR_NUL)
+	if (cCmd == CHR_NUL) {
 		return ;
+	}
 	if (sCLI.bMode) {
 		xCommandBuffer(&sCLI, cCmd) ;
 	} else {
 		switch (cCmd) {
 	// ########################### Unusual (possibly dangerous) options
 
-#if		defined(ESP_PLATFORM)
-		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
-		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
-		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
-		case CHR_DLE:															// c-P
-			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
-			VarsFlag |= varFLAG_HOSTS ;
-			xRtosSetStatus(flagAPP_RESTART) ;
+#if		(!defined(NDEBUG) || defined(DEBUG))			// Diagnostic related options
+		case CHR_DC4:
+			while(1) ; 									// generate watchdog timeout
 			break ;
-		case CHR_DC1:															// c-Q (XON)
-			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 : (sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
-			VarsFlag |= varFLAG_QOSLEVEL ;
-			xRtosSetStatus(flagAPP_RESTART) ;
+		case CHR_NAK:
+			*((char *) 0xFFFFFFFF) = 1 ; 				// invalid memory access
 			break ;
-		case CHR_DC2:															// c-R
-			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT) ;
-			break ;
-		case CHR_SYN:															// c-V
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
-			IF_SL_INFO(debugTRACK, "Reset config & restart") ;
-			break ;
-#endif
-
-#if		(!defined(NDEBUG) || defined(DEBUG))
-		case CHR_DC4:	while(1) ; break ;										// generate watchdog timeout
-		case CHR_NAK:	*((char *) 0xFFFFFFFF) = 1 ; break ;					// generate invalid memory access restart
-#endif
-
-	// ################################## Diagnostic related options
-
-#if		(!defined(NDEBUG) || defined(DEBUG))
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -416,32 +401,32 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 	#if	(HW_VARIANT==HW_AC00 || HW_VARIANT==HW_AC01 || HW_VARIANT==HW_WROVERKIT || HW_VARIANT==HW_DOITDEVKIT)
 		case CHR_A:	vActuatorsIdent() ;								break ;
-	#endif
-#endif
-
-		case CHR_B:	xRtosSetStatus(flagAPP_RESTART) ;				break ;
-#if		(halHAS_DS18X20 > 0)
-//		case CHR_D:	ds18x20ReadConvertAll(NULL) ;					break ;
-		case CHR_D:	ds18x20ScanAlarmsAll() ;						break ;
-#endif
-		case CHR_F:
-			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
-			VarsFlag |= varFLAG_FLAGS ;
-			break ;
-#if		(SW_AEP == 1)
-		case CHR_I:	{ void vSW_ReRegister(void); vSW_ReRegister();	break; }
-#elif	(SW_AEP == 2)
-		case CHR_I:	{ void vTB_ReRegister(void); vTB_ReRegister();	break; }
-#endif
-		case CHR_T:	vSysTimerShow(0xFFFFFFFF) ; 					break ;
-		case CHR_U:	xRtosSetStatus(flagAPP_UPGRADE) ;				break ;
-
-	// ############################ Normal (non-dangerous) options
-
-	#if	(configHAL_XXX_XXX_OUT > 0)
 		case CHR_a:	vTaskActuatorReport() ;							break ;
 	#endif
+#endif
 
+#if		defined(ESP_PLATFORM)							// ESP32 Specific options
+		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
+		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
+		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
+		case CHR_DLE:															// c-P
+			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
+			VarsFlag |= varFLAG_HOSTS ;
+			xRtosSetStatus(flagAPP_RESTART) ;
+			break ;
+		case CHR_DC1:															// c-Q (XON)
+			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
+								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
+			VarsFlag |= varFLAG_QOSLEVEL ;
+			xRtosSetStatus(flagAPP_RESTART) ;
+			break ;
+		case CHR_DC2:															// c-R
+			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT) ;
+			break ;
+		case CHR_SYN:															// c-V
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
+			IF_TRACK(debugTRACK, "Reset config & restart") ;
+			break ;
 		case CHR_b: {
 			#define	blobBUFFER_SIZE			1024
 			uint8_t * pBuffer = malloc(blobBUFFER_SIZE) ;
@@ -458,51 +443,52 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			free(pBuffer) ;
 			break ;
 		}
-
-	#if	(halHAS_DS248X > 0)
-		case CHR_c:	++OWflags.Level ; break ;
-	#endif
-
-		case CHR_d:
-#if		(halHAS_DS248X > 0)
-			ds248xReportAll() ;
-#endif
-#if		(halHAS_M90E26 > 0)
-			m90e26Report() ;
-#endif
-#if		(halHAS_SSD1306 > 0)
-			ssd1306Report() ;
-#endif
+		case CHR_p:
+			halFOTA_ReportPartitions() ;
 			break ;
+#endif
 
+		// ############################ Normal (non-dangerous) options
+
+		case CHR_B:
+			xRtosSetStatus(flagAPP_RESTART) ;
+			break ;
+		case CHR_F:
+			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
+			VarsFlag |= varFLAG_FLAGS ;
+			break ;
+		case CHR_T:
+			vSysTimerShow(0xFFFFFFFF) ;
+			break ;
+		case CHR_U:
+			xRtosSetStatus(flagAPP_UPGRADE) ;
+			break ;
 		case CHR_f:
 			sCLI.bForce	= 1 ;
 			halVARS_ReportFlags(&sCLI) ;
 			sCLI.bForce	= 0 ;
 			break ;
-
-		case CHR_h:	PRINT(HelpMessage) ;			break ;
-
-	#if		(configUSE_IDENT == 1)
-		case CHR_i:	vIdentityReportAll() ;			break ;
-	#endif
-
-		case CHR_l:	halVARS_ReportGeoloc() ;		break ;
-		case CHR_m:	vRtosReportMemory() ;			break ;
-		case CHR_n:	xNetReportStats() ;				break ;
-
-	#if	(halHAS_ONEWIRE > 0)
-		case CHR_o:	OWPlatformReportAll() ;			break ;
-	#endif
-
-	#if		defined(ESP_PLATFORM)
-		case CHR_p:	halFOTA_ReportPartitions() ;	break ;
-	#endif
-
-		case CHR_r:	vRulesDecode() ;				break ;
-		case CHR_s:	vTaskSensorsReport() ;			break ;
-		case CHR_t:	xRtosReportTasksNew(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ; 	break;
-
+		case CHR_h:
+			printfx(HelpMessage) ;
+			break ;
+		case CHR_l:
+			halVARS_ReportGeoloc() ;
+			break ;
+		case CHR_m:
+			vRtosReportMemory() ;
+			break ;
+		case CHR_n:
+			xNetReportStats() ;
+			break ;
+		case CHR_r:
+			vRulesDecode() ;
+			break ;
+		case CHR_s:
+			vTaskSensorsReport() ;
+			break ;
+		case CHR_t:
+			xRtosReportTasksNew(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ;
+			break;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
@@ -510,24 +496,62 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
-	#if		(SW_AEP == 1)
-			void vSW_Report(void) ; vSW_Report() ;
-	#elif	(SW_AEP == 2)
-			void vTB_Report(void) ; vTB_Report() ;
-	#endif
+			IF_EXEC_0(SW_AEP == 1, vSW_Report) ;
+			IF_EXEC_0(SW_AEP == 2, vTB_Report) ;
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
-
-		case CHR_w:	halWL_Report() ;				break ;
-
-	#if		(configBUILD_LONG_COMMAND == 1)
+		case CHR_w:
+			halWL_Report() ;
+			break ;
+#if		(configBUILD_LONG_COMMAND == 1)
 		case CHR_Z:
 		case CHR_z:
 			vCLIreset(&sCLI) ;
 			sCLI.bMode		= 1 ;
 			break ;
+#endif
+
+#if		(halHAS_ONEWIRE > 0)
+	#if	(halHAS_DS18X20 > 0)
+		case CHR_D:
+			ds18x20ReadConvertAll(NULL) ;
+			ds18x20ScanAlarmsAll() ;
+			break ;
+		case CHR_c:
+			++OWflags.Level ;
+			break ;
+		case CHR_d:
+			ds248xReportAll() ;
+			break ;
 	#endif
+		case CHR_o:
+			OWPlatformReportAll() ;
+			break ;
+#endif
+
+#if		(SW_AEP == 1)
+		case CHR_I:
+			vSW_ReRegister();
+			break ;
+		case CHR_i:
+			vID1_ReportAll() ;
+			break ;
+#elif	(SW_AEP == 2)
+		case CHR_I:
+			vTB_ReRegister();
+			break ;
+		case CHR_i:
+			vIdentityReportAll() ;
+			break ;
+#endif
+
+#if		(halHAS_M90E26 > 0)
+		case CHR_d:
+			m90e26Report() ;
+			ssd1306Report() ;
+			break ;
+#endif
 
 		default:	PRINT("key=0x%03X\r", cCmd) ;
 		}
