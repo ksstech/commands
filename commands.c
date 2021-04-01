@@ -388,7 +388,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 
 	#elif	(HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
-			if (cCmd - CHR_0 < configHAL_GPIO_DIG_OUT) {
+			if (cCmd - CHR_0 < halGP_DIG_OUT) {
 				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
 			} else {
 				printfx("%c", CHR_BEL) ;
