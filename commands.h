@@ -40,7 +40,6 @@ typedef	struct	cmnd_t {
 
 // ###################################### Global variables #########################################
 
-extern	const char * const FlagNames[] ;
 
 // ################################### GLOBAL Function Prototypes ##################################
 

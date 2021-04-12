@@ -46,15 +46,15 @@
 	#include	"m90e26_cmds.h"
 #endif
 
-#if		(halHAS_DS18X20 > 0)
-	#include	"ds18x20_cmds.h"
-#endif
 
 #if		(halHAS_PCA9555 > 0)
 	#include	"pca9555.h"
 #endif
 
 #if		(halHAS_ONEWIRE > 0)
+	#if	(halHAS_DS18X20 > 0)
+	#include	"ds18x20_cmds.h"
+	#endif
 	#include	"onewire_platform.h"
 #endif
 
