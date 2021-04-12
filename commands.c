@@ -60,9 +60,10 @@
 
 #include	<string.h>
 
-#define	debugFLAG					0xC000
+#define	debugFLAG					0xC002
 
 #define	debugCMND					(debugFLAG & 0x0001)
+#define	debugLEVEL					(debugFLAG & 0x0002)
 
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
@@ -524,6 +525,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_c:
 			++OWflags.Level ;
+			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
 			break ;
 		case CHR_d:
 			ds248xReportAll() ;
