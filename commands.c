@@ -114,7 +114,7 @@ static const char	HelpMessage[] = {
 	"\t(T)imer/Scatter Info\n"
 	"\t(U)pgrade Firmware\n"
 
-	#if	(configHAL_XXX_XXX_OUT > 0)
+	#if	(halXXX_XXX_OUT > 0)
 	"\t(0-7) Trigger actuator channel 'x'\n"
 	"\t(A)ctuators reload\n"
 	#endif
@@ -169,7 +169,7 @@ static const char	HelpMessage[] = {
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
 
-#if		(configHAL_XXX_XXX_OUT > 0)
+#if		(halXXX_XXX_OUT > 0)
 	"\t(a)ctuators status\n"
 #endif
 
@@ -388,7 +388,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 
 	#elif	(HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
-			if (cCmd - CHR_0 < halGP_DIG_OUT) {
+			if (cCmd - CHR_0 < halSOC_DIG_OUT) {
 				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
 			} else {
 				printfx("%c", CHR_BEL) ;
@@ -403,7 +403,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	#endif
 			break ;
 
-	#if	(configHAL_XXX_XXX_OUT > 0)
+	#if	(halXXX_XXX_OUT > 0)
 		case CHR_A:	vActuatorsIdent() ;								break ;
 		case CHR_a:	vTaskActuatorReport() ;							break ;
 	#endif
