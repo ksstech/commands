@@ -528,7 +528,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
 			break ;
 		case CHR_d:
-			ds248xReportAll() ;
+			ds248xReportAll(1) ;
 			break ;
 	#endif
 		case CHR_o:
