@@ -122,7 +122,7 @@ static const char	HelpMessage[] = {
 
 	#if	(halHAS_M90E26 > 0) || (halHAS_M90E36 > 0)
 	"\t(A)utomatic adjustment\n"
-		#if	(halHAS_M90E36 > 0)
+		#if	(halHAS_M90E26 > 0)
 		"\t    Calibrate M90E26's\n"
 		#endif
 		#if	(halHAS_M90E36 > 0)
@@ -394,6 +394,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			} else {
 				printfx("%c", CHR_BEL) ;
 			}
+
 	#elif	(HW_VARIANT == HW_EM1P2)
 			if (cCmd - CHR_0 < CALIB_NUM) {
 				m90e26Report() ;
@@ -517,6 +518,13 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 #endif
 
+#if		(halHAS_M90E26 > 0)
+		case CHR_d:
+			m90e26Report() ;
+			ssd1306Report() ;
+			break ;
+#endif
+
 #if		(halHAS_ONEWIRE > 0)
 	#if	(halHAS_DS18X20 > 0)
 		case CHR_D:
@@ -527,6 +535,8 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			++OWflags.Level ;
 			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
 			break ;
+	#endif
+	#if	(halHAS_DS248X > 0)
 		case CHR_d:
 			ds248xReportAll(1) ;
 			break ;
@@ -549,13 +559,6 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_i:
 			vIdentityReportAll() ;
-			break ;
-#endif
-
-#if		(halHAS_M90E26 > 0)
-		case CHR_d:
-			m90e26Report() ;
-			ssd1306Report() ;
 			break ;
 #endif
 
