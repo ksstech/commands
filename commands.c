@@ -73,7 +73,6 @@
 // ######################################## Macros ################################################
 
 #define	bufferMEMDUMP_SIZE			(1 * KILO)
-#define	configBUILD_LONG_COMMAND	1
 
 #define	cliBUF_SIZE					128
 
@@ -510,13 +509,11 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_w:
 			halWL_Report() ;
 			break ;
-#if		(configBUILD_LONG_COMMAND == 1)
 		case CHR_Z:
 		case CHR_z:
 			vCLIreset(&sCLI) ;
 			sCLI.bMode		= 1 ;
 			break ;
-#endif
 
 #if		(halHAS_M90E26 > 0)
 		case CHR_d:
