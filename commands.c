@@ -46,6 +46,9 @@
 	#include	"m90e26_cmds.h"
 #endif
 
+#if		(halHAS_MCP342X > 0)
+	#include	"mcp342x.h"
+#endif
 
 #if		(halHAS_PCA9555 > 0)
 	#include	"pca9555.h"
@@ -59,6 +62,7 @@
 #endif
 
 #include	<string.h>
+#include	<stdbool.h>
 
 #define	debugFLAG					0xC002
 
@@ -92,71 +96,18 @@ cmnd_t sCLIlist[] = {
 	{ "M90C", CmndM90C }, { "M90D", CmndM90D }, { "M90L", CmndM90L }, { "M90N", CmndM90N },
 	{ "M90O", CmndM90O }, { "M90P", CmndM90P }, { "M90S", CmndM90S }, { "M90Z", CmndM90Z },
 #endif
-
 #if		(halHAS_DS18X20 > 0)
 	{ "DS18", CmndDS18 },
 #endif
-
 #if		(configCONSOLE_UART > 0)
 	{ "UART", CmndUART },
 #endif
-
 } ;
 
 static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
 static	cli_t	sCLI ;
 
 static const char	HelpMessage[] = {
-	"Single character commands\n"
-#if		(!defined(NDEBUG) || defined(DEBUG))
-	"\tre(B)oot\n"
-	"\t(F)lag changes dis/enable\n"
-	"\t(T)imer/Scatter Info\n"
-	"\t(U)pgrade Firmware\n"
-
-	#if	(halXXX_XXX_OUT > 0)
-	"\t(0-7) Trigger actuator channel 'x'\n"
-	"\t(A)ctuators reload\n"
-	#endif
-
-	#if	(halHAS_M90E26 > 0) || (halHAS_M90E36 > 0)
-	"\t(A)utomatic adjustment\n"
-		#if	(halHAS_M90E26 > 0)
-		"\t    Calibrate M90E26's\n"
-		#endif
-		#if	(halHAS_M90E36 > 0)
-		"\t    Calibrate M90E36's\n"
-		#endif
-	"\t(0-2) load predefined config 'x'\n"
-	#endif
-
-	#if	(halHAS_DS248X > 0)
-	"\t(D)ebug 1W Channels\n"
-	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
-	#endif
-
-	#if	defined(ESP_PLATFORM)
-	"\tc-T Generate WatchDog timeout\n"
-	"\tc-U generate Invalid memory access crash\n"
-	#endif
-#endif
-
-#if		defined(ESP_PLATFORM)
-	"\tc-A Boot OTA #1 FW as STA\n"
-	#if (fotaMAX_OTA_PARTITIONS > 2)
-	"\tc-B Boot OTA #2 FW as STA\n"
-	#endif
-	#if (fotaMAX_OTA_PARTITIONS > 3)
-	"\tc-C Boot OTA #3 FW as STA\n"
-	#endif
-	"\tc-P switch Platform & reboot\n"
-	"\tc-Q Toggle QOS 0->1->2->0\n"
-	"\tc-R Revert to previous FW\n"
-	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
-#endif
-
-// ##################### non lethal command options
-
 	"\t(b)lob report\n"
 	"\t(f)lags Status\n"
 	"\t(h)elp screen display\n"
@@ -168,16 +119,49 @@ static const char	HelpMessage[] = {
 	"\t(t)asks statistics\n"
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
+	"EXT\tzMQTT addr port\t\t{en/disable local broker}\n"
+	"EXT\tzWIFI ssid pswd\t\t{set wifi credentials}\n"
+	"EXT\tzNWMO mode (0->3)\t\{set network mode}\n"
+	"EXT\tzRULE {sense|mode|rule text to decode}\n"
+
+#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\tre(B)oot\n"
+	"\t(F)lag changes dis/enable\n"
+	"\t(T)imer/Scatter Info\n"
+	"\t(U)pgrade Firmware\n"
+	"EXT\tzPEEK addr length\t\{dump section of memory}\n"
+#endif
+
+#if		(configCONSOLE_UART > 0)
+	"EXT\tzUART chan speed\t\t{set baudrate}\n"
+#endif
+
+#if		defined(ESP_PLATFORM)
+	"ESP32 Specific\n"
+	"\tc-A Boot OTA #1 FW as STA\n"
+	#if (fotaMAX_OTA_PARTITIONS > 2)
+	"\tc-B Boot OTA #2 FW as STA\n"
+	#endif
+	#if (fotaMAX_OTA_PARTITIONS > 3)
+	"\tc-C Boot OTA #3 FW as STA\n"
+	#endif
+	"\tc-P switch Platform & reboot\n"
+	"\tc-Q Toggle QOS 0->1->2->0\n"
+	"\tc-R Revert to previous FW\n"
+	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
+	#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\tc-T Generate WatchDog timeout\n"
+	"\tc-U generate Invalid memory access crash\n"
+	#endif
+	"\t(p)artitions report\n"
+#endif
 
 #if		(halXXX_XXX_OUT > 0)
 	"\t(a)ctuators status\n"
-#endif
-
-
-#if		(halHAS_M90E26 > 0)
-	"\t ### M90E26 ###\n"
-	"\t(d)ebug M90E26 config\n"
-	"\t(d)ebug SSD1306 config\n"
+	#if	(!defined(NDEBUG) || defined(DEBUG))
+	"\t(0-7) Trigger actuator channel 'x'\n"
+	"\t(A)ctuators reload\n"
+	#endif
 #endif
 
 #if		(configUSE_IDENT > 0)
@@ -186,43 +170,32 @@ static const char	HelpMessage[] = {
 #endif
 
 #if		(halHAS_ONEWIRE > 0)
-	"\t ### 1-WIRE ###\n"
+	"1-Wire\n"
+	"\t(o)newire info\n"
 	#if	(halHAS_DS248X > 0)
-	"\t(d)ebug DS248X Configuration\n"
+	"\t(D)ebug 1W Channels\n"
+	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
 	#endif
-		"\t(o)newire info\n"
-#endif
-
-#if		defined(ESP_PLATFORM)
-	"\t(p)artitions report\n"
-#endif
-
-	"\nExtended commands, prefix with 'z'\n"
-	"\tMQTT addr port\t\t{en/disable local broker}\n"
-	"\tWIFI ssid pswd\t\t{set wifi credentials}\n"
-	"\tNWMO mode (0->3)\t\{set network mode}\n"
-	"\tRULE {sense|mode|rule text to decode}\n"
-
-#if		(configCONSOLE_UART > 0)
-	"\tUART chan speed\t\t{set baudrate}\n"
-#endif
-
-#if		(!defined(NDEBUG) || defined(DEBUG))
-	"\tPEEK addr length\t\{dump section of memory}\n"
-
 	#if	(halHAS_DS18X20 > 0)
-	"\tDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
+	"    EXT\tzDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
 	#endif
+#endif
 
-	#if	(halHAS_M90E26 > 0)
-	"\tM90C chan reg value\t{configure a register [+CRC]}\n"
-	"\tM90D\t\t\t{delete the NVS blob}\n"
-	"\tM90L chan value\t\t{set Live gain}\n"
-	"\tM90N chan value\t\t{set Neutral gain}\n"
-	"\tM90O chan\t\t{Current OFFSET adjust}\n"
-	"\tM90P chan\t\t{Power OFFSET adjust}\n"
-	"\tM90S chan index\t\t{save config to blob #}\n"
-	"\tM90Z chan\t\t{reset to defaults}\n"
+#if	(halHAS_M90E26 > 0)
+	"M90E26\n"
+	"\t(d)ebug M90E26[+SSD1306] config\n"
+	#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\t(A)utomatic adjustment\n"
+	"\t    Calibrate M90E26's\n"
+	"\t(0-2) load predefined config 'x'\n"
+	"EXT\tzM90C chan reg value\t{configure a register [+CRC]}\n"
+	"EXT\tzM90D\t\t\t{delete the NVS blob}\n"
+	"EXT\tzM90L chan value\t\t{set Live gain}\n"
+	"EXT\tzM90N chan value\t\t{set Neutral gain}\n"
+	"EXT\tzM90O chan\t\t{Current OFFSET adjust}\n"
+	"EXT\tzM90P chan\t\t{Power OFFSET adjust}\n"
+	"EXT\tzM90S chan index\t\t{save config to blob #}\n"
+	"EXT\tzM90Z chan\t\t{reset to defaults}\n"
 	#endif
 #endif
 	"\n"
@@ -458,6 +431,12 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_B:
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
+		case CHR_D:
+#if	(halHAS_DS18X20 > 0)
+			ds18x20ReadConvertAll(NULL) ;
+			ds18x20ScanAlarmsAll() ;
+#endif
+			break ;
 		case CHR_F:
 			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
 			VarsFlag |= varFLAG_FLAGS ;
@@ -467,6 +446,22 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_U:
 			xRtosSetStatus(flagAPP_UPGRADE) ;
+			break ;
+
+		case CHR_c:
+#if		(halHAS_ONEWIRE > 0)
+			++OWflags.Level ;
+			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
+#endif
+			break ;
+		case CHR_d:
+#if		(halHAS_M90E26 > 0)
+			m90e26Report() ;
+			ssd1306Report() ;
+#endif
+#if		(halHAS_MCP342X > 0)
+			mcp342xReportAll() ;
+#endif
 			break ;
 		case CHR_f:
 			sCLI.bForce	= 1 ;
@@ -484,6 +479,11 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_n:
 			xNetReportStats() ;
+			break ;
+		case CHR_o:
+#if		(halHAS_ONEWIRE > 0)
+			OWPlatformReportAll() ;
+#endif
 			break ;
 		case CHR_r:
 			vRulesDecode() ;
@@ -515,34 +515,6 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			sCLI.bMode		= 1 ;
 			break ;
 
-#if		(halHAS_M90E26 > 0)
-		case CHR_d:
-			m90e26Report() ;
-			ssd1306Report() ;
-			break ;
-#endif
-
-#if		(halHAS_ONEWIRE > 0)
-	#if	(halHAS_DS18X20 > 0)
-		case CHR_D:
-			ds18x20ReadConvertAll(NULL) ;
-			ds18x20ScanAlarmsAll() ;
-			break ;
-		case CHR_c:
-			++OWflags.Level ;
-			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
-			break ;
-	#endif
-	#if	(halHAS_DS248X > 0)
-		case CHR_d:
-			ds248xReportAll(1) ;
-			break ;
-	#endif
-		case CHR_o:
-			OWPlatformReportAll() ;
-			break ;
-#endif
-
 #if		(SW_AEP == 1)
 		case CHR_I:
 			vSW_ReRegister();
@@ -550,6 +522,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_i:
 			vID1_ReportAll() ;
 			break ;
+
 #elif	(SW_AEP == 2)
 		case CHR_I:
 			vTB_ReRegister();
