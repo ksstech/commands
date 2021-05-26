@@ -43,7 +43,7 @@
 #endif
 
 #if		(halHAS_M90E26 > 0)
-	#include	"m90e26_cmds.h"
+	#include	"m90e26.h"
 #endif
 
 #if		(halHAS_MCP342X > 0)
@@ -55,9 +55,6 @@
 #endif
 
 #if		(halHAS_ONEWIRE > 0)
-	#if	(halHAS_DS18X20 > 0)
-	#include	"ds18x20_cmds.h"
-	#endif
 	#include	"onewire_platform.h"
 #endif
 
@@ -92,13 +89,7 @@ int32_t CmndPEEK(cli_t * psCLI) ;
 cmnd_t sCLIlist[] = {
 	{ "PEEK", CmndPEEK }, { "WIFI", CmndWIFI }, { "NWMO", CmndNWMO }, { "MQTT", CmndMQTT },
 	{ "CMND", CmndCMND },
-#if		(HW_VARIANT == HW_EM1P2)
-	{ "M90C", CmndM90C }, { "M90D", CmndM90D }, { "M90L", CmndM90L }, { "M90N", CmndM90N },
-	{ "M90O", CmndM90O }, { "M90P", CmndM90P }, { "M90S", CmndM90S }, { "M90Z", CmndM90Z },
-#endif
-#if		(halHAS_DS18X20 > 0)
-	{ "DS18", CmndDS18 },
-#endif
+
 #if		(configCONSOLE_UART > 0)
 	{ "UART", CmndUART },
 #endif
@@ -176,9 +167,6 @@ static const char	HelpMessage[] = {
 	"\t(D)ebug 1W Channels\n"
 	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
 	#endif
-	#if	(halHAS_DS18X20 > 0)
-	"    EXT\tzDS18 {RDT|RDSP|WRSP|MODE} {Lchan} {Lo Hi Res}\n"
-	#endif
 #endif
 
 #if	(halHAS_M90E26 > 0)
@@ -190,12 +178,8 @@ static const char	HelpMessage[] = {
 	"\t(0-2) load predefined config 'x'\n"
 	"EXT\tzM90C chan reg value\t{configure a register [+CRC]}\n"
 	"EXT\tzM90D\t\t\t{delete the NVS blob}\n"
-	"EXT\tzM90L chan value\t\t{set Live gain}\n"
-	"EXT\tzM90N chan value\t\t{set Neutral gain}\n"
-	"EXT\tzM90O chan\t\t{Current OFFSET adjust}\n"
 	"EXT\tzM90P chan\t\t{Power OFFSET adjust}\n"
 	"EXT\tzM90S chan index\t\t{save config to blob #}\n"
-	"EXT\tzM90Z chan\t\t{reset to defaults}\n"
 	#endif
 #endif
 	"\n"
