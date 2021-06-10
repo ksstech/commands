@@ -387,7 +387,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_SYN:															// c-V
 			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
-			IF_TRACK(debugTRACK, "Reset config & restart") ;
+			IF_TRACK(debugTRACK, "Reset config & restart\n") ;
 			break ;
 		case CHR_b: {
 			#define	blobBUFFER_SIZE			1024
