@@ -240,7 +240,7 @@ int32_t CmndPEEK(cli_t * psCLI) {
 
 int32_t	xCLImatch(cli_t * psCLI) {
 	for (int32_t Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
-		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SIZEOF_MEMBER(cmnd_t, cmnd)) ;
+		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SO_MEM(cmnd_t, cmnd)) ;
 		if (xstrncmp(psCLI->pcParse, psCLI->pasList[Idx].cmnd, Len, 0) == 1) {
 			psCLI->pcParse += Len ;
 			return Idx ;
@@ -253,7 +253,7 @@ void	vCLIreset(cli_t * psCLI) {
 	psCLI->pcStore	= psCLI->pcParse	= psCLI->pcBeg = CLIbuf ;
 	sCLI.u8BSize	= cliBUF_SIZE ;
 	sCLI.pasList	= sCLIlist ;
-	sCLI.u8LSize	= NUM_OF_MEMBERS(sCLIlist) ;
+	sCLI.u8LSize	= NO_MEM(sCLIlist) ;
 	psCLI->bMode	= 0 ;
 	memset(psCLI->pcBeg, 0, psCLI->u8BSize) ;
 }
@@ -324,14 +324,9 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	} else {
 		switch (cCmd) {
 	// ########################### Unusual (possibly dangerous) options
-
-#if		(!defined(NDEBUG) || defined(DEBUG))			// Diagnostic related options
-		case CHR_DC4:
-			while(1) ; 									// generate watchdog timeout
-			break ;
-		case CHR_NAK:
-			*((char *) 0xFFFFFFFF) = 1 ; 				// invalid memory access
-			break ;
+#if		(!defined(NDEBUG) || defined(DEBUG))
+		case CHR_DC4: while(1); break ;					// generate watchdog timeout
+		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break ;
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -340,32 +335,38 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-	#if		(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
+			#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 			xActuatorLoad(cCmd - CHR_0 + 8, 1, 0, 6000, 0, 0) ;
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 
-	#elif	(HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
-			if (cCmd - CHR_0 < halSOC_DIG_OUT) {
-				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
-			} else {
-				printfx("%c", CHR_BEL) ;
-			}
+			#elif (HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
+			if (cCmd - CHR_0 < halSOC_DIG_OUT) xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
+			else printfx("%c", CHR_BEL) ;
 
-	#elif	(HW_VARIANT == HW_EM1P2)
+			#elif (HW_VARIANT == HW_EM1P2)
 			if (cCmd - CHR_0 < CALIB_NUM) {
 				m90e26Report() ;
 				m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
 				m90e26LoadNVSConfig(1, cCmd - CHR_0) ;
 				m90e26Report() ;
 			}
-	#endif
+			#endif
 			break ;
 
-	#if	(halXXX_XXX_OUT > 0)
-		case CHR_A:	vActuatorsIdent() ;								break ;
-		case CHR_a:	vTaskActuatorReport() ;							break ;
-	#endif
-#endif
+		case CHR_A:
+			#if	(halXXX_XXX_OUT > 0)
+			vActuatorsIdent() ;
+			#endif
+			#if (halHAS_M90E26 > 0)
+			vActuatorsIdent() ;
+			#endif
+			break ;
+
+		case CHR_a:
+			#if	(halXXX_XXX_OUT > 0)
+			vTaskActuatorReport() ;
+			#endif
+			break ;
 
 #if		defined(ESP_PLATFORM)							// ESP32 Specific options
 		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
@@ -382,12 +383,9 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			VarsFlag |= varFLAG_QOSLEVEL ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
-		case CHR_DC2:															// c-R
-			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT) ;
-			break ;
+		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break ;// c-R
 		case CHR_SYN:															// c-V
 			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
-			IF_TRACK(debugTRACK, "Reset config & restart\n") ;
 			break ;
 		case CHR_b: {
 			#define	blobBUFFER_SIZE			1024
@@ -398,39 +396,31 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
 			SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
-	#if		(HW_VARIANT == HW_EM1P2)
+			#if	(HW_VARIANT == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
-	#endif
+			#endif
 			free(pBuffer) ;
 			break ;
 		}
-		case CHR_p:
-			halFOTA_ReportPartitions() ;
-			break ;
+		case CHR_p: halFOTA_ReportPartitions(); break ;
 #endif
 
 		// ############################ Normal (non-dangerous) options
 
-		case CHR_B:
-			xRtosSetStatus(flagAPP_RESTART) ;
-			break ;
+		case CHR_B: xRtosSetStatus(flagAPP_RESTART) ; break ;
 		case CHR_D:
-#if	(halHAS_DS18X20 > 0)
-			ds18x20ReadConvertAll(NULL) ;
-			ds18x20ScanAlarmsAll() ;
+#if		(halHAS_DS18X20 > 0)
+			OWP_TempAllInOne(NULL) ;
+			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 #endif
 			break ;
 		case CHR_F:
 			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
 			VarsFlag |= varFLAG_FLAGS ;
 			break ;
-		case CHR_T:
-			vSysTimerShow(0xFFFFFFFF) ;
-			break ;
-		case CHR_U:
-			xRtosSetStatus(flagAPP_UPGRADE) ;
-			break ;
+		case CHR_T: vSysTimerShow(0xFFFFFFFF) ; break ;
+		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE) ; break ;
 
 		case CHR_c:
 #if		(halHAS_ONEWIRE > 0)
@@ -439,45 +429,33 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 #endif
 			break ;
 		case CHR_d:
-#if		(halHAS_M90E26 > 0)
+			#if	(halHAS_M90E26 > 0)
 			m90e26Report() ;
+			#endif
+			#if	(halHAS_SSD1306 > 0)
 			ssd1306Report() ;
-#endif
-#if		(halHAS_MCP342X > 0)
+			#endif
+			#if	(halHAS_MCP342X > 0)
 			mcp342xReportAll() ;
-#endif
+			#endif
 			break ;
 		case CHR_f:
 			sCLI.bForce	= 1 ;
 			halVARS_ReportFlags(&sCLI) ;
 			sCLI.bForce	= 0 ;
 			break ;
-		case CHR_h:
-			printfx(HelpMessage) ;
-			break ;
-		case CHR_l:
-			halVARS_ReportGeoloc() ;
-			break ;
-		case CHR_m:
-			vRtosReportMemory() ;
-			break ;
-		case CHR_n:
-			xNetReportStats() ;
-			break ;
+		case CHR_h: printfx(HelpMessage) ; break ;
+		case CHR_l: halVARS_ReportGeoloc() ; break ;
+		case CHR_m: vRtosReportMemory() ; break ;
+		case CHR_n: xNetReportStats() ; break ;
 		case CHR_o:
 #if		(halHAS_ONEWIRE > 0)
-			OWPlatformReportAll() ;
+			OWP_Report() ;
 #endif
 			break ;
-		case CHR_r:
-			vRulesDecode() ;
-			break ;
-		case CHR_s:
-			vTaskSensorsReport() ;
-			break ;
-		case CHR_t:
-			xRtosReportTasksNew(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ;
-			break;
+		case CHR_r: vRulesDecode() ; break ;
+		case CHR_s: vTaskSensorsReport() ; break ;
+		case CHR_t: xRtosReportTasksNew(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ; break ;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
@@ -490,33 +468,18 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
-		case CHR_w:
-			halWL_Report() ;
-			break ;
+		case CHR_w: halWL_Report() ; break ;
 		case CHR_Z:
-		case CHR_z:
-			vCLIreset(&sCLI) ;
-			sCLI.bMode		= 1 ;
-			break ;
+		case CHR_z: vCLIreset(&sCLI); sCLI.bMode = 1; break ;
 
 #if		(SW_AEP == 1)
-		case CHR_I:
-			vSW_ReRegister();
-			break ;
-		case CHR_i:
-			vID1_ReportAll() ;
-			break ;
-
+		case CHR_I: vSW_ReRegister(); break ;
+		case CHR_i: vID1_ReportAll(); break ;
 #elif	(SW_AEP == 2)
-		case CHR_I:
-			vTB_ReRegister();
-			break ;
-		case CHR_i:
-			vIdentityReportAll() ;
-			break ;
+		case CHR_I: vTB_ReRegister(); break ;
+		case CHR_i: vIdentityReportAll(); break ;
 #endif
-
-		default:	printfx("key=0x%03X\r", cCmd) ;
+		default: printfx("key=0x%03X\r", cCmd);
 		}
 	}
 	halVARS_ReportFlags(&sCLI) ;
