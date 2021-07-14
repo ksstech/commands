@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include	"x_struct_union.h"							// x_time x_definitions stdint time
+#include	"struct_union.h"							// x_time definitions stdint time
 
 #include	<stdbool.h>
 

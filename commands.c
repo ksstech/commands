@@ -5,7 +5,7 @@
 #include	"hal_variables.h"
 #include	"commands.h"
 
-#include	"FreeRTOS_Support.h"						// freertos statistics x_complex_vars x_struct_unions x_time x_definitions stdint time
+#include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include	"actuators.h"
 
 #include	"task_sitewhere.h"
@@ -87,9 +87,7 @@ int32_t CmndPEEK(cli_t * psCLI) ;
 // ##################################### Local variables ##########################################
 
 cmnd_t sCLIlist[] = {
-	{ "PEEK", CmndPEEK }, { "WIFI", CmndWIFI }, { "NWMO", CmndNWMO }, { "MQTT", CmndMQTT },
-	{ "CMND", CmndCMND },
-
+	{"PEEK",CmndPEEK},{"WIFI",CmndWIFI},{"NWMO",CmndNWMO},{"MQTT",CmndMQTT},{"CMND",CmndCMND},
 #if		(configCONSOLE_UART > 0)
 	{ "UART", CmndUART },
 #endif
@@ -184,9 +182,6 @@ static const char	HelpMessage[] = {
 #endif
 	"\n"
 } ;
-
-// ############################### General status reporting functions ##############################
-
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
@@ -316,12 +311,9 @@ void	vControlReportTimeout(void) ;
 void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho ;
 	halVARS_ReportFlags(&sCLI) ;
-	if (cCmd == CHR_NUL) {
-		return ;
-	}
-	if (sCLI.bMode) {
-		xCommandBuffer(&sCLI, cCmd) ;
-	} else {
+	if (cCmd == CHR_NUL) return ;
+	if (sCLI.bMode)  xCommandBuffer(&sCLI, cCmd) ;
+	else {
 		switch (cCmd) {
 	// ########################### Unusual (possibly dangerous) options
 #if		(!defined(NDEBUG) || defined(DEBUG))
@@ -367,6 +359,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vTaskActuatorReport() ;
 			#endif
 			break ;
+#endif
 
 #if		defined(ESP_PLATFORM)							// ESP32 Specific options
 		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
@@ -374,13 +367,13 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
 		case CHR_DLE:															// c-P
 			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
-			VarsFlag |= varFLAG_HOSTS ;
+			BlobsFlag |= varFLAG_HOSTS ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 		case CHR_DC1:															// c-Q (XON)
 			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
 								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
-			VarsFlag |= varFLAG_QOSLEVEL ;
+			BlobsFlag |= varFLAG_QOSLEVEL ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break ;// c-R
@@ -411,17 +404,13 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_B: xRtosSetStatus(flagAPP_RESTART) ; break ;
 		case CHR_D:
 #if		(halHAS_DS18X20 > 0)
-			OWP_TempAllInOne(NULL) ;
+			OWP_DS18X20Ai1(NULL) ;
 			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 #endif
 			break ;
-		case CHR_F:
-			sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ;
-			VarsFlag |= varFLAG_FLAGS ;
-			break ;
+		case CHR_F: sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ; BlobsFlag |= varFLAG_FLAGS ; break ;
 		case CHR_T: vSysTimerShow(0xFFFFFFFF) ; break ;
 		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE) ; break ;
-
 		case CHR_c:
 #if		(halHAS_ONEWIRE > 0)
 			++OWflags.Level ;
@@ -455,7 +444,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_r: vRulesDecode() ; break ;
 		case CHR_s: vTaskSensorsReport() ; break ;
-		case CHR_t: xRtosReportTasksNew(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ; break ;
+		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ; break ;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
