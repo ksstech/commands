@@ -8,20 +8,22 @@
 #include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include	"actuators.h"
 
-#include	"task_sitewhere.h"
-#include	"ident1.h"
+#if		(configUSE_IDENT == 1)
+	#include	"ident1.h"
+#elif	(configUSE_IDENT == 2)
+	#include	"ident2.h"
+#endif
 
-#include	"task_thingsboard.h"
-#include	"ident2.h"
+#include 	"printfx.h"
+#include	"syslog.h"
+#include	"systiming.h"
 
 #include	"x_http_server.h"
 #include	"x_string_general.h"						// xstrncmp()
 #include	"x_string_to_values.h"
+
 #include	"x_errors_events.h"
 #include	"x_builddefs.h"
-#include 	"printfx.h"
-#include	"syslog.h"
-#include	"systiming.h"
 #include	"x_telnet_server.h"
 
 #include	"hal_usart.h"
@@ -31,7 +33,9 @@
 
 // external modules that offer commands
 #include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
-#include	"paho_mqtt.h"
+
+#define 	MQTT_TASK				1
+#include	"MQTTClient.h"
 
 #if		(configUSE_RULES > 0)
 	#include	"rules_decode.h"
@@ -50,12 +54,12 @@
 	#include	"mcp342x.h"
 #endif
 
-#if		(halHAS_PCA9555 > 0)
-	#include	"pca9555.h"
-#endif
-
 #if		(halHAS_ONEWIRE > 0)
 	#include	"onewire_platform.h"
+#endif
+
+#if		(halHAS_PCA9555 > 0)
+	#include	"pca9555.h"
 #endif
 
 #include	<string.h>
@@ -452,8 +456,13 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
-			IF_EXEC_0(SW_AEP == 1, vSW_Report) ;
-			IF_EXEC_0(SW_AEP == 2, vTB_Report) ;
+		#if		(SW_AEP == 1)
+			#include	"task_sitewhere.h"
+			vSW_Report() ;
+		#elif	(SW_AEP == 2)
+			#include	"task_thingsboard.h"
+			vTB_Report() ;
+		#endif
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
@@ -463,10 +472,14 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 #if		(SW_AEP == 1)
 		case CHR_I: vSW_ReRegister(); break ;
-		case CHR_i: vID1_ReportAll(); break ;
 #elif	(SW_AEP == 2)
 		case CHR_I: vTB_ReRegister(); break ;
-		case CHR_i: vIdentityReportAll(); break ;
+#endif
+
+#if		(configUSE_IDENT == 1)
+		case CHR_i: vID1_ReportAll(); break ;
+#elif	(configUSE_IDENT == 2)
+		case CHR_i: vID2_ReportAll(); break ;
 #endif
 		default: printfx("key=0x%03X\r", cCmd);
 		}
