@@ -448,7 +448,7 @@ void	vCommandInterpret(int32_t cCmd, bool bEcho) {
 			break ;
 		case CHR_r: vRulesDecode() ; break ;
 		case CHR_s: vTaskSensorsReport() ; break ;
-		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,0,0,0,1,1,1,1,1,1,1,0xFFFFF), NULL, 0) ; break ;
+		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0) ; break ;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
