@@ -123,7 +123,6 @@ static const char	HelpMessage[] = {
 
 #if		(!defined(NDEBUG) || defined(DEBUG))
 	"\tre(B)oot\n"
-	"\t(F)lag changes dis/enable\n"
 	"\t(T)imer/Scatter Info\n"
 	"\t(U)pgrade Firmware\n"
 	"EXT\tzPEEK addr length\t\{dump section of memory}\n"
@@ -424,7 +423,6 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 		#endif
 			break ;
-		case CHR_F: sNVSvars.fFlags	= sNVSvars.fFlags ? 0 : 1 ; BlobsFlag |= varFLAG_FLAGS ; break ;
 
 		case CHR_T: vSysTimerShow(0xFFFFFFFF) ; break ;
 		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE) ; break ;
