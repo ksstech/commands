@@ -501,7 +501,6 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			#endif
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
-			xEpConfigIOSHOW();
 			break ;
 		case CHR_w:
 			halWL_Report();
