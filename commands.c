@@ -93,12 +93,8 @@ int32_t CmndPEEK(cli_t * psCLI) ;
 cmnd_t sCLIlist[] = {
 	{	"PEEK",	CmndPEEK	},
 	{	"WIFI",	CmndWIFI	},
-	{	"NWMO",	CmndNWMO	},
 	{	"MQTT",	CmndMQTT	},
 	{	"CMND",	CmndCMND	},
-#if		(configCONSOLE_UART > 0)
-	{	"UART",	CmndUART	},
-#endif
 } ;
 
 static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
@@ -118,7 +114,6 @@ static const char	HelpMessage[] = {
 	"\t(w)ifi Stats\n"
 	"EXT\tzMQTT addr port\t\t{en/disable local broker}\n"
 	"EXT\tzWIFI ssid pswd\t\t{set wifi credentials}\n"
-	"EXT\tzNWMO mode (0->3)\t\{set network mode}\n"
 	"EXT\tzCMND {ioset|sense|mode|rule text to decode}\n"
 
 #if		(!defined(NDEBUG) || defined(DEBUG))
@@ -126,10 +121,6 @@ static const char	HelpMessage[] = {
 	"\t(T)imer/Scatter Info\n"
 	"\t(U)pgrade Firmware\n"
 	"EXT\tzPEEK addr length\t\{dump section of memory}\n"
-#endif
-
-#if		(configCONSOLE_UART > 0)
-	"EXT\tzUART chan speed\t\t{set baudrate}\n"
 #endif
 
 #if		defined(ESP_PLATFORM)
