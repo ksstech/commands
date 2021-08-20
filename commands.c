@@ -8,12 +8,19 @@
 #include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include	"actuators.h"
 
+#if		(SW_AEP == 1)
+	#include	"task_sitewhere.h"
+#elif	(SW_AEP == 2)
+	#include	"task_thingsboard.h"
+#endif
+
 #if		(configUSE_IDENT == 1)
 	#include	"ident1.h"
 #elif	(configUSE_IDENT == 2)
 	#include	"ident2.h"
 #endif
 
+#include	"options.h"
 #include 	"printfx.h"
 #include	"syslog.h"
 #include	"systiming.h"
@@ -112,6 +119,7 @@ static const char	HelpMessage[] = {
 	"\t(t)asks statistics\n"
 	"\t(v)erbose system info\n"
 	"\t(w)ifi Stats\n"
+	"\t(O)ptions display\n"
 	"EXT\tzMQTT addr port\t\t{en/disable local broker}\n"
 	"EXT\tzWIFI ssid pswd\t\t{set wifi credentials}\n"
 	"EXT\tzCMND {ioset|sense|mode|rule text to decode}\n"
@@ -217,10 +225,10 @@ int CmndParseAddrSRAM(cli_t * psCLI, void ** pAddr) {
 }
 
 int CmndPEEK(cli_t * psCLI) {
-	void *		Addr ;
-	uint32_t	Size ;
+	void * Addr ;
 	int iRV = CmndParseAddrMEM(psCLI, &Addr) ;
 	if (iRV != erFAILURE) {
+		uint32_t	Size ;
 		char * pTmp = pcStringParseValueRange(psCLI->pcParse, (px_t) &Size, vfUXX, vs32B, sepSPACE, (x32_t) 1, (x32_t) 1024) ;
 		if (pTmp != pcFAILURE) {
 			printfx("PEEK %p %u\n%'+B", Addr, Size, Size, Addr) ;
@@ -232,7 +240,7 @@ int CmndPEEK(cli_t * psCLI) {
 }
 
 int	xCLImatch(cli_t * psCLI) {
-	for (int32_t Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
+	for (int Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
 		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SO_MEM(cmnd_t, cmnd)) ;
 		if (xstrncmp(psCLI->pcParse, psCLI->pasList[Idx].cmnd, Len, 0) == 1) {
 			psCLI->pcParse += Len ;
@@ -255,20 +263,16 @@ void vCLIinit(void) { vCLIreset(&sCLI) ; }
 
 static char caBS[] = { CHR_BS, CHR_SPACE, CHR_BS, CHR_NUL } ;
 
-int	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
+int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 	int iRV = erSUCCESS ;
-	if (cCmd == CHR_CR || cCmd == CHR_NUL) {			// terminating char received
-		*psCLI->pcStore	= CHR_NUL ;
-		if (psCLI->bEcho) {
-			printfx("\n") ;
-		}
+	if (cCmd == '\r' || cCmd == 0) {					// terminating char received
+		*psCLI->pcStore	= 0 ;
+		if (psCLI->bEcho) printfx("\n") ;
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
 		if (iRV > erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
 			if (psCLI->bEcho && iRV < erSUCCESS) {		// Failed ?
 				printfx("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
-			} else {
-				// command was successful
 			}
 		} else {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
@@ -277,16 +281,10 @@ int	xCommandBuffer(cli_t * psCLI, int32_t cCmd) {
 	} else if (cCmd == CHR_BS) {
 		if (psCLI->pcStore > psCLI->pcBeg) {
 			--psCLI->pcStore ;
-			if (psCLI->bEcho) {
-				printfx("%s", caBS) ;
-			}
-		} else {
-			// nothing in buffer so ignore
+			if (psCLI->bEcho) printfx("%s", caBS);
 		}
 	} else if (cCmd == CHR_ESC) {
-		if (psCLI->bEcho) {
-			printfx("\r%*.s\r", psCLI->u8BSize, "") ;
-		}
+		if (psCLI->bEcho) printfx("\r%*.s\r", psCLI->u8BSize, "");
 		vCLIreset(psCLI) ;
 	} else if (isprint(cCmd)) {
 		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1)) {	// plan for terminating NUL
@@ -309,12 +307,12 @@ void vControlReportTimeout(void) ;
 void vCommandInterpret(int32_t cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho ;
 	halVARS_ReportFlags(&sCLI) ;
-	if (cCmd == CHR_NUL) return ;
+	if (cCmd == 0) return ;
 	if (sCLI.bMode)  xCommandBuffer(&sCLI, cCmd) ;
 	else {
 		switch (cCmd) {
-	// ########################### Unusual (possibly dangerous) options
-#if		(!defined(NDEBUG) || defined(DEBUG))
+		// ########################### Unusual (possibly dangerous) options
+		#if	(!defined(NDEBUG) || defined(DEBUG))
 		case CHR_DC4: while(1); break ;					// generate watchdog timeout
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break ;
 		case CHR_0:
@@ -357,9 +355,9 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vTaskActuatorReport() ;
 			#endif
 			break ;
-#endif
+		#endif
 
-#ifdef	ESP_PLATFORM									// ESP32 Specific options
+		#ifdef	ESP_PLATFORM									// ESP32 Specific options
 		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
 		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
 		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
@@ -394,36 +392,50 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
 			SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
-		#if	(HW_VARIANT == HW_EM1P2)
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
-		#endif
+			#if	(HW_VARIANT == HW_EM1P2)
+				SizeBlob = blobBUFFER_SIZE ;
+				halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
+			#endif
 			free(pBuffer) ;
 			break ;
 		}
 		case CHR_p: halFOTA_ReportPartitions(); break ;
-#endif
+		#endif
 
 		// ############################ Normal (non-dangerous) options
 
-		case CHR_B: xRtosSetStatus(flagAPP_RESTART) ; break ;
-
+		case CHR_B:
+			xRtosSetStatus(flagAPP_RESTART);
+			break;
 		case CHR_D:
-		#if	(halHAS_DS18X20 > 0)
+			#if	(halHAS_DS18X20 > 0)
 			OWP_DS18X20Ai1(NULL) ;
 			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
-		#endif
+			#endif
 			break ;
-
-		case CHR_T: vSysTimerShow(0xFFFFFFFF) ; break ;
-		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE) ; break ;
+		case CHR_I:
+			#if	(SW_AEP == 1)
+			vSW_ReRegister();
+			#elif (SW_AEP == 2)
+			vTB_ReRegister();
+			#endif
+			break ;
+		case CHR_O:
+			vOptionsShow();
+			break;
+		case CHR_T:
+			vSysTimerShow(0xFFFFFFFF) ;
+			break ;
+		case CHR_U:
+			xRtosSetStatus(flagAPP_UPGRADE) ;
+			break ;
 
 		case CHR_c:
-#if		(halHAS_ONEWIRE > 0)
+			#if	(halHAS_ONEWIRE > 0)
 			++OWflags.Level ;
 			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
-#endif
-			break ;
+			#endif
+			break;
 		case CHR_d:
 			#if	(halHAS_M90E26 > 0)
 			m90e26Report() ;
@@ -435,28 +447,44 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			mcp342xReportAll() ;
 			#endif
 			break ;
-
 		case CHR_f:
 			sCLI.bForce	= 1 ;
 			halVARS_ReportFlags(&sCLI) ;
 			sCLI.bForce	= 0 ;
 			break ;
-
-		case CHR_h: printfx(HelpMessage) ; break ;
-		case CHR_l: halVARS_ReportGeoloc() ; break ;
-		case CHR_m: vRtosReportMemory() ; break ;
-		case CHR_n: xNetReportStats() ; break ;
-
-		case CHR_o:
-#if		(halHAS_ONEWIRE > 0)
-			OWP_Report() ;
-#endif
+		case CHR_h:
+			printfx(HelpMessage) ;
 			break ;
-
-		case CHR_r: vRulesDecode() ; break ;
-		case CHR_s: vTaskSensorsReport() ; break ;
-		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0) ; break ;
-
+		case CHR_i:
+			#if	(configUSE_IDENT == 1)
+			vID1_ReportAll();
+			#elif (configUSE_IDENT == 2)
+			vID2_ReportAll();
+			#endif
+			break ;
+		case CHR_l:
+			halVARS_ReportGeoloc() ;
+			break;
+		case CHR_m:
+			vRtosReportMemory();
+			break;
+		case CHR_n:
+			xNetReportStats();
+			break;
+		case CHR_o:
+			#if	(halHAS_ONEWIRE > 0)
+			OWP_Report() ;
+			#endif
+			break ;
+		case CHR_r:
+			vRulesDecode();
+			break;
+		case CHR_s:
+			vTaskSensorsReport();
+			break;
+		case CHR_t:
+			xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0);
+			break;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
@@ -464,34 +492,27 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			vSyslogReport() ;
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
-		#if		(SW_AEP == 1)
+			#if	(SW_AEP == 1)
 			#include	"task_sitewhere.h"
 			vSW_Report() ;
-		#elif	(SW_AEP == 2)
+			#elif (SW_AEP == 2)
 			#include	"task_thingsboard.h"
 			vTB_Report() ;
-		#endif
+			#endif
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			xEpConfigIOSHOW();
 			break ;
+		case CHR_w:
+			halWL_Report();
+			break;
 
-		case CHR_w: halWL_Report() ; break ;
 		case CHR_Z:
-		case CHR_z: vCLIreset(&sCLI); sCLI.bMode = 1; break ;
-
-#if		(SW_AEP == 1)
-		case CHR_I: vSW_ReRegister(); break ;
-#elif	(SW_AEP == 2)
-		case CHR_I: vTB_ReRegister(); break ;
-#endif
-
-#if		(configUSE_IDENT == 1)
-		case CHR_i: vID1_ReportAll(); break ;
-#elif	(configUSE_IDENT == 2)
-		case CHR_i: vID2_ReportAll(); break ;
-#endif
-		default: printfx("key=0x%03X\r", cCmd);
+		case CHR_z:
+			vCLIreset(&sCLI); sCLI.bMode = 1;
+			break;
+		default:
+			printfx("key=0x%03X\r", cCmd);
 		}
 	}
 	halVARS_ReportFlags(&sCLI) ;
