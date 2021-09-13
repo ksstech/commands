@@ -38,11 +38,7 @@
 #include	"hal_fota.h"
 #include	"hal_storage.h"
 
-// external modules that offer commands
-#include	"hal_network_cmds.h"						// x_struct_union x_time x_definitions stdint.h time.h
-
-#define 	MQTT_TASK				1
-#include	"MQTTClient.h"
+#include	"MQTTClient.h"								// QOSx levels
 
 #if		(configUSE_RULES > 0)
 	#include	"rules_decode.h"
@@ -85,52 +81,24 @@
 // ######################################## Macros ################################################
 
 #define	bufferMEMDUMP_SIZE			(1 * KILO)
-
 #define	cliBUF_SIZE					128
 
 // ############################### Forward function declarations ##################################
 
-int32_t CmndPEEK(cli_t * psCLI) ;
 
 // #################################### Public variables ##########################################
 
 
 // ##################################### Local variables ##########################################
 
-cmnd_t sCLIlist[] = {
-	{	"PEEK",	CmndPEEK	},
-	{	"WIFI",	CmndWIFI	},
-	{	"MQTT",	CmndMQTT	},
-	{	"CMND",	CmndCMND	},
-} ;
+#if	(cliUSE_TABLE == 1)
+cmnd_t sCLIlist[] = { {	"CMND",	CmndCMND }, } ;
+#endif
 
 static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
 static	cli_t	sCLI ;
 
 static const char	HelpMessage[] = {
-	"\t(b)lob report\n"
-	"\t(f)lags Status\n"
-	"\t(h)elp screen display\n"
-	"\t(l)ocation info\n"
-	"\t(m)emory info\n"
-	"\t(n)etwork (IP4) info\n"
-	"\t(r)ules display\n"
-	"\t(s)ensors statistics\n"
-	"\t(t)asks statistics\n"
-	"\t(v)erbose system info\n"
-	"\t(w)ifi Stats\n"
-	"\t(O)ptions display\n"
-	"EXT\tzMQTT addr port\t\t{en/disable local broker}\n"
-	"EXT\tzWIFI ssid pswd\t\t{set wifi credentials}\n"
-	"EXT\tzCMND {ioset|sense|mode|rule text to decode}\n"
-
-#if		(!defined(NDEBUG) || defined(DEBUG))
-	"\tre(B)oot\n"
-	"\t(T)imer/Scatter Info\n"
-	"\t(U)pgrade Firmware\n"
-	"EXT\tzPEEK addr length\t\{dump section of memory}\n"
-#endif
-
 #if		defined(ESP_PLATFORM)
 	"ESP32 Specific\n"
 	"\tc-A Boot OTA #1 FW as STA\n"
@@ -143,12 +111,34 @@ static const char	HelpMessage[] = {
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
-	"\tc-V Reboot current FW as APSTA (delete WIFI & VAR blobs)\n"
+	"\tc-V Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
+	"\tc-W Reboot current FW as [AP]STA (delete VARS blob)\n"
 	#if		(!defined(NDEBUG) || defined(DEBUG))
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
 	"\t(p)artitions report\n"
+#endif
+
+	"General\n"
+	"\t(b)lob report\n"
+	"\t(f)lags Status\n"
+	"\t(h)elp screen display\n"
+	"\t(l)ocation info\n"
+	"\t(m)emory info\n"
+	"\t(n)etwork (IP4) info\n"
+	"\t(o)ptions display\n"
+	"\t(r)ules display\n"
+	"\t(s)ensors statistics\n"
+	"\t(t)asks statistics\n"
+	"\t(v)erbose system info\n"
+	"\t(w)ifi Stats\n"
+	"EXT\tz{ioset|sense|mode|rule} {text to decode}\n"
+
+#if		(!defined(NDEBUG) || defined(DEBUG))
+	"\tre(B)oot\n"
+	"\t(T)imer/Scatter Info\n"
+	"\t(U)pgrade Firmware\n"
 #endif
 
 #if		(halXXX_XXX_OUT > 0)
@@ -166,11 +156,11 @@ static const char	HelpMessage[] = {
 
 #if		(halHAS_ONEWIRE > 0)
 	"1-Wire\n"
-	"\t(o)newire info\n"
 	#if	(halHAS_DS248X > 0)
+	"\t(C)DS248X flags level (0-1-2-3-0) increment\n"
 	"\t(D)ebug 1W Channels\n"
-	"\t(c)DS248X flags level (0-1-2-3-0) increment\n"
 	#endif
+	"\t(O)newire info\n"
 #endif
 
 #if	(halHAS_M90E26 > 0)
@@ -180,10 +170,6 @@ static const char	HelpMessage[] = {
 	"\t(A)utomatic adjustment\n"
 	"\t    Calibrate M90E26's\n"
 	"\t(0-2) load predefined config 'x'\n"
-	"EXT\tzM90C chan reg value\t{configure a register [+CRC]}\n"
-	"EXT\tzM90D\t\t\t{delete the NVS blob}\n"
-	"EXT\tzM90P chan\t\t{Power OFFSET adjust}\n"
-	"EXT\tzM90S chan index\t\t{save config to blob #}\n"
 	#endif
 #endif
 	"\n"
@@ -191,54 +177,7 @@ static const char	HelpMessage[] = {
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
-int CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
-	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
-	if (pTmp != pcFAILURE && (halCONFIG_inMEM(*pAddr) == 0)) {
-		psCLI->pcParse = pTmp ;
-		return erSUCCESS ;
-	}
-	return erFAILURE ;
-}
-
-int CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
-	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !halCONFIG_inFLASH(*pAddr), " erRANGE") ;
-	if (pTmp != pcFAILURE && halCONFIG_inFLASH(*pAddr)) {
-		psCLI->pcParse = pTmp ;
-		return erSUCCESS ;
-	}
-	return erFAILURE ;
-}
-
-int CmndParseAddrSRAM(cli_t * psCLI, void ** pAddr) {
-	char * pTmp = pcStringParseValue(psCLI->pcParse, (px_t) pAddr, vfUXX, vs32B, sepSPACE) ;
-	IF_PRINT(debugCMND && pTmp == pcFAILURE, " erFAILURE") ;
-	IF_PRINT(debugCMND && !halCONFIG_inSRAM(*pAddr), " erRANGE") ;
-	if ((pTmp != pcFAILURE) && halCONFIG_inSRAM(*pAddr)) {
-		psCLI->pcParse = pTmp ;
-		return erSUCCESS ;
-	}
-	return erFAILURE ;
-}
-
-int CmndPEEK(cli_t * psCLI) {
-	void * Addr ;
-	int iRV = CmndParseAddrMEM(psCLI, &Addr) ;
-	if (iRV != erFAILURE) {
-		uint32_t	Size ;
-		char * pTmp = pcStringParseValueRange(psCLI->pcParse, (px_t) &Size, vfUXX, vs32B, sepSPACE, (x32_t) 1, (x32_t) 1024) ;
-		if (pTmp != pcFAILURE) {
-			printfx("PEEK %p %u\n%'+B", Addr, Size, Size, Addr) ;
-			psCLI->pcParse = pTmp ;
-			return erSUCCESS ;
-		}
-	}
-	return iRV ;
-}
-
+#if	(cliUSE_TABLE == 1)
 int	xCLImatch(cli_t * psCLI) {
 	for (int Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
 		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SO_MEM(cmnd_t, cmnd)) ;
@@ -249,25 +188,29 @@ int	xCLImatch(cli_t * psCLI) {
 	}
 	return erFAILURE ;
 }
+#endif
 
 void vCLIreset(cli_t * psCLI) {
-	psCLI->pcStore	= psCLI->pcParse	= psCLI->pcBeg = CLIbuf ;
+	psCLI->pcStore	= psCLI->pcParse = psCLI->pcBeg = CLIbuf ;
 	sCLI.u8BSize	= cliBUF_SIZE ;
+#if	(cliUSE_TABLE == 1)
 	sCLI.pasList	= sCLIlist ;
 	sCLI.u8LSize	= NO_MEM(sCLIlist) ;
+#endif
 	psCLI->bMode	= 0 ;
 	memset(psCLI->pcBeg, 0, psCLI->u8BSize) ;
 }
 
 void vCLIinit(void) { vCLIreset(&sCLI) ; }
 
-static char caBS[] = { CHR_BS, CHR_SPACE, CHR_BS, CHR_NUL } ;
+char caBS[] = { CHR_BS, CHR_SPACE, CHR_BS, CHR_NUL } ;
 
 int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 	int iRV = erSUCCESS ;
 	if (cCmd == '\r' || cCmd == 0) {					// terminating char received
 		*psCLI->pcStore	= 0 ;
 		if (psCLI->bEcho) printfx("\n") ;
+#if	(cliUSE_TABLE == 1)
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
 		if (iRV > erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
@@ -277,11 +220,14 @@ int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 		} else {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
 		}
+#else
+		xRulesProcessText(psCLI->pcParse);
+#endif
 		vCLIreset(psCLI) ;
 	} else if (cCmd == CHR_BS) {
 		if (psCLI->pcStore > psCLI->pcBeg) {
 			--psCLI->pcStore ;
-			if (psCLI->bEcho) printfx("%s", caBS);
+			if (psCLI->bEcho) printfx("%c", CHR_BS);	// printfx("%s", caBS);
 		}
 	} else if (cCmd == CHR_ESC) {
 		if (psCLI->bEcho) printfx("\r%*.s\r", psCLI->u8BSize, "");
@@ -293,9 +239,8 @@ int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 			printfx("%c", CHR_BEL) ;
 		}
 	}
-	if (psCLI->bEcho && (psCLI->pcStore > psCLI->pcBeg)) {
+	if (psCLI->bEcho && (psCLI->pcStore > psCLI->pcBeg))
 		printfx("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg) ;
-	}
 	return iRV ;
 }
 
@@ -304,9 +249,9 @@ void halWL_ReportLx(void) ;
 void vTaskSensorsReport(void) ;
 void vControlReportTimeout(void) ;
 
-void vCommandInterpret(int32_t cCmd, bool bEcho) {
+void vCommandInterpret(int cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho ;
-	halVARS_ReportFlags(&sCLI) ;
+	halVARS_ReportFlags(0) ;
 	if (cCmd == 0) return ;
 	if (sCLI.bMode)  xCommandBuffer(&sCLI, cCmd) ;
 	else {
@@ -362,30 +307,34 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
 		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
 
-		case CHR_DLE:															// c-P
+		case CHR_DLE:	// c-P
 			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
 			BlobsFlag |= varFLAG_HOSTS ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 
-		case CHR_DC1:															// c-Q (XON)
+		case CHR_DC1:	// c-Q (XON)
 			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
 								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
 			BlobsFlag |= varFLAG_QOSLEVEL ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 
-		case CHR_DC2:															// c-R
+		case CHR_DC2:	// c-R
 			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT);
 			break;
 
-		case CHR_SYN:															// c-V
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_WIFI | fotaBOOT_REBOOT | fotaERASE_VARS) ;
+		case CHR_SYN:	// c-V Delete WIFI & VARS blobs, reboot same firmware
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(),  fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT) ;
+			break ;
+
+		case CHR_ETB:	// c-W Deleted VARS blob only, reboot SAME firmware
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT) ;
 			break ;
 
 		case CHR_b: {
 			#define	blobBUFFER_SIZE			1024
-			uint8_t * pBuffer = malloc(blobBUFFER_SIZE) ;
+			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE) ;
 			size_t	SizeBlob = blobBUFFER_SIZE ;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob) ;
 			SizeBlob = blobBUFFER_SIZE ;
@@ -396,7 +345,7 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 				SizeBlob = blobBUFFER_SIZE ;
 				halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
 			#endif
-			free(pBuffer) ;
+			vRtosFree(pBuffer) ;
 			break ;
 		}
 		case CHR_p: halFOTA_ReportPartitions(); break ;
@@ -406,6 +355,12 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_B:
 			xRtosSetStatus(flagAPP_RESTART);
+			break;
+		case CHR_C:
+			#if	(halHAS_ONEWIRE > 0)
+			++OWflags.Level ;
+			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
+			#endif
 			break;
 		case CHR_D:
 			#if	(halHAS_DS18X20 > 0)
@@ -421,8 +376,10 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			#endif
 			break ;
 		case CHR_O:
-			vOptionsShow();
-			break;
+			#if	(halHAS_ONEWIRE > 0)
+			OWP_Report() ;
+			#endif
+			break ;
 		case CHR_T:
 			vSysTimerShow(0xFFFFFFFF) ;
 			break ;
@@ -430,12 +387,6 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			xRtosSetStatus(flagAPP_UPGRADE) ;
 			break ;
 
-		case CHR_c:
-			#if	(halHAS_ONEWIRE > 0)
-			++OWflags.Level ;
-			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
-			#endif
-			break;
 		case CHR_d:
 			#if	(halHAS_M90E26 > 0)
 			m90e26Report() ;
@@ -448,9 +399,7 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			#endif
 			break ;
 		case CHR_f:
-			sCLI.bForce	= 1 ;
-			halVARS_ReportFlags(&sCLI) ;
-			sCLI.bForce	= 0 ;
+			halVARS_ReportFlags(1) ;
 			break ;
 		case CHR_h:
 			printfx(HelpMessage) ;
@@ -472,10 +421,8 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 			xNetReportStats();
 			break;
 		case CHR_o:
-			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report() ;
-			#endif
-			break ;
+			vOptionsShow();
+			break;
 		case CHR_r:
 			vRulesDecode();
 			break;
@@ -508,11 +455,12 @@ void vCommandInterpret(int32_t cCmd, bool bEcho) {
 
 		case CHR_Z:
 		case CHR_z:
-			vCLIreset(&sCLI); sCLI.bMode = 1;
+			vCLIreset(&sCLI);
+			sCLI.bMode = 1;
 			break;
 		default:
 			printfx("key=0x%03X\r", cCmd);
 		}
 	}
-	halVARS_ReportFlags(&sCLI) ;
+	halVARS_ReportFlags(0) ;
 }

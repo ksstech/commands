@@ -14,6 +14,7 @@ extern "C" {
 
 // ######################################## General MACROs #########################################
 
+#define	cliUSE_TABLE				0
 
 // ######################################### enumerations ##########################################
 
@@ -24,28 +25,27 @@ typedef struct __attribute__((packed)) cli_t {
 	char *			pcBeg ;								// Buffer beginning
 	char *			pcStore ;							// Buffer position
 	char *			pcParse ;
+#if	(cliUSE_TABLE == 1)
 	struct cmnd_t *	pasList ;							// Command List
+#endif
 	z64_t			z64Var ;
 	uint8_t			u8BSize ;
+#if	(cliUSE_TABLE == 1)
 	uint8_t			u8LSize ;							// Command List Size
+#endif
 	uint8_t			bMode	: 1 ;						// Long mode
-	uint8_t			bEcho	: 1 ;
-	uint8_t			bForce	: 1 ;						// force flags display
+	uint8_t			bEcho	: 1 ;						// echo CLI buffer
 } cli_t ;
 
 typedef	struct cmnd_t {
 	const char	cmnd[4] ;
-	int32_t	(* const hdlr) (cli_t *) ;
+	int	(* const hdlr) (cli_t *) ;
 } cmnd_t ;
 
 // ###################################### Global variables #########################################
 
 
 // ################################### GLOBAL Function Prototypes ##################################
-
-int	CmndParseAddrMEM(cli_t * psCLI, void ** pAddr) ;
-int	CmndParseAddrFLASH(cli_t * psCLI, void ** pAddr) ;
-int	CmndParseAddrSRAM(cli_t * psCLI, void ** pAddr) ;
 
 /**
  * CmndMatch() - Scan through a table of [sub]commands trying to find matching name
