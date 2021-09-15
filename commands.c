@@ -250,10 +250,9 @@ void vTaskSensorsReport(void) ;
 void vControlReportTimeout(void) ;
 
 void vCommandInterpret(int cCmd, bool bEcho) {
-	sCLI.bEcho = bEcho ;
-	halVARS_ReportFlags(0) ;
-	if (cCmd == 0) return ;
-	if (sCLI.bMode)  xCommandBuffer(&sCLI, cCmd) ;
+	sCLI.bEcho = bEcho;
+	if (cCmd == 0) return;
+	if (sCLI.bMode) xCommandBuffer(&sCLI, cCmd);
 	else {
 		switch (cCmd) {
 		// ########################### Unusual (possibly dangerous) options
@@ -309,14 +308,14 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_DLE:	// c-P
 			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
-			BlobsFlag |= varFLAG_HOSTS ;
+			SystemFlag |= varFLAG_HOSTS ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 
 		case CHR_DC1:	// c-Q (XON)
 			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
 								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
-			BlobsFlag |= varFLAG_QOSLEVEL ;
+			SystemFlag |= varFLAG_QOSLEVEL ;
 			xRtosSetStatus(flagAPP_RESTART) ;
 			break ;
 
@@ -462,5 +461,5 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			printfx("key=0x%03X\r", cCmd);
 		}
 	}
-	halVARS_ReportFlags(0) ;
+	halVARS_ReportFlags(0);
 }
