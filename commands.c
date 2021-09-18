@@ -221,7 +221,7 @@ int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
 		}
 #else
-		xRulesProcessText(psCLI->pcParse);
+		iRV = xRulesProcessText(psCLI->pcParse);
 #endif
 		vCLIreset(psCLI) ;
 	} else if (cCmd == CHR_BS) {
@@ -251,9 +251,11 @@ void vControlReportTimeout(void) ;
 
 void vCommandInterpret(int cCmd, bool bEcho) {
 	sCLI.bEcho = bEcho;
+	halVARS_ReportFlags(0);
 	if (cCmd == 0) return;
-	if (sCLI.bMode) xCommandBuffer(&sCLI, cCmd);
-	else {
+	if (sCLI.bMode) {
+		xCommandBuffer(&sCLI, cCmd);
+	} else {
 		switch (cCmd) {
 		// ########################### Unusual (possibly dangerous) options
 		#if	(!defined(NDEBUG) || defined(DEBUG))
@@ -357,8 +359,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 		case CHR_C:
 			#if	(halHAS_ONEWIRE > 0)
-			++OWflags.Level ;
-			IF_PRINT(debugLEVEL, "Level = %u\n", OWflags.Level) ;
+			OWP_SetDebugLevel(1);
 			#endif
 			break;
 		case CHR_D:
