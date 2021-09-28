@@ -59,6 +59,9 @@
 
 #if		(halHAS_ONEWIRE > 0)
 	#include	"onewire_platform.h"
+	#if	(halHAS_DS18X20 > 0)
+	#include	"ds18x20.h"
+	#endif
 #endif
 
 #if		(halHAS_PCA9555 > 0)
@@ -166,7 +169,7 @@ static const char	HelpMessage[] = {
 #if	(halHAS_M90E26 > 0)
 	"M90E26\n"
 	"\t(d)ebug M90E26[+SSD1306] config\n"
-	#if		(!defined(NDEBUG) || defined(DEBUG))
+	#if	(!defined(NDEBUG) || defined(DEBUG))
 	"\t(A)utomatic adjustment\n"
 	"\t    Calibrate M90E26's\n"
 	"\t(0-2) load predefined config 'x'\n"
@@ -354,9 +357,6 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		// ############################ Normal (non-dangerous) options
 
-		case CHR_B:
-			xRtosSetStatus(flagAPP_RESTART);
-			break;
 		case CHR_C:
 			#if	(halHAS_ONEWIRE > 0)
 			OWP_SetDebugLevel(1);
@@ -368,6 +368,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 			#endif
 			break ;
+		case CHR_B: xRtosSetStatus(flagAPP_RESTART); break;
 		case CHR_I:
 			#if	(SW_AEP == 1)
 			vSW_ReRegister();
@@ -377,7 +378,11 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break ;
 		case CHR_O:
 			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report() ;
+			OWP_Report();
+			#if (halHAS_DS18X20 > 0)
+			ds18x20StartAllInOne(NULL);
+			#endif
+			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 			#endif
 			break ;
 		case CHR_T:
