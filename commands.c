@@ -159,9 +159,8 @@ static const char	HelpMessage[] = {
 
 #if		(halHAS_ONEWIRE > 0)
 	"1-Wire\n"
-	#if	(halHAS_DS248X > 0)
-	"\t(C)DS248X flags level (0-1-2-3-0) increment\n"
-	"\t(D)ebug 1W Channels\n"
+	#if	(halHAS_DS18X20 > 0)
+	"\t(D)S18X20 device info\n"
 	#endif
 	"\t(O)newire info\n"
 #endif
@@ -357,18 +356,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		// ############################ Normal (non-dangerous) options
 
-		case CHR_C:
-			#if	(halHAS_ONEWIRE > 0)
-			OWP_SetDebugLevel(1);
-			#endif
-			break;
-		case CHR_D:
-			#if	(halHAS_DS18X20 > 0)
-			OWP_DS18X20Ai1(NULL) ;
-			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
-			#endif
-			break ;
 		case CHR_B: xRtosSetStatus(flagAPP_RESTART); break;
+//		case CHR_C: break;
+//		case CHR_D: break ;
 		case CHR_I:
 			#if	(SW_AEP == 1)
 			vSW_ReRegister();
@@ -385,12 +375,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
 			#endif
 			break ;
-		case CHR_T:
-			vSysTimerShow(0xFFFFFFFF) ;
-			break ;
-		case CHR_U:
-			xRtosSetStatus(flagAPP_UPGRADE) ;
-			break ;
+		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
+		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE); break;
 
 		case CHR_d:
 			#if	(halHAS_M90E26 > 0)
@@ -403,12 +389,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			mcp342xReportAll() ;
 			#endif
 			break ;
-		case CHR_f:
-			halVARS_ReportFlags(1) ;
-			break ;
-		case CHR_h:
-			printfx(HelpMessage) ;
-			break ;
+		case CHR_f: halVARS_ReportFlags(1); break;
+		case CHR_h: printfx(HelpMessage); break;
 		case CHR_i:
 			#if	(configUSE_IDENT == 1)
 			vID1_ReportAll();
@@ -416,27 +398,13 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vID2_ReportAll();
 			#endif
 			break ;
-		case CHR_l:
-			halVARS_ReportGeoloc() ;
-			break;
-		case CHR_m:
-			vRtosReportMemory();
-			break;
-		case CHR_n:
-			xNetReportStats();
-			break;
-		case CHR_o:
-			vOptionsShow();
-			break;
-		case CHR_r:
-			vRulesDecode();
-			break;
-		case CHR_s:
-			vTaskSensorsReport();
-			break;
-		case CHR_t:
-			xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0);
-			break;
+		case CHR_l: halVARS_ReportGeoloc(); break;
+		case CHR_m: vRtosReportMemory(); break;
+		case CHR_n: xNetReportStats(); break;
+		case CHR_o: vOptionsShow(); break;
+		case CHR_r: vRulesDecode(); break;
+		case CHR_s: vTaskSensorsReport(); break;
+		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
 		case CHR_v:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
@@ -454,17 +422,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
-		case CHR_w:
-			halWL_Report();
-			break;
-
+		case CHR_w: halWL_Report(); break;
 		case CHR_Z:
-		case CHR_z:
-			vCLIreset(&sCLI);
-			sCLI.bMode = 1;
-			break;
-		default:
-			printfx("key=0x%03X\r", cCmd);
+		case CHR_z: vCLIreset(&sCLI); sCLI.bMode = 1; break;
+		default: printfx("key=0x%03X\r", cCmd);
 		}
 	}
 	halVARS_ReportFlags(0);
