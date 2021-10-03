@@ -103,7 +103,7 @@ static	cli_t	sCLI ;
 
 static const char	HelpMessage[] = {
 #if		defined(ESP_PLATFORM)
-	"ESP32 Specific\n"
+	"ESP32 Specific:\n"
 	"\tc-A Boot OTA #1 FW as STA\n"
 	#if (fotaMAX_OTA_PARTITIONS > 2)
 	"\tc-B Boot OTA #2 FW as STA\n"
@@ -116,53 +116,62 @@ static const char	HelpMessage[] = {
 	"\tc-R Revert to previous FW\n"
 	"\tc-V Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
 	"\tc-W Reboot current FW as [AP]STA (delete VARS blob)\n"
-	#if		(!defined(NDEBUG) || defined(DEBUG))
+
+	#if (!defined(NDEBUG) || defined(DEBUG))
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
-	"\t(p)artitions report\n"
+
 #endif
 
-	"General\n"
-	"\t(b)lob report\n"
-	"\t(f)lags Status\n"
-	"\t(h)elp screen display\n"
-	"\t(l)ocation info\n"
-	"\t(m)emory info\n"
-	"\t(n)etwork (IP4) info\n"
-	"\t(o)ptions display\n"
-	"\t(r)ules display\n"
-	"\t(s)ensors statistics\n"
-	"\t(t)asks statistics\n"
-	"\t(v)erbose system info\n"
-	"\t(w)ifi Stats\n"
-	"EXT\tz{ioset|sense|mode|rule} {text to decode}\n"
-
-#if		(!defined(NDEBUG) || defined(DEBUG))
+#if	(!defined(NDEBUG) || defined(DEBUG))
+	"DEBUG only:\n"
+	#if	(halXXX_XXX_OUT > 0)
+	"\t(0-7) Trigger actuator channel 'x'\n"
+	"\t(A)ctuators reload\n"
+	#endif
 	"\tre(B)oot\n"
+	"\t(F)lags Status\n"
+	"\t(G)MAP start\n"
+	"\t(H)elp screen display\n"
+	"\t(L)ocation info\n"
+	"\t(M)emory info\n"
+	#if	(halHAS_ONEWIRE > 0)
+	"\t(O)newire info\n"
+	#endif
+	"\t(P)artitions report\n"
+	"\t(R)ules display\n"
+	"\t(S)ensors statistics\n"
 	"\t(T)imer/Scatter Info\n"
 	"\t(U)pgrade Firmware\n"
 #endif
 
-#if		(halXXX_XXX_OUT > 0)
-	"\t(a)ctuators status\n"
-	#if	(!defined(NDEBUG) || defined(DEBUG))
-	"\t(0-7) Trigger actuator channel 'x'\n"
-	"\t(A)ctuators reload\n"
+	"General:\n"
+	#if	(configUSE_IDENT > 0)
+	"\t(I)dent table\n"
 	#endif
-#endif
+	"\t(N)etwork (IP4) info\n"
+	"\t(W)ifi Stats\n"
 
-#if		(configUSE_IDENT > 0)
-	"\t(I)nit rules & ident\n"
-	"\t(i)dent table\n"
-#endif
+	#if	(halXXX_XXX_OUT > 0)
+	"\t(a)ctuators status\n"
+	#endif
+
+	"\t(b)lob report\n"
+	"\t(o)ptions display\n"
+	"\t(t)asks statistics\n"
+	"\t(v)erbose system info\n"
+	"Extended commands:\n"
+	"\tioset option para1 para2\n"
+	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
+	"\tmode /uri para1 [para2 .. [para6]]\n"
+	"\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
 
 #if		(halHAS_ONEWIRE > 0)
 	"1-Wire\n"
 	#if	(halHAS_DS18X20 > 0)
 	"\t(D)S18X20 device info\n"
 	#endif
-	"\t(O)newire info\n"
 #endif
 
 #if	(halHAS_M90E26 > 0)
@@ -259,10 +268,61 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		xCommandBuffer(&sCLI, cCmd);
 	} else {
 		switch (cCmd) {
+	#ifdef	ESP_PLATFORM									// ESP32 Specific options
+		case CHR_SOH: halFOTA_SetBootNumber(1, fotaBOOT_REBOOT); break;	// c-A
+		case CHR_STX: halFOTA_SetBootNumber(2, fotaBOOT_REBOOT); break;	// c-B
+		case CHR_ETX: halFOTA_SetBootNumber(3, fotaBOOT_REBOOT); break;	// c-C
+
+		case CHR_DLE:	// c-P
+			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD;
+			SystemFlag |= varFLAG_HOSTS;
+			xRtosSetStatus(flagAPP_RESTART);
+			break;
+
+		case CHR_DC1:	// c-Q (XON)
+			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
+						(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0;
+			SystemFlag |= varFLAG_QOSLEVEL;
+			xRtosSetStatus(flagAPP_RESTART);
+			break;
+
+		case CHR_DC2:	// c-R
+			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT);
+			break;
+
+		case CHR_SYN:	// c-V Delete WIFI & VARS blobs, reboot same firmware
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(),  fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
+			break;
+
+		case CHR_ETB:	// c-W Deleted VARS blob only, reboot SAME firmware
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT);
+			break;
+
+		case CHR_P: halFOTA_ReportPartitions(); break ;
+
+		case CHR_b: {
+			#define	blobBUFFER_SIZE			1024
+			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE) ;
+			size_t	SizeBlob = blobBUFFER_SIZE ;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob) ;
+			SizeBlob = blobBUFFER_SIZE ;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
+			SizeBlob = blobBUFFER_SIZE ;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
+			#if	(HW_VARIANT == HW_EM1P2)
+			SizeBlob = blobBUFFER_SIZE ;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
+			#endif
+			vRtosFree(pBuffer) ;
+			break ;
+		}
+	#endif
+
 		// ########################### Unusual (possibly dangerous) options
 		#if	(!defined(NDEBUG) || defined(DEBUG))
 		case CHR_DC4: while(1); break ;					// generate watchdog timeout
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break ;
+
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -291,10 +351,19 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_A:
 			#if	(halXXX_XXX_OUT > 0)
-			vActuatorsIdent() ;
+			vActuatorsIdent();
 			#endif
 			#if (halHAS_M90E26 > 0)
-			vActuatorsIdent() ;
+			vActuatorsIdent();
+			#endif
+			break;
+		case CHR_O:
+			#if	(halHAS_ONEWIRE > 0)
+			OWP_Report();
+			#if (halHAS_DS18X20 > 0)
+			ds18x20StartAllInOne(NULL);
+			#endif
+			OWP_ScanAlarmsFamily(OWFAMILY_28);
 			#endif
 			break ;
 
@@ -305,107 +374,33 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break ;
 		#endif
 
-		#ifdef	ESP_PLATFORM									// ESP32 Specific options
-		case CHR_SOH:	halFOTA_SetBootNumber(1, fotaBOOT_REBOOT) ;		break ;	// c-A
-		case CHR_STX:	halFOTA_SetBootNumber(2, fotaBOOT_REBOOT) ;		break ;	// c-B
-		case CHR_ETX:	halFOTA_SetBootNumber(3, fotaBOOT_REBOOT) ;		break ;	// c-C
-
-		case CHR_DLE:	// c-P
-			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD ;
-			SystemFlag |= varFLAG_HOSTS ;
-			xRtosSetStatus(flagAPP_RESTART) ;
-			break ;
-
-		case CHR_DC1:	// c-Q (XON)
-			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
-								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0 ;
-			SystemFlag |= varFLAG_QOSLEVEL ;
-			xRtosSetStatus(flagAPP_RESTART) ;
-			break ;
-
-		case CHR_DC2:	// c-R
-			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT);
-			break;
-
-		case CHR_SYN:	// c-V Delete WIFI & VARS blobs, reboot same firmware
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(),  fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT) ;
-			break ;
-
-		case CHR_ETB:	// c-W Deleted VARS blob only, reboot SAME firmware
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT) ;
-			break ;
-
-		case CHR_b: {
-			#define	blobBUFFER_SIZE			1024
-			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE) ;
-			size_t	SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob) ;
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
-			#if	(HW_VARIANT == HW_EM1P2)
-				SizeBlob = blobBUFFER_SIZE ;
-				halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
-			#endif
-			vRtosFree(pBuffer) ;
-			break ;
-		}
-		case CHR_p: halFOTA_ReportPartitions(); break ;
-		#endif
-
 		// ############################ Normal (non-dangerous) options
 
 		case CHR_B: xRtosSetStatus(flagAPP_RESTART); break;
-//		case CHR_C: break;
-//		case CHR_D: break ;
-		case CHR_I:
+		case CHR_F: halVARS_ReportFlags(1); break;
+		case CHR_G:
 			#if	(SW_AEP == 1)
 			vSW_ReRegister();
 			#elif (SW_AEP == 2)
 			vTB_ReRegister();
 			#endif
 			break ;
-		case CHR_O:
-			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report();
-			#if (halHAS_DS18X20 > 0)
-			ds18x20StartAllInOne(NULL);
-			#endif
-			OWP_ScanAlarmsFamily(OWFAMILY_28) ;
-			#endif
-			break ;
-		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
-		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE); break;
-
-		case CHR_d:
-			#if	(halHAS_M90E26 > 0)
-			m90e26Report() ;
-			#endif
-			#if	(halHAS_SSD1306 > 0)
-			ssd1306Report() ;
-			#endif
-			#if	(halHAS_MCP342X > 0)
-			mcp342xReportAll() ;
-			#endif
-			break ;
-		case CHR_f: halVARS_ReportFlags(1); break;
-		case CHR_h: printfx(HelpMessage); break;
-		case CHR_i:
+		case CHR_H: printfx(HelpMessage); break;
+		case CHR_I:
 			#if	(configUSE_IDENT == 1)
 			vID1_ReportAll();
 			#elif (configUSE_IDENT == 2)
 			vID2_ReportAll();
 			#endif
 			break ;
-		case CHR_l: halVARS_ReportGeoloc(); break;
-		case CHR_m: vRtosReportMemory(); break;
-		case CHR_n: xNetReportStats(); break;
-		case CHR_o: vOptionsShow(); break;
-		case CHR_r: vRulesDecode(); break;
-		case CHR_s: vTaskSensorsReport(); break;
-		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
-		case CHR_v:
+		case CHR_L: halVARS_ReportGeoloc(); break;
+		case CHR_M: vRtosReportMemory(); break;
+		case CHR_N: xNetReportStats(); break;
+		case CHR_R: vRulesDecode(); break;
+		case CHR_S: vTaskSensorsReport(); break;
+		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
+		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE); break;
+		case CHR_V:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
 			halWL_ReportLx() ;
@@ -422,9 +417,30 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			halVARS_ReportSystem() ;
 			vControlReportTimeout() ;
 			break ;
-		case CHR_w: halWL_Report(); break;
-		case CHR_Z:
-		case CHR_z: vCLIreset(&sCLI); sCLI.bMode = 1; break;
+		case CHR_W: halWL_Report(); break;
+
+		case CHR_d:
+			#if	(halHAS_M90E26 > 0)
+			m90e26Report() ;
+			#endif
+			#if	(halHAS_SSD1306 > 0)
+			ssd1306Report() ;
+			#endif
+			#if	(halHAS_MCP342X > 0)
+			mcp342xReportAll() ;
+			#endif
+			break ;
+		case CHR_o: vOptionsShow(); break;
+		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
+
+		case CHR_i:
+		case CHR_m:
+		case CHR_r:
+		case CHR_s:
+			vCLIreset(&sCLI);
+			sCLI.bMode = 1;
+			xCommandBuffer(&sCLI, cCmd);
+			break;
 		default: printfx("key=0x%03X\r", cCmd);
 		}
 	}
