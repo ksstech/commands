@@ -114,7 +114,7 @@ static const char	HelpMessage[] = {
 	#endif
 	#endif
 
-	#if	(!defined(NDEBUG) || defined(DEBUG))
+	#if	(configPRODUCTION == 0)
 	"DEBUG only:\n"
 	#if	(halXXX_XXX_OUT > 0)
 	"\t(0-7) Trigger actuator channel 'x'\n"
@@ -156,8 +156,8 @@ static const char	HelpMessage[] = {
 	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
 	"\tupgrade\n"
 
-	"Model specific\n"
 	#if	(halXXX_XXX_OUT > 0)
+	"* Actuator *\n"
 	"\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
 	"\tload|update ch# Rpt tFI tON tFO tOFF\n"
 	"\tadjust ch# stage# Adj\n"
@@ -165,18 +165,18 @@ static const char	HelpMessage[] = {
 	#endif
 
 	#if	(halHAS_ONEWIRE > 0)
-	"1-Wire\n"
+	"* 1-Wire *\n"
 	#if	(halHAS_DS18X20 > 0)
 	"\t(D)S18X20 device info\n"
 	#endif
 	#endif
 	#if	(halHAS_M90E26 > 0)
-	"M90E26\n"
+	"* M90E26 *\n"
 	"\t(d)ebug M90E26[+SSD1306] config\n"
 	#if	(!defined(NDEBUG) || defined(DEBUG))
 	"\t(A)utomatic adjustment\n"
-	"\t    Calibrate M90E26's\n"
-	"\t(0-2) load predefined config 'x'\n"
+	"\t      Calibrate M90E26's\n"
+	"\t(0-2) Load predefined config 'x'\n"
 	#endif
 	#endif
 	"\n"
@@ -280,7 +280,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		#if	(!defined(NDEBUG) || defined(DEBUG))
+		#if	(configPRODUCTION == 0)
 		case CHR_DC4: while(1); break ;					// generate watchdog timeout
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break ;
 
