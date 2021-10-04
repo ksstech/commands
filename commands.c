@@ -84,7 +84,6 @@
 // ######################################## Macros ################################################
 
 #define	bufferMEMDUMP_SIZE			(1 * KILO)
-#define	cliBUF_SIZE					128
 
 // ############################### Forward function declarations ##################################
 
@@ -93,13 +92,6 @@
 
 
 // ##################################### Local variables ##########################################
-
-#if	(cliUSE_TABLE == 1)
-cmnd_t sCLIlist[] = { {	"CMND",	CmndCMND }, } ;
-#endif
-
-static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
-static	cli_t	sCLI ;
 
 static const char	HelpMessage[] = {
 	#if	defined(ESP_PLATFORM)
@@ -190,68 +182,37 @@ static const char	HelpMessage[] = {
 	"\n"
 } ;
 
+typedef struct __attribute__((packed)) cli_t {
+	char caBuf[127];
+	uint8_t Idx;
+} cli_t;
+
+static cli_t sCLI = { 0 };
+
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
-#if	(cliUSE_TABLE == 1)
-int	xCLImatch(cli_t * psCLI) {
-	for (int Idx = 0; Idx < psCLI->u8LSize; ++Idx) {
-		size_t Len = strnlen(psCLI->pasList[Idx].cmnd, SO_MEM(cmnd_t, cmnd)) ;
-		if (xstrncmp(psCLI->pcParse, psCLI->pasList[Idx].cmnd, Len, 0) == 1) {
-			psCLI->pcParse += Len ;
-			return Idx ;
-		}
-	}
-	return erFAILURE ;
-}
-#endif
-
-void vCLIreset(cli_t * psCLI) {
-	psCLI->pcStore	= psCLI->pcParse = psCLI->pcBeg = CLIbuf ;
-	sCLI.u8BSize	= cliBUF_SIZE ;
-#if	(cliUSE_TABLE == 1)
-	sCLI.pasList	= sCLIlist ;
-	sCLI.u8LSize	= NO_MEM(sCLIlist) ;
-#endif
-	psCLI->bMode	= 0 ;
-	memset(psCLI->pcBeg, 0, psCLI->u8BSize) ;
-}
-
-void vCLIinit(void) { vCLIreset(&sCLI) ; }
-
-int	xCommandBuffer(cli_t * psCLI, int cCmd, bool bEcho) {
+int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	if (cCmd == '\r' || cCmd == 0) {					// terminating char received
-		*psCLI->pcStore	= 0;
-#if	(cliUSE_TABLE == 1)
-		iRV = xCLImatch(psCLI) ;						// try to find matching command
-		if (iRV > erFAILURE) {							// successful ?
-			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
-			if (bEcho && iRV < erSUCCESS) {		// Failed ?
-				printf("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
-			}
-		} else {
-			printf("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
-		}
-#else
-		iRV = xRulesProcessText(psCLI->pcParse);
-#endif
-		vCLIreset(psCLI);
-	} else if (cCmd == CHR_BS) {
-		if (psCLI->pcStore > psCLI->pcBeg) {
-			psCLI->pcStore = psCLI->pcBeg;
-			if (psCLI->pcStore == psCLI->pcBeg)
-				vCLIreset(psCLI);
-		}
+	if (cCmd == CHR_BS) {
+		if (sCLI.Idx) --sCLI.Idx;
+
 	} else if (cCmd == CHR_ESC) {
-		vCLIreset(psCLI);
-	} else if (isprint(cCmd)) {
-		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1))	// plan for terminating NUL
-			*psCLI->pcStore++ = cCmd;					// store character
+		sCLI.Idx = 0;
+
+	} else if ((cCmd == '\r' || cCmd == 0) && sCLI.Idx) {
+		sCLI.caBuf[sCLI.Idx] = 0;
+		iRV = xRulesProcessText(sCLI.caBuf);
+		sCLI.Idx = 0;
+
+	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1))) {
+		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
 	}
-	if (bEcho) {
-		if (psCLI->pcStore > psCLI->pcBeg)
-			printf("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg);
-		printf("\033[0K");
+	if (sCLI.Idx) {
+		SystemFlag |= sysFLAG_CLI;
+		if (bEcho) printf("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
+	} else {
+		SystemFlag &= ~sysFLAG_CLI;
+		if (bEcho) printf("\r\033[0K");
 	}
 	return iRV;
 }
@@ -264,11 +225,11 @@ void vControlReportTimeout(void) ;
 void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
 	if (cCmd == 0 || cCmd == EOF) return;
-	if (sCLI.bMode) {
-		xCommandBuffer(&sCLI, cCmd, bEcho);
+	if (SystemFlag & sysFLAG_CLI) {
+		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
-	#ifdef	ESP_PLATFORM									// ESP32 Specific options
+		#ifdef	ESP_PLATFORM									// ESP32 Specific options
 		case CHR_SOH: halFOTA_SetBootNumber(1, fotaBOOT_REBOOT); break;	// c-A
 		case CHR_STX: halFOTA_SetBootNumber(2, fotaBOOT_REBOOT); break;	// c-B
 		case CHR_ETX: halFOTA_SetBootNumber(3, fotaBOOT_REBOOT); break;	// c-C
@@ -316,7 +277,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vRtosFree(pBuffer) ;
 			break ;
 		}
-	#endif
+		#endif
 
 		// ########################### Unusual (possibly dangerous) options
 		#if	(!defined(NDEBUG) || defined(DEBUG))
@@ -424,10 +385,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break ;
 		case CHR_o: vOptionsShow(); break;
 		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
-		default:
-			vCLIreset(&sCLI);
-			sCLI.bMode = 1;
-			xCommandBuffer(&sCLI, cCmd, bEcho);
+		default: xCommandBuffer(cCmd, bEcho);
 		}
 	}
 	halVARS_ReportFlags(0);
