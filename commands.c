@@ -130,9 +130,7 @@ static const char	HelpMessage[] = {
 	"\t(0-7) Trigger actuator channel 'x'\n"
 	"\t(A)ctuators reload\n"
 	#endif
-	"\tre(B)oot\n"
 	"\t(F)lags Status\n"
-	"\t(G)MAP start\n"
 	"\t(H)elp screen display\n"
 	"\t(L)ocation info\n"
 	"\t(M)emory info\n"
@@ -143,7 +141,6 @@ static const char	HelpMessage[] = {
 	"\t(R)ules display\n"
 	"\t(S)ensors statistics\n"
 	"\t(T)imer/Scatter Info\n"
-	"\t(U)pgrade Firmware\n"
 #endif
 
 	"General:\n"
@@ -163,9 +160,12 @@ static const char	HelpMessage[] = {
 	"\t(v)erbose system info\n"
 	"Extended commands:\n"
 	"\tioset option para1 para2\n"
-	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
 	"\tmode /uri para1 [para2 .. [para6]]\n"
+	"\tregister\n"
+	"\trestart\n"
 	"\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
+	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
+	"\tupgrade\n"
 
 #if		(halHAS_ONEWIRE > 0)
 	"1-Wire\n"
@@ -357,6 +357,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vActuatorsIdent();
 			#endif
 			break;
+
 		case CHR_O:
 			#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
@@ -376,15 +377,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		// ############################ Normal (non-dangerous) options
 
-		case CHR_B: xRtosSetStatus(flagAPP_RESTART); break;
 		case CHR_F: halVARS_ReportFlags(1); break;
-		case CHR_G:
-			#if	(SW_AEP == 1)
-			vSW_ReRegister();
-			#elif (SW_AEP == 2)
-			vTB_ReRegister();
-			#endif
-			break ;
 		case CHR_H: printfx(HelpMessage); break;
 		case CHR_I:
 			#if	(configUSE_IDENT == 1)
@@ -399,7 +392,6 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_R: vRulesDecode(); break;
 		case CHR_S: vTaskSensorsReport(); break;
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
-		case CHR_U: xRtosSetStatus(flagAPP_UPGRADE); break;
 		case CHR_V:
 			halMCU_Report() ;
 			halVARS_ReportFirmware() ;
@@ -432,16 +424,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break ;
 		case CHR_o: vOptionsShow(); break;
 		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
-
-		case CHR_i:
-		case CHR_m:
-		case CHR_r:
-		case CHR_s:
+		default:
 			vCLIreset(&sCLI);
 			sCLI.bMode = 1;
-			xCommandBuffer(&sCLI, cCmd);
-			break;
-		default: printfx("key=0x%03X\r", cCmd);
+			xCommandBuffer(&sCLI, cCmd, bEcho);
 		}
 	}
 	halVARS_ReportFlags(0);
