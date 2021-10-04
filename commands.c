@@ -102,7 +102,7 @@ static	char	CLIbuf[cliBUF_SIZE] = { 0 } ;
 static	cli_t	sCLI ;
 
 static const char	HelpMessage[] = {
-#if		defined(ESP_PLATFORM)
+	#if	defined(ESP_PLATFORM)
 	"ESP32 Specific:\n"
 	"\tc-A Boot OTA #1 FW as STA\n"
 	#if (fotaMAX_OTA_PARTITIONS > 2)
@@ -116,15 +116,13 @@ static const char	HelpMessage[] = {
 	"\tc-R Revert to previous FW\n"
 	"\tc-V Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
 	"\tc-W Reboot current FW as [AP]STA (delete VARS blob)\n"
-
 	#if (!defined(NDEBUG) || defined(DEBUG))
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
+	#endif
 
-#endif
-
-#if	(!defined(NDEBUG) || defined(DEBUG))
+	#if	(!defined(NDEBUG) || defined(DEBUG))
 	"DEBUG only:\n"
 	#if	(halXXX_XXX_OUT > 0)
 	"\t(0-7) Trigger actuator channel 'x'\n"
@@ -141,7 +139,7 @@ static const char	HelpMessage[] = {
 	"\t(R)ules display\n"
 	"\t(S)ensors statistics\n"
 	"\t(T)imer/Scatter Info\n"
-#endif
+	#endif
 
 	"General:\n"
 	#if	(configUSE_IDENT > 0)
@@ -149,11 +147,9 @@ static const char	HelpMessage[] = {
 	#endif
 	"\t(N)etwork (IP4) info\n"
 	"\t(W)ifi Stats\n"
-
 	#if	(halXXX_XXX_OUT > 0)
 	"\t(a)ctuators status\n"
 	#endif
-
 	"\t(b)lob report\n"
 	"\t(o)ptions display\n"
 	"\t(t)asks statistics\n"
@@ -164,17 +160,25 @@ static const char	HelpMessage[] = {
 	"\tregister\n"
 	"\trestart\n"
 	"\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
+	"\tshow W0 [... [W23]]\n"
 	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
 	"\tupgrade\n"
 
-#if		(halHAS_ONEWIRE > 0)
+	"Model specific\n"
+	#if	(halXXX_XXX_OUT > 0)
+	"\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
+	"\tload|update ch# Rpt tFI tON tFO tOFF\n"
+	"\tadjust ch# stage# Adj\n"
+	"\tque|seq ch# S0 [... S23]]\n"
+	#endif
+
+	#if	(halHAS_ONEWIRE > 0)
 	"1-Wire\n"
 	#if	(halHAS_DS18X20 > 0)
 	"\t(D)S18X20 device info\n"
 	#endif
-#endif
-
-#if	(halHAS_M90E26 > 0)
+	#endif
+	#if	(halHAS_M90E26 > 0)
 	"M90E26\n"
 	"\t(d)ebug M90E26[+SSD1306] config\n"
 	#if	(!defined(NDEBUG) || defined(DEBUG))
@@ -182,7 +186,7 @@ static const char	HelpMessage[] = {
 	"\t    Calibrate M90E26's\n"
 	"\t(0-2) load predefined config 'x'\n"
 	#endif
-#endif
+	#endif
 	"\n"
 } ;
 
