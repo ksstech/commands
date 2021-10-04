@@ -218,45 +218,42 @@ void vCLIreset(cli_t * psCLI) {
 
 void vCLIinit(void) { vCLIreset(&sCLI) ; }
 
-char caBS[] = { CHR_BS, CHR_SPACE, CHR_BS, CHR_NUL } ;
-
 int	xCommandBuffer(cli_t * psCLI, int cCmd, bool bEcho) {
-	int iRV = erSUCCESS ;
+	int iRV = erSUCCESS;
 	if (cCmd == '\r' || cCmd == 0) {					// terminating char received
-		*psCLI->pcStore	= 0 ;
-		if (bEcho) printfx("\n");
+		*psCLI->pcStore	= 0;
 #if	(cliUSE_TABLE == 1)
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
 		if (iRV > erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
 			if (bEcho && iRV < erSUCCESS) {		// Failed ?
-				printfx("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
+				printf("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
 			}
 		} else {
-			printfx("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
+			printf("Command '%.*s' not found!\n", psCLI->pcParse - psCLI->pcBeg, psCLI->pcBeg) ;
 		}
 #else
 		iRV = xRulesProcessText(psCLI->pcParse);
 #endif
-		vCLIreset(psCLI) ;
+		vCLIreset(psCLI);
 	} else if (cCmd == CHR_BS) {
 		if (psCLI->pcStore > psCLI->pcBeg) {
-			--psCLI->pcStore ;
-			if (bEcho) printfx("%c", CHR_BS);	// printfx("%s", caBS);
+			psCLI->pcStore = psCLI->pcBeg;
+			if (psCLI->pcStore == psCLI->pcBeg)
+				vCLIreset(psCLI);
 		}
 	} else if (cCmd == CHR_ESC) {
-		if (bEcho) printfx("\r%*.s\r", psCLI->u8BSize, "");
-		vCLIreset(psCLI) ;
+		vCLIreset(psCLI);
 	} else if (isprint(cCmd)) {
-		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1)) {	// plan for terminating NUL
-			*psCLI->pcStore++ = cCmd ;					// store character
-		} else {
-			printfx("%c", CHR_BEL) ;
-		}
+		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1))	// plan for terminating NUL
+			*psCLI->pcStore++ = cCmd;					// store character
 	}
-	if (bEcho && (psCLI->pcStore > psCLI->pcBeg))
-		printfx("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg) ;
-	return iRV ;
+	if (bEcho) {
+		if (psCLI->pcStore > psCLI->pcBeg)
+			printf("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg);
+		printf("\033[0K");
+	}
+	return iRV;
 }
 
 void halWL_Report(void) ;
