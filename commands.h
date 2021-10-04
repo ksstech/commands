@@ -34,7 +34,6 @@ typedef struct __attribute__((packed)) cli_t {
 	uint8_t			u8LSize ;							// Command List Size
 #endif
 	uint8_t			bMode	: 1 ;						// Long mode
-	uint8_t			bEcho	: 1 ;						// echo CLI buffer
 } cli_t ;
 
 typedef	struct cmnd_t {

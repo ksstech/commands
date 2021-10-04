@@ -216,16 +216,16 @@ void vCLIinit(void) { vCLIreset(&sCLI) ; }
 
 char caBS[] = { CHR_BS, CHR_SPACE, CHR_BS, CHR_NUL } ;
 
-int	xCommandBuffer(cli_t * psCLI, int cCmd) {
+int	xCommandBuffer(cli_t * psCLI, int cCmd, bool bEcho) {
 	int iRV = erSUCCESS ;
 	if (cCmd == '\r' || cCmd == 0) {					// terminating char received
 		*psCLI->pcStore	= 0 ;
-		if (psCLI->bEcho) printfx("\n") ;
+		if (bEcho) printfx("\n");
 #if	(cliUSE_TABLE == 1)
 		iRV = xCLImatch(psCLI) ;						// try to find matching command
 		if (iRV > erFAILURE) {							// successful ?
 			iRV = psCLI->pasList[iRV].hdlr(psCLI) ;		// yes, execute matching command
-			if (psCLI->bEcho && iRV < erSUCCESS) {		// Failed ?
+			if (bEcho && iRV < erSUCCESS) {		// Failed ?
 				printfx("%s\n%*.s^\n", psCLI->pcBeg, psCLI->pcParse - psCLI->pcBeg, "") ;
 			}
 		} else {
@@ -238,10 +238,10 @@ int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 	} else if (cCmd == CHR_BS) {
 		if (psCLI->pcStore > psCLI->pcBeg) {
 			--psCLI->pcStore ;
-			if (psCLI->bEcho) printfx("%c", CHR_BS);	// printfx("%s", caBS);
+			if (bEcho) printfx("%c", CHR_BS);	// printfx("%s", caBS);
 		}
 	} else if (cCmd == CHR_ESC) {
-		if (psCLI->bEcho) printfx("\r%*.s\r", psCLI->u8BSize, "");
+		if (bEcho) printfx("\r%*.s\r", psCLI->u8BSize, "");
 		vCLIreset(psCLI) ;
 	} else if (isprint(cCmd)) {
 		if (psCLI->pcStore < (psCLI->pcBeg + psCLI->u8BSize + 1)) {	// plan for terminating NUL
@@ -250,7 +250,7 @@ int	xCommandBuffer(cli_t * psCLI, int cCmd) {
 			printfx("%c", CHR_BEL) ;
 		}
 	}
-	if (psCLI->bEcho && (psCLI->pcStore > psCLI->pcBeg))
+	if (bEcho && (psCLI->pcStore > psCLI->pcBeg))
 		printfx("\r%*.s", psCLI->pcStore - psCLI->pcBeg, psCLI->pcBeg) ;
 	return iRV ;
 }
@@ -261,11 +261,10 @@ void vTaskSensorsReport(void) ;
 void vControlReportTimeout(void) ;
 
 void vCommandInterpret(int cCmd, bool bEcho) {
-	sCLI.bEcho = bEcho;
 	halVARS_ReportFlags(0);
 	if (cCmd == 0) return;
 	if (sCLI.bMode) {
-		xCommandBuffer(&sCLI, cCmd);
+		xCommandBuffer(&sCLI, cCmd, bEcho);
 	} else {
 		switch (cCmd) {
 	#ifdef	ESP_PLATFORM									// ESP32 Specific options
