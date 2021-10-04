@@ -262,7 +262,7 @@ void vControlReportTimeout(void) ;
 
 void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
-	if (cCmd == 0) return;
+	if (cCmd == 0 || cCmd == EOF) return;
 	if (sCLI.bMode) {
 		xCommandBuffer(&sCLI, cCmd, bEcho);
 	} else {
