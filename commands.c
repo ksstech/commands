@@ -94,7 +94,7 @@
 // ##################################### Local variables ##########################################
 
 static const char	HelpMessage[] = {
-	#if	defined(ESP_PLATFORM)
+#ifdef ESP_PLATFORM
 	"ESP32 Specific:\n"
 	"\tc-A Boot OTA #1 FW as STA\n"
 	#if (fotaMAX_OTA_PARTITIONS > 2)
@@ -112,73 +112,68 @@ static const char	HelpMessage[] = {
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
-	#endif
-
-	#if	(configPRODUCTION == 0)
-	"DEBUG only:\n"
-	#if	(halXXX_XXX_OUT > 0)
-	"\t(0-7) Trigger actuator channel 'x'\n"
-	"\t(A)ctuators reload\n"
-	#endif
-	"\t(F)lags Status\n"
-	"\t(H)elp screen display\n"
-	"\t(L)ocation info\n"
-	"\t(M)emory info\n"
-	#if	(halHAS_ONEWIRE > 0)
-	"\t(O)newire info\n"
-	#endif
-	"\t(P)artitions report\n"
-	"\t(R)ules display\n"
-	"\t(S)ensors statistics\n"
-	"\t(T)imer/Scatter Info\n"
-	#endif
+#endif
 
 	"General:\n"
+#if	(configPRODUCTION == 0)
+	#if	(halXXX_XXX_OUT > 0)
+	"ACT\t(0-7) Trigger actuator channel 'x'\n"
+	"ACT\t(A)ctuators reload\n"
+	#endif
+
+	#if	(halHAS_M90E26 > 0)
+	"M90Ex\t(0-3) Load predefined config 'x'\n"
+	"M90Ex\t(A)utomatic adjustment/calibration\n"
+	#endif
+
+	"\t(B)lob report\n"
+#endif
+	"\t(F)lags Status\n"
+	"\t(H)elp screen display\n"
 	#if	(configUSE_IDENT > 0)
 	"\t(I)dent table\n"
 	#endif
+	"\t(L)ocation info\n"
+	"\t(M)emory info\n"
 	"\t(N)etwork (IP4) info\n"
+#if	(configPRODUCTION == 0)
+	#if	(halHAS_ONEWIRE > 0)
+	"1W\t(O)newire info\n"
+	#if	(halHAS_DS18X20 > 0)
+	"\t    DS18X20 device info\n"
+	#endif
+	#endif
+	"\t(P)artitions report\n"
+#endif
+	"\t(R)ules display\n"
+	"\t(S)ensors statistics\n"
+	#if	(configPRODUCTION == 0)
+	"\t(T)imer/Scatter Info\n"
+	#endif
+	"\t(V)erbose system info\n"
 	"\t(W)ifi Stats\n"
+
 	#if	(halXXX_XXX_OUT > 0)
 	"\t(a)ctuators status\n"
 	#endif
-	"\t(b)lob report\n"
 	"\t(o)ptions display\n"
 	"\t(t)asks statistics\n"
-	"\t(v)erbose system info\n"
+
 	"Extended commands:\n"
-	"\tioset option para1 para2\n"
-	"\tmode /uri para1 [para2 .. [para6]]\n"
+	#if	(halXXX_XXX_OUT > 0)
+	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
+	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\n"
+	"ACT\tadjust ch# stage# Adj\n"
+	"ACT\tque|seq ch# S0 [... S23]]\n"
+	#endif
+	"GMAP\tioset option para1 para2\n"
+	"GMAP\tmode /uri para1 [para2 .. [para6]]\n"
+	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
+	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
 	"\tregister\n"
 	"\trestart\n"
-	"\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
 	"\tshow W0 [... [W23]]\n"
-	"\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
 	"\tupgrade\n"
-
-	#if	(halXXX_XXX_OUT > 0)
-	"* Actuator *\n"
-	"\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
-	"\tload|update ch# Rpt tFI tON tFO tOFF\n"
-	"\tadjust ch# stage# Adj\n"
-	"\tque|seq ch# S0 [... S23]]\n"
-	#endif
-
-	#if	(halHAS_ONEWIRE > 0)
-	"* 1-Wire *\n"
-	#if	(halHAS_DS18X20 > 0)
-	"\t(D)S18X20 device info\n"
-	#endif
-	#endif
-	#if	(halHAS_M90E26 > 0)
-	"* M90E26 *\n"
-	"\t(d)ebug M90E26[+SSD1306] config\n"
-	#if	(!defined(NDEBUG) || defined(DEBUG))
-	"\t(A)utomatic adjustment\n"
-	"\t      Calibrate M90E26's\n"
-	"\t(0-2) Load predefined config 'x'\n"
-	#endif
-	#endif
 	"\n"
 } ;
 
@@ -188,6 +183,13 @@ typedef struct __attribute__((packed)) cli_t {
 } cli_t;
 
 static cli_t sCLI = { 0 };
+
+// ################################ Forward function declarations ##################################
+
+void halWL_Report(void) ;
+void halWL_ReportLx(void) ;
+void vTaskSensorsReport(void) ;
+void vControlReportTimeout(void) ;
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
@@ -217,11 +219,6 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 	return iRV;
 }
 
-void halWL_Report(void) ;
-void halWL_ReportLx(void) ;
-void vTaskSensorsReport(void) ;
-void vControlReportTimeout(void) ;
-
 void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
 	if (cCmd == 0 || cCmd == EOF) return;
@@ -229,7 +226,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
-		#ifdef	ESP_PLATFORM									// ESP32 Specific options
+	#if defined(ESP_PLATFORM)
 		case CHR_SOH: halFOTA_SetBootNumber(1, fotaBOOT_REBOOT); break;	// c-A
 		case CHR_STX: halFOTA_SetBootNumber(2, fotaBOOT_REBOOT); break;	// c-B
 		case CHR_ETX: halFOTA_SetBootNumber(3, fotaBOOT_REBOOT); break;	// c-C
@@ -258,32 +255,14 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_ETB:	// c-W Deleted VARS blob only, reboot SAME firmware
 			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
-
-		case CHR_P: halFOTA_ReportPartitions(); break ;
-
-		case CHR_b: {
-			#define	blobBUFFER_SIZE			1024
-			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE) ;
-			size_t	SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob) ;
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob) ;
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob) ;
-			#if	(HW_VARIANT == HW_EM1P2)
-			SizeBlob = blobBUFFER_SIZE ;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob) ;
-			#endif
-			vRtosFree(pBuffer) ;
-			break ;
-		}
-		#endif
+	#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		#if	(configPRODUCTION == 0)
-		case CHR_DC4: while(1); break ;					// generate watchdog timeout
-		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break ;
+	#if	(configPRODUCTION == 0)
+		case CHR_DC4: while(1); break;
+		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break;
 
+		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -292,97 +271,126 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-			#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 			xActuatorLoad(cCmd - CHR_0 + 8, 1, 0, 6000, 0, 0) ;
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
-
-			#elif (HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
-			if (cCmd - CHR_0 < halSOC_DIG_OUT) xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
-			else printfx("%c", CHR_BEL) ;
-
-			#elif (HW_VARIANT == HW_EM1P2)
-			if (cCmd - CHR_0 < CALIB_NUM) {
-				m90e26Report() ;
-				m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
-				m90e26LoadNVSConfig(1, cCmd - CHR_0) ;
-				m90e26Report() ;
-			}
-			#endif
 			break ;
 
-		case CHR_A:
-			#if	(halXXX_XXX_OUT > 0)
-			vActuatorsIdent();
-			#endif
-			#if (halHAS_M90E26 > 0)
-			vActuatorsIdent();
-			#endif
-			break;
-
-		case CHR_O:
-			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report();
-			#if (halHAS_DS18X20 > 0)
-			ds18x20StartAllInOne(NULL);
-			#endif
-			OWP_ScanAlarmsFamily(OWFAMILY_28);
-			#endif
+		#elif (HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
+		case CHR_0:
+		case CHR_1:
+			if (cCmd - CHR_0 < halSOC_DIG_OUT)
+				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
+			else
+				printfx("%c", CHR_BEL) ;
 			break ;
 
-		case CHR_a:
-			#if	(halXXX_XXX_OUT > 0)
-			vTaskActuatorReport() ;
-			#endif
+		#elif (HW_VARIANT == HW_EM1P2)
+		case CHR_0:
+		case CHR_1:
+		case CHR_2:
+		case CHR_3:
+			m90e26Report() ;
+			m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
+			m90e26LoadNVSConfig(1, cCmd - CHR_0) ;
+			m90e26Report() ;
 			break ;
 		#endif
 
-		// ############################ Normal (non-dangerous) options
 
+		#if	(halXXX_XXX_OUT > 0)
+		case CHR_A:	vActuatorsIdent(); break;
+		#endif
+		#if (halHAS_M90E26 > 0)
+		case CHR_A: vActuatorsIdent(); break;
+		#endif
+
+		case CHR_B: {
+			#define	blobBUFFER_SIZE			1024
+			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE);
+			size_t	SizeBlob = blobBUFFER_SIZE;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
+			SizeBlob = blobBUFFER_SIZE;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
+			SizeBlob = blobBUFFER_SIZE;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
+			#if	(HW_VARIANT == HW_EM1P2)
+			SizeBlob = blobBUFFER_SIZE;
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob);
+			#endif
+			vRtosFree(pBuffer);
+			break;
+		}
+	#endif
+		// ############################ Normal (non-dangerous) options
 		case CHR_F: halVARS_ReportFlags(1); break;
 		case CHR_H: printfx(HelpMessage); break;
-		case CHR_I:
-			#if	(configUSE_IDENT == 1)
-			vID1_ReportAll();
-			#elif (configUSE_IDENT == 2)
-			vID2_ReportAll();
-			#endif
-			break ;
+
+	#if	(configUSE_IDENT == 1)
+		case CHR_I: vID1_ReportAll(); break;
+	#elif (configUSE_IDENT == 2)
+		case CHR_I: vID2_ReportAll(); break;
+	#endif
+
 		case CHR_L: halVARS_ReportGeoloc(); break;
 		case CHR_M: vRtosReportMemory(); break;
 		case CHR_N: xNetReportStats(); break;
+
+	#if	(halHAS_ONEWIRE > 0) && (configPRODUCTION == 0)
+		case CHR_O:
+			#if (halHAS_DS18X20 > 0)
+			ds18x20StartAllInOne(NULL);
+			OWP_ScanAlarmsFamily(OWFAMILY_28);
+			#endif
+			OWP_Report();
+			break ;
+	#endif
+
+	#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
+		case CHR_P: halFOTA_ReportPartitions(); break ;
+	#endif
+
 		case CHR_R: vRulesDecode(); break;
 		case CHR_S: vTaskSensorsReport(); break;
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		case CHR_V:
-			halMCU_Report() ;
-			halVARS_ReportFirmware() ;
-			halWL_ReportLx() ;
-			vSyslogReport() ;
-			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport) ;
-			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport) ;
+			halMCU_Report();
+			halVARS_ReportFirmware();
+			halWL_ReportLx();
+			vSyslogReport();
+			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
+			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport);
 			#if	(SW_AEP == 1)
-			#include	"task_sitewhere.h"
+			#include "task_sitewhere.h"
 			vSW_Report() ;
 			#elif (SW_AEP == 2)
-			#include	"task_thingsboard.h"
-			vTB_Report() ;
+			#include "task_thingsboard.h"
+			vTB_Report();
 			#endif
-			halVARS_ReportSystem() ;
-			vControlReportTimeout() ;
+			halVARS_ReportSystem();
+			vControlReportTimeout();
 			break ;
 		case CHR_W: halWL_Report(); break;
 
+	#if	(configPRODUCTION == 0)
+		#if	(halXXX_XXX_OUT > 0)
+		case CHR_a: vTaskActuatorReport(); break;
+		#endif
+
+		#if	(halHAS_M90E26 > 0) || (halHAS_SSD1306 > 0) || (halHAS_MCP342X > 0)
 		case CHR_d:
 			#if	(halHAS_M90E26 > 0)
-			m90e26Report() ;
+			m90e26Report();
 			#endif
 			#if	(halHAS_SSD1306 > 0)
-			ssd1306Report() ;
+			ssd1306Report();
 			#endif
 			#if	(halHAS_MCP342X > 0)
-			mcp342xReportAll() ;
+			mcp342xReportAll();
 			#endif
-			break ;
+			break;
+		#endif
+	#endif
+
 		case CHR_o: vOptionsShow(); break;
 		case CHR_t: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
 		default: xCommandBuffer(cCmd, bEcho);
