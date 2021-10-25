@@ -123,6 +123,9 @@ static const char HelpMessage[] = {
 	#endif
 	#if	(configPRODUCTION == 0)
 	"\t(B)lob report\n"
+	#if	(halUSE_LITTLEFS == 1)
+	"\t(C)ontent of LFS\n"
+	#endif
 	"\t(D)iagnostics\n"
 	#if	(halHAS_ONEWIRE > 0)
 	"1W\t    Onewire info\n"
@@ -302,7 +305,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vRtosFree(pBuffer);
 			break;
 		}
-//		case CHR_C:
+#if	(halUSE_LITTLEFS == 1)
+		case CHR_C: halSTORAGE_InfoFS(""); break;
+#endif
 		case CHR_D:
 		#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
