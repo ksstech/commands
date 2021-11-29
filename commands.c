@@ -264,7 +264,17 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 			break ;
 
-		#elif (HW_VARIANT == HW_WROVERKIT) || (HW_VARIANT == HW_DOITDEVKIT)
+	#elif (HW_VARIANT == HW_WROVERKIT)
+		case CHR_0:
+		case CHR_1:
+		case CHR_2:
+			if (cCmd - CHR_0 < halSOC_DIG_OUT)
+				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500);
+			else
+				printfx("%c", CHR_BEL);
+			break;
+
+		#elif (HW_VARIANT == HW_DOITDEVKIT)
 		case CHR_0:
 		case CHR_1:
 			if (cCmd - CHR_0 < halSOC_DIG_OUT)
