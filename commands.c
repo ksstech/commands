@@ -371,7 +371,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 	#endif
-		case CHR_U: xRtosReportTasks(makeMASKFLAG(0,0,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
+		case CHR_U: xRtosReportTasks(makeMASKFLAG(0,1,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
 		case CHR_V:
 			halMCU_Report();
 			halVARS_ReportFirmware();
