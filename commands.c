@@ -202,32 +202,34 @@ void vControlReportTimeout(void) ;
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_BS) {
-		if (sCLI.Idx) --sCLI.Idx;
-
+		if (sCLI.Idx)
+			--sCLI.Idx;
 	} else if (cCmd == CHR_ESC) {
 		sCLI.Idx = 0;
-
 	} else if ((cCmd == '\r' || cCmd == 0) && sCLI.Idx) {
+		if (bEcho)
+			printf(" -> ");
 		sCLI.caBuf[sCLI.Idx] = 0;
 		iRV = xRulesProcessText(sCLI.caBuf);
 		sCLI.Idx = 0;
-
-	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1))) {
+	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1)))
 		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
-	}
-	if (sCLI.Idx) {
-		SystemFlag |= sysFLAG_CLI;
-		if (bEcho) printf("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
+	if (sCLI.Idx) {										// anything in buffer?
+		SystemFlag |= sysFLAG_CLI;						// ensure flag is set
+		if (bEcho)										// option refresh whole line
+			printf("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
 	} else {
-		SystemFlag &= ~sysFLAG_CLI;
-		if (bEcho) printf("\r\033[0K");
+		SystemFlag &= ~sysFLAG_CLI;						// buffer empty, clear flag
+		if (bEcho)										// optional clear line
+			printf("\r\033[0K");
 	}
 	return iRV;
 }
 
 void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
-	if (cCmd == 0 || cCmd == EOF) return;
+	if (cCmd == 0 || cCmd == EOF)
+		return;
 	if (SystemFlag & sysFLAG_CLI) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
@@ -322,8 +324,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
 			#if (halHAS_DS18X20 > 0)
-			ds18x20StartAllInOne(NULL);
-			OWP_ScanAlarmsFamily(OWFAMILY_28);
+//			ds18x20StartAllInOne(NULL);
+//			OWP_ScanAlarmsFamily(OWFAMILY_28);
 			#endif
 		#endif
 		#if	(halHAS_M90E26 > 0)
@@ -359,7 +361,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#if	(configPRODUCTION == 0)
 		case CHR_Q:
 			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
-						(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0;
+								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0;
 			SystemFlag |= varFLAG_QOSLEVEL;
 			xRtosSetStatus(flagAPP_RESTART);
 			break;
