@@ -218,12 +218,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
 	}
 	if (sCLI.Idx) {										// anything in buffer?
-		SystemFlag |= sysFLAG_CLI;						// ensure flag is set
+		setSYSFLAG(sysFLAG_CLI);						// ensure flag is set
 		if (bEcho) {									// option refresh whole line
 			printfx("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
 		}
 	} else {
-		SystemFlag &= ~sysFLAG_CLI;						// buffer empty, clear flag
+		clrSYSFLAG(sysFLAG_CLI);						// buffer empty, clear flag
 		if (bEcho) {									// optional clear line
 			printfx("\r\033[0K");
 		}
@@ -235,8 +235,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
 	if (cCmd == 0 || cCmd == EOF) {
 		return;
-	if (SystemFlag & sysFLAG_CLI) {
 	}
+	if (tstSYSFLAG(sysFLAG_CLI)) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
