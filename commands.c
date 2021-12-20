@@ -202,35 +202,41 @@ void vControlReportTimeout(void) ;
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_BS) {
-		if (sCLI.Idx)
+		if (sCLI.Idx) {
 			--sCLI.Idx;
+		}
 	} else if (cCmd == CHR_ESC) {
 		sCLI.Idx = 0;
 	} else if ((cCmd == '\r' || cCmd == 0) && sCLI.Idx) {
-		if (bEcho)
-			printf(" -> ");
+		if (bEcho) {
+			printfx(" -> ");
+		}
 		sCLI.caBuf[sCLI.Idx] = 0;
 		iRV = xRulesProcessText(sCLI.caBuf);
 		sCLI.Idx = 0;
-	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1)))
+	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1))) {
 		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
+	}
 	if (sCLI.Idx) {										// anything in buffer?
 		SystemFlag |= sysFLAG_CLI;						// ensure flag is set
-		if (bEcho)										// option refresh whole line
-			printf("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
+		if (bEcho) {									// option refresh whole line
+			printfx("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
+		}
 	} else {
 		SystemFlag &= ~sysFLAG_CLI;						// buffer empty, clear flag
-		if (bEcho)										// optional clear line
-			printf("\r\033[0K");
+		if (bEcho) {									// optional clear line
+			printfx("\r\033[0K");
+		}
 	}
 	return iRV;
 }
 
 void vCommandInterpret(int cCmd, bool bEcho) {
 	halVARS_ReportFlags(0);
-	if (cCmd == 0 || cCmd == EOF)
+	if (cCmd == 0 || cCmd == EOF) {
 		return;
 	if (SystemFlag & sysFLAG_CLI) {
+	}
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
