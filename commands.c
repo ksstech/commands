@@ -57,6 +57,10 @@
 	#include	"mcp342x.h"
 #endif
 
+#if (halHAS_SI70XX > 0)
+	#include	"si70xx.h"
+#endif
+
 #if (halHAS_ONEWIRE > 0)
 	#include	"onewire_platform.h"
 	#if	(halHAS_DS18X20 > 0)
@@ -138,6 +142,9 @@ static const char HelpMessage[] = {
 	#endif
 	#if	(halHAS_ONEWIRE > 0)
 	"1W\t    Onewire info\n"
+	#endif
+	#if	(halHAS_SI70XX > 0)
+	"si70xx\t    si70xxReport"
 	#endif
 	#if	(halHAS_SSD1306 > 0)
 	"SSD1306\t    ssd1306Report"
@@ -339,6 +346,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 		#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
+		#endif
+		#if	(halHAS_SI70XX > 0)
+			si70xxReportAll();
 		#endif
 		#if	(halHAS_SSD1306 > 0)
 			ssd1306Report();
