@@ -8,15 +8,15 @@
 #include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include	"actuators.h"
 
-#if		(SW_AEP == 1)
+#if (SW_AEP == 1)
 	#include	"task_sitewhere.h"
 #elif	(SW_AEP == 2)
 	#include	"task_thingsboard.h"
 #endif
 
-#if		(configUSE_IDENT == 1)
+#if (configUSE_IDENT == 1)
 	#include	"ident1.h"
-#elif	(configUSE_IDENT == 2)
+#elif (configUSE_IDENT == 2)
 	#include	"ident2.h"
 #endif
 
@@ -40,31 +40,31 @@
 
 #include	"MQTTClient.h"								// QOSx levels
 
-#if		(configUSE_RULES > 0)
+#if (configUSE_RULES > 0)
 	#include	"rules_decode.h"
 	#include	"rules_parse_text.h"
 #endif
 
-#if		(halHAS_SSD1306 > 0)
+#if (halHAS_SSD1306 > 0)
 	#include	"ssd1306.h"
 #endif
 
-#if		(halHAS_M90E26 > 0)
+#if (halHAS_M90E26 > 0)
 	#include	"m90e26.h"
 #endif
 
-#if		(halHAS_MCP342X > 0)
+#if (halHAS_MCP342X > 0)
 	#include	"mcp342x.h"
 #endif
 
-#if		(halHAS_ONEWIRE > 0)
+#if (halHAS_ONEWIRE > 0)
 	#include	"onewire_platform.h"
 	#if	(halHAS_DS18X20 > 0)
 	#include	"ds18x20.h"
 	#endif
 #endif
 
-#if		(halHAS_PCA9555 > 0)
+#if (halHAS_PCA9555 > 0)
 	#include	"pca9555.h"
 #endif
 
@@ -127,20 +127,20 @@ static const char HelpMessage[] = {
 	"\t(C)ontent of LFS\n"
 	#endif
 	"\t(D)iagnostics\n"
-	#if	(halHAS_ONEWIRE > 0)
-	"1W\t    Onewire info\n"
 	#if	(halHAS_DS18X20 > 0)
 	"1W\t    DS18X20 device info\n"
-	#endif
 	#endif
 	#if	(halHAS_M90E26 > 0)
 	"M90E\t    m90e26Report"
 	#endif
-	#if	(halHAS_SSD1306 > 0)
-	"SSD1306     ssd1306Report"
-	#endif
 	#if	(halHAS_MCP342X > 0)
-	"MCP342x     mcp342xReport"
+	"MCP342x\t    mcp342xReport"
+	#endif
+	#if	(halHAS_ONEWIRE > 0)
+	"1W\t    Onewire info\n"
+	#endif
+	#if	(halHAS_SSD1306 > 0)
+	"SSD1306\t    ssd1306Report"
 	#endif
 	#endif
 
@@ -272,7 +272,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
 			break ;
 
-	#elif (HW_VARIANT == HW_WROVERKIT)
+		#elif (HW_VARIANT == HW_WROVERKIT)
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -323,25 +323,25 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vRtosFree(pBuffer);
 			break;
 		}
-#if	(halUSE_LITTLEFS == 1)
+		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C: halSTORAGE_InfoFS(""); break;
-#endif
+		#endif
 		case CHR_D:
-		#if	(halHAS_ONEWIRE > 0)
-			OWP_Report();
-			#if (halHAS_DS18X20 > 0)
-//			ds18x20StartAllInOne(NULL);
-//			OWP_ScanAlarmsFamily(OWFAMILY_28);
-			#endif
+		#if (halHAS_DS18X20 > 0)
+			//ds18x20StartAllInOne(NULL);
+			OWP_ScanAlarmsFamily(OWFAMILY_28);
 		#endif
 		#if	(halHAS_M90E26 > 0)
 			m90e26Report();
 		#endif
-		#if	(halHAS_SSD1306 > 0)
-			ssd1306Report();
-		#endif
 		#if	(halHAS_MCP342X > 0)
 			mcp342xReportAll();
+		#endif
+		#if	(halHAS_ONEWIRE > 0)
+			OWP_Report();
+		#endif
+		#if	(halHAS_SSD1306 > 0)
+			ssd1306Report();
 		#endif
 			break;
 	#endif
