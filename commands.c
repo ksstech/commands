@@ -49,6 +49,10 @@
 	#include	"ssd1306.h"
 #endif
 
+#if (halHAS_LTR329ALS > 0)
+	#include	"ltr329als.h"
+#endif
+
 #if (halHAS_M90E26 > 0)
 	#include	"m90e26.h"
 #endif
@@ -59,6 +63,10 @@
 
 #if (halHAS_SI70XX > 0)
 	#include	"si70xx.h"
+#endif
+
+#if (halHAS_MPL3115 > 0)
+	#include	"mpl3115.h"
 #endif
 
 #if (halHAS_ONEWIRE > 0)
@@ -134,11 +142,17 @@ static const char HelpMessage[] = {
 	#if	(halHAS_DS18X20 > 0)
 	"1W\t    DS18X20 device info\n"
 	#endif
+	#if	(halHAS_LTR329ALS > 0)
+	"ltr329als   ltr329alsReport"
+	#endif
 	#if	(halHAS_M90E26 > 0)
 	"M90E\t    m90e26Report"
 	#endif
 	#if	(halHAS_MCP342X > 0)
 	"MCP342x\t    mcp342xReport"
+	#endif
+	#if	(halHAS_MPL3115 > 0)
+	"mpl3115\t    mpl3115Report"
 	#endif
 	#if	(halHAS_ONEWIRE > 0)
 	"1W\t    Onewire info\n"
@@ -338,11 +352,17 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			//ds18x20StartAllInOne(NULL);
 			OWP_ScanAlarmsFamily(OWFAMILY_28);
 		#endif
+		#if	(halHAS_LTR329ALS > 0)
+			ltr329alsReportAll();
+		#endif
 		#if	(halHAS_M90E26 > 0)
 			m90e26Report();
 		#endif
 		#if	(halHAS_MCP342X > 0)
 			mcp342xReportAll();
+		#endif
+		#if	(halHAS_MPL3115 > 0)
+			mpl3115ReportAll();
 		#endif
 		#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
