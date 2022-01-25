@@ -45,8 +45,8 @@
 	#include	"rules_parse_text.h"
 #endif
 
-#if (halHAS_SSD1306 > 0)
-	#include	"ssd1306.h"
+#if (halHAS_LIS2HH12 > 0)
+	#include	"lis2hh12.h"
 #endif
 
 #if (halHAS_LTR329ALS > 0)
@@ -59,10 +59,6 @@
 
 #if (halHAS_MCP342X > 0)
 	#include	"mcp342x.h"
-#endif
-
-#if (halHAS_SI70XX > 0)
-	#include	"si70xx.h"
 #endif
 
 #if (halHAS_MPL3115 > 0)
@@ -78,6 +74,18 @@
 
 #if (halHAS_PCA9555 > 0)
 	#include	"pca9555.h"
+#endif
+
+#if (halHAS_PYCOPROC > 0)
+	#include	"pycoproc.h"
+#endif
+
+#if (halHAS_SI70XX > 0)
+	#include	"si70xx.h"
+#endif
+
+#if (halHAS_SSD1306 > 0)
+	#include	"ssd1306.h"
 #endif
 
 #include	<string.h>
@@ -142,26 +150,29 @@ static const char HelpMessage[] = {
 	#if	(halHAS_DS18X20 > 0)
 	"1W\t    DS18X20 device info\n"
 	#endif
+	#if (halHAS_LIS2HH12 > 0)
+	"lis2hh12    lis2hh12Report\n"
+	#endif
 	#if	(halHAS_LTR329ALS > 0)
-	"ltr329als   ltr329alsReport"
+	"ltr329als   ltr329alsReport\n"
 	#endif
 	#if	(halHAS_M90E26 > 0)
-	"M90E\t    m90e26Report"
+	"M90E\t    m90e26Report\n"
 	#endif
 	#if	(halHAS_MCP342X > 0)
-	"MCP342x\t    mcp342xReport"
+	"MCP342x\t    mcp342xReport\n"
 	#endif
 	#if	(halHAS_MPL3115 > 0)
-	"mpl3115\t    mpl3115Report"
+	"mpl3115     mpl3115Report\n"
 	#endif
 	#if	(halHAS_ONEWIRE > 0)
 	"1W\t    Onewire info\n"
 	#endif
 	#if	(halHAS_SI70XX > 0)
-	"si70xx\t    si70xxReport"
+	"si70xx      si70xxReport\n"
 	#endif
 	#if	(halHAS_SSD1306 > 0)
-	"SSD1306\t    ssd1306Report"
+	"SSD1306\t    ssd1306Report\n"
 	#endif
 	#endif
 
@@ -187,6 +198,9 @@ static const char HelpMessage[] = {
 	"\t(W)ifi Stats\n"
 
 	"Extended commands:\n"
+	#if (halHAS_LIS2HH12 > 0)
+	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\n"
+	#endif
 	#if	(halXXX_XXX_OUT > 0)
 	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
 	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\n"
@@ -351,6 +365,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#if (halHAS_DS18X20 > 0)
 			//ds18x20StartAllInOne(NULL);
 			OWP_ScanAlarmsFamily(OWFAMILY_28);
+		#endif
+		#if	(halHAS_LIS2HH12 > 0)
+			lis2hh12ReportAll();
 		#endif
 		#if	(halHAS_LTR329ALS > 0)
 			ltr329alsReportAll();
