@@ -253,12 +253,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
 	}
 	if (sCLI.Idx) {										// anything in buffer?
-		setSYSFLAG(sysFLAG_CLI);						// ensure flag is set
+		setSYSFLAGS(sysFLAG_CLI);						// ensure flag is set
 		if (bEcho) {									// option refresh whole line
 			printfx("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
 		}
 	} else {
-		clrSYSFLAG(sysFLAG_CLI);						// buffer empty, clear flag
+		clrSYSFLAGS(sysFLAG_CLI);						// buffer empty, clear flag
 		if (bEcho) {									// optional clear line
 			printfx("\r\033[0K");
 		}
@@ -271,7 +271,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	if (cCmd == 0 || cCmd == EOF) {
 		return;
 	}
-	if (tstSYSFLAG(sysFLAG_CLI)) {
+	if (anySYSFLAGS(sysFLAG_CLI)) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
@@ -283,7 +283,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_DLE:	// c-P
 			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD;
 			SystemFlag |= varFLAG_HOSTS;
-			xRtosSetStatus(flagAPP_RESTART);
+			setSYSFLAGS(sfRESTART);
 			break;
 
 		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break;	// c-R
@@ -416,7 +416,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
 								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0;
 			SystemFlag |= varFLAG_QOSLEVEL;
-			xRtosSetStatus(flagAPP_RESTART);
+			setSYSFLAGS(sfRESTART);
 			break;
 	#endif
 		case CHR_R: vRulesDecode(); break;
