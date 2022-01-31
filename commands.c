@@ -4,6 +4,7 @@
 
 #include	"hal_variables.h"
 #include	"commands.h"
+#include	"hbuf.h"
 
 #include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include	"actuators.h"
@@ -221,12 +222,9 @@ static const char HelpMessage[] = {
 	"\n"
 } ;
 
-typedef struct __attribute__((packed)) cli_t {
-	char caBuf[127];
-	uint8_t Idx;
-} cli_t;
-
-static cli_t sCLI = { 0 };
+static hbuf_t sCLI = { 0 };
+static uint8_t Lbuf[127]= { 0 };
+static uint8_t Lidx = 0;
 
 // ################################ Forward function declarations ##################################
 
@@ -239,26 +237,52 @@ void vControlReportTimeout(void) ;
 
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	if (cCmd == CHR_BS) {
-		if (sCLI.Idx) {
-			--sCLI.Idx;
+	hbuf_t * psHB = &sCLI;
+	if (allSYSFLAGS(sfESCAPE|sfLSBRACKET)) {
+		Lidx = 0;
+		if (psHB->iCur == psHB->iFree) {				// history empty?
+			// Do nothing
+		} else if (cCmd == CHR_A) {						// Cursor UP
+			Lidx = vHBufPrvCmd(psHB, Lbuf, sizeof(Lbuf));
+			if (Lidx)
+				setSYSFLAGS(sfHISTORY);
+		} else if (cCmd == CHR_B) {						// Cursor DOWN
+			Lidx = vHBufNxtCmd(psHB, Lbuf, sizeof(Lbuf));
+			if (Lidx)
+				setSYSFLAGS(sfHISTORY);
+		} else {										// unknown command....
+			// Do nothing
 		}
-	} else if (cCmd == CHR_ESC) {
-		sCLI.Idx = 0;
-	} else if ((cCmd == '\r' || cCmd == 0) && sCLI.Idx) {
-		if (bEcho) {
-			printfx(" -> ");
+	} else {
+		if (cCmd == '\r' && Lidx) {				// CR and something in buffer?
+			if (bEcho) {								// yes, ....
+				printfx(" -> ");
+			}
+			Lbuf[Lidx] = 0;								// terminate command
+			iRV = xRulesProcessText((char *)Lbuf);		// then execute
+			if (allSYSFLAGS(sfHISTORY) == 0) {			// if new/modified command
+				vHBufAddCmd(psHB, Lbuf, Lidx);			// save into buffer
+			}
+			Lidx = 0;
+		} else {
+			if (cCmd == CHR_BS) {				// BS to remove last character
+				if (Lidx) {
+					--Lidx;
+				}
+			} else if (cCmd == CHR_ESC) {		// ESC to clear the buffer
+				Lidx = 0;
+			} else if (isprint(cCmd) &&			// printable character
+				(Lidx < (sizeof(Lbuf) - 1))) {			// and space in buffer
+				Lbuf[Lidx++] = cCmd;					// store character & step index
+			}
 		}
-		sCLI.caBuf[sCLI.Idx] = 0;
-		iRV = xRulesProcessText(sCLI.caBuf);
-		sCLI.Idx = 0;
-	} else if (isprint(cCmd) && (sCLI.Idx < (SO_MEM(cli_t, caBuf) - 1))) {
-		sCLI.caBuf[sCLI.Idx++] = cCmd;					// store character, leave 1 spare
+		clrSYSFLAGS(sfHISTORY);
 	}
-	if (sCLI.Idx) {										// anything in buffer?
+	clrSYSFLAGS(sfESCAPE|sfLSBRACKET);
+	if (Lidx) {											// anything in buffer?
 		setSYSFLAGS(sfCLI);								// ensure flag is set
 		if (bEcho) {									// option refresh whole line
-			printfx("\r%.*s \b", sCLI.Idx, sCLI.caBuf);
+			printfx("\r%.*s \b", Lidx, Lbuf);
 		}
 	} else {
 		clrSYSFLAGS(sfCLI);								// buffer empty, clear flag
@@ -274,7 +298,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	if (cCmd == 0 || cCmd == EOF) {
 		return;
 	}
-	if (anySYSFLAGS(sfCLI)) {
+	if (allSYSFLAGS(sfCLI) || allSYSFLAGS(sfESCAPE|sfLSBRACKET)) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
@@ -294,6 +318,15 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_SYN: halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-V
 		case CHR_ETB: halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-W
 	#endif
+
+		case CHR_ESC:
+			if (anySYSFLAGS(sfESCAPE|sfLSBRACKET)) {
+				clrSYSFLAGS(sfESCAPE|sfLSBRACKET);
+			} else {
+				setSYSFLAGS(sfESCAPE);
+			}
+			break;
+
 		// ########################### Unusual (possibly dangerous) options
 	#if	(configPRODUCTION == 0)
 		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
@@ -444,9 +477,17 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			halVARS_ReportSystem();
 			vControlReportTimeout();
+			vHBufReport(&sCLI);
 			break ;
 		case CHR_W: halWL_Report(); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
+		case CHR_L_SQUARE:
+			if (allSYSFLAGS(sfESCAPE) && allSYSFLAGS(sfLSBRACKET) == 0) {
+				setSYSFLAGS(sfLSBRACKET);
+			} else {
+				clrSYSFLAGS(sfESCAPE|sfLSBRACKET);
+			}
+			break;
 		default: xCommandBuffer(cCmd, bEcho);
 		}
 	}
