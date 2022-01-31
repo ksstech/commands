@@ -147,6 +147,9 @@ static const char HelpMessage[] = {
 	"\t(C)ontent of LFS\n"
 	#endif
 	"\t(D)iagnostics\n"
+	#if (halSOC_DIG_IN > 0)
+	"\t    DigIn Pins\n"
+	#endif
 	#if	(halHAS_DS18X20 > 0)
 	"1W\t    DS18X20 device info\n"
 	#endif
@@ -286,10 +289,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break;	// c-R
-		case CHR_SYN: halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-V
-		case CHR_ETB: halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-W
 		case CHR_DC4: while(1); break;					// WatchDog timeout crash
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break;// Illegal memory write crash
+		case CHR_SYN: halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-V
+		case CHR_ETB: halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-W
 	#endif
 		// ########################### Unusual (possibly dangerous) options
 	#if	(configPRODUCTION == 0)
@@ -361,6 +364,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_C: halSTORAGE_InfoFS(""); break;
 		#endif
 		case CHR_D:
+		#if (halSOC_DIG_IN > 0)
+			halGPIO_DIreport();
+		#endif
 		#if (halHAS_DS18X20 > 0)
 			//ds18x20StartAllInOne(NULL);
 			OWP_ScanAlarmsFamily(OWFAMILY_28);
@@ -401,8 +407,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#elif (configUSE_IDENT == 2)
 		case CHR_I: vID2_ReportAll(); break;
 	#endif
-//		case CHR_J:
-//		case CHR_K:
+//		case CHR_J: case CHR_K:
 		case CHR_L: halVARS_ReportGeoloc(); break;
 		case CHR_M: vRtosReportMemory(); break;
 		case CHR_N: xNetReportStats(); break;
@@ -441,9 +446,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vControlReportTimeout();
 			break ;
 		case CHR_W: halWL_Report(); break;
-//		case CHR_X:
-//		case CHR_Y:
-//		case CHR_Z:
+//		case CHR_X: case CHR_Y: case CHR_Z:
 		default: xCommandBuffer(cCmd, bEcho);
 		}
 	}

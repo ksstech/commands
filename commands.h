@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include	"struct_union.h"							// x_time definitions stdint time
-
 #include	<stdbool.h>
 
 #ifdef __cplusplus
@@ -14,7 +12,6 @@ extern "C" {
 
 // ######################################## General MACROs #########################################
 
-#define	cliUSE_TABLE				0
 
 // ######################################### enumerations ##########################################
 
@@ -27,7 +24,7 @@ extern "C" {
 
 // ################################### GLOBAL Function Prototypes ##################################
 
-void vCommandInterpret(int cCmd, bool bEcho) ;
+void vCommandInterpret(int cCmd, bool bEcho);
 
 #ifdef __cplusplus
 }
