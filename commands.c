@@ -442,7 +442,11 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#endif
 //		case CHR_J: case CHR_K:
 		case CHR_L: halVARS_ReportGeoloc(); break;
-		case CHR_M: vRtosReportMemory(); break;
+		case CHR_M: {
+			flagmask_t sFM = { .u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0) };
+			vRtosReportMemory(sFM, NULL, 0);
+			break;
+		}
 		case CHR_N: xNetReportStats(); break;
 		case CHR_O: vOptionsShow(); break;
 	#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
@@ -460,7 +464,11 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 	#endif
-		case CHR_U: xRtosReportTasks(makeMASKFLAG(0,1,1,1,1,1,1,1,1,0x007FFFFF), NULL, 0); break;
+		case CHR_U: {
+			flagmask_t sFM = {.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF) };
+			xRtosReportTasks(sFM, NULL, 0);
+			break;
+		}
 		case CHR_V:
 			halMCU_Report();
 			halVARS_ReportFirmware();
