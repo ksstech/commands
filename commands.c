@@ -307,11 +307,6 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_STX: halFOTA_SetBootNumber(2, fotaBOOT_REBOOT); break;	// c-B
 		case CHR_ETX: halFOTA_SetBootNumber(3, fotaBOOT_REBOOT); break;	// c-C
 
-		case CHR_DLE:	// c-P
-			sNVSvars.HostMQTT = sNVSvars.HostSLOG = sNVSvars.HostFOTA = sNVSvars.HostCONF = (sNVSvars.HostMQTT==hostPROD) ? hostDEV : hostPROD;
-			setSYSFLAGS(vfHOSTS|sfRESTART);
-			break;
-
 		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: while(1); break;					// WatchDog timeout crash
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break;// Illegal memory write crash
