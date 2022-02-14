@@ -391,13 +391,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C: halSTORAGE_InfoFS(""); break;
 		#endif
+
 		case CHR_D:
 		#if (halSOC_DIG_IN > 0)
 			halGPIO_DIreport();
-		#endif
-		#if (halHAS_DS18X20 > 0)
-			//ds18x20StartAllInOne(NULL);
-			OWP_ScanAlarmsFamily(OWFAMILY_28);
 		#endif
 		#if	(halHAS_LIS2HH12 > 0)
 			lis2hh12ReportAll();
