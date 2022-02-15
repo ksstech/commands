@@ -127,8 +127,8 @@ static const char HelpMessage[] = {
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
-	"\tc-V Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
-	"\tc-W Reboot current FW as [AP]STA (delete VARS blob)\n"
+	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\n"
+	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
 	#if (!defined(NDEBUG) || defined(DEBUG))
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
@@ -311,8 +311,12 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_DC2: halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: while(1); break;					// WatchDog timeout crash
 		case CHR_NAK: *((char *) 0xFFFFFFFF) = 1; break;// Illegal memory write crash
-		case CHR_SYN: halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-V
-		case CHR_ETB: halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT); break;	// c-W
+		case CHR_SYN:									// c-V Erase VARS blob then reboot
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT);
+			break;
+		case CHR_ETB:									// c-W Erase VARS & WIFI blobs then reboot
+			halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
+			break;
 	#endif
 
 		case CHR_ESC:
