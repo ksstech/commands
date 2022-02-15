@@ -211,6 +211,7 @@ static const char HelpMessage[] = {
 	"ACT\tadjust ch# stage# Adj\n"
 	"ACT\tque|seq ch# S0 [... S23]]\n"
 	#endif
+	"GMAP\tioset 134 idx (-1 -> 3) ssid pswd\n"
 	"GMAP\tioset option para1 para2\n"
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\n"
 	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
