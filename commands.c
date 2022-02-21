@@ -11,7 +11,7 @@
 
 #if (SW_AEP == 1)
 	#include	"task_sitewhere.h"
-#elif	(SW_AEP == 2)
+#elif (SW_AEP == 2)
 	#include	"task_thingsboard.h"
 #endif
 
@@ -129,7 +129,7 @@ static const char HelpMessage[] = {
 	"\tc-R Revert to previous FW\n"
 	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\n"
 	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
-	#if (!defined(NDEBUG) || defined(DEBUG))
+	#if (configPRODUCTION == 0)
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
@@ -295,6 +295,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 }
 
 void vCommandInterpret(int cCmd, bool bEcho) {
+	int iRV = erSUCCESS;
 	halVARS_ReportFlags(0);
 	if (cCmd == 0 || cCmd == EOF) {
 		return;
@@ -334,7 +335,6 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		// ########################### Unusual (possibly dangerous) options
 	#if	(configPRODUCTION == 0)
-		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -343,38 +343,32 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-			xActuatorLoad(cCmd - CHR_0 + 8, 1, 0, 6000, 0, 0) ;
-			xActuatorLoad(cCmd - CHR_0, 6, 0, 500, 0, 500) ;
-			break ;
-
-		#elif (HW_VARIANT == HW_WROVERKIT)
-		case CHR_0:
-		case CHR_1:
-		case CHR_2:
-			if (cCmd - CHR_0 < halSOC_DIG_OUT)
-				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500);
-			else
-				printfx("%c", CHR_BEL);
+		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
+			cCmd -= CHR_0 ;
+			iRV = xActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
+			if (iRV >= erSUCCESS)
+				iRV = xActuatorLoad(cCmd, 6, 0, 500, 0, 500);
 			break;
 
-		#elif (HW_VARIANT == HW_DOITDEVKIT)
-		case CHR_0:
-		case CHR_1:
-			if (cCmd - CHR_0 < halSOC_DIG_OUT)
-				xActuatorLoad(cCmd - CHR_0, 5, 500, 500, 500, 500) ;
-			else
-				printfx("%c", CHR_BEL) ;
-			break ;
+		#elif (HW_VARIANT == HW_WROVERKIT || HW_VARIANT == HW_DOITDEVKIT)
+			cCmd -= CHR_0 ;
+			if (cCmd < halSOC_DIG_OUT) {
+				iRV = xActuatorLoad(cCmd, 5, 500, 500, 500, 500);
+			} else {
+				iRV = erOUT_OF_RANGE;
+			}
+			break;
 
 		#elif (HW_VARIANT == HW_EM1P2)
-		case CHR_0:
-		case CHR_1:
-		case CHR_2:
-		case CHR_3:
-			m90e26Report() ;
-			m90e26LoadNVSConfig(0, cCmd - CHR_0) ;
-			m90e26LoadNVSConfig(1, cCmd - CHR_0) ;
-			m90e26Report() ;
+			cCmd -= CHR_0;
+			if (cCmd < 3) {
+				m90e26Report() ;
+				m90e26LoadNVSConfig(0, cCmd) ;
+				m90e26LoadNVSConfig(1, cCmd) ;
+				m90e26Report() ;
+			} else {
+				iRV = erOUT_OF_RANGE;
+			}
 			break ;
 		#endif
 
@@ -500,6 +494,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 		default: xCommandBuffer(cCmd, bEcho);
 		}
+		if (iRV < erSUCCESS)
+			xSyslogError(__FUNCTION__, iRV);
 	}
 	halVARS_ReportFlags(0);
 }
