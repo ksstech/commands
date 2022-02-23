@@ -464,7 +464,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			halWL_ReportLx();
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
-			IF_EXEC_0(configCONSOLE_TELNET == 1, vTelnetReport);
+			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
 			#if	(SW_AEP == 1)
 			#include "task_sitewhere.h"
 			vSW_Report() ;
