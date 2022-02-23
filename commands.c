@@ -448,13 +448,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
 	#endif
-	#if	(configPRODUCTION == 0)
-		case CHR_Q:
-			sNVSvars.QoSLevel = (sNVSvars.QoSLevel == QOS0) ? QOS1 :
-								(sNVSvars.QoSLevel == QOS1) ? QOS2 : QOS0;
-			setSYSFLAGS(vfQOSLEVEL|sfRESTART);
-			break;
-	#endif
+//		case CHR_Q:
 		case CHR_R: vRulesDecode(); break;
 		case CHR_S: vTaskSensorsReport(); break;
 	#if	(configPRODUCTION == 0)
