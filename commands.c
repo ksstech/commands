@@ -124,15 +124,16 @@ static const char HelpMessage[] = {
 	#if (fotaMAX_OTA_PARTITIONS > 3)
 	"\tc-C Boot OTA #3 FW as STA\n"
 	#endif
+	"\tc-E delete 'syslog.txt'\n"
 	"\tc-P switch Platform & reboot\n"
 	"\tc-Q Toggle QOS 0->1->2->0\n"
 	"\tc-R Revert to previous FW\n"
-	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\n"
-	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
 	#if (configPRODUCTION == 0)
 	"\tc-T Generate WatchDog timeout\n"
 	"\tc-U generate Invalid memory access crash\n"
 	#endif
+	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\n"
+	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
 	#endif
 
 	"General:\n"
@@ -297,18 +298,19 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 void vCommandInterpret(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	flagmask_t sFM;
-	halVARS_ReportFlags(0);
-	if (cCmd == 0 || cCmd == EOF) {
-		return;
-	}
 	if (allSYSFLAGS(sfCLI) || allSYSFLAGS(sfESCAPE|sfLSBRACKET)) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
 	#if defined(ESP_PLATFORM)
-		case CHR_SOH: halFOTA_SetBootNumber(1, fotaBOOT_REBOOT); break;	// c-A
-		case CHR_STX: halFOTA_SetBootNumber(2, fotaBOOT_REBOOT); break;	// c-B
-		case CHR_ETX: halFOTA_SetBootNumber(3, fotaBOOT_REBOOT); break;	// c-C
+		case CHR_SOH:									// c-A
+		case CHR_STX:									// c-B
+		case CHR_ETX: 									// c-C
+			halFOTA_SetBootNumber(cCmd, fotaBOOT_REBOOT);
+			break;
+		case CHR_ENQ:									// c-E
+			unlink("syslog.txt");
+			break;
 		case CHR_DC2: 									// c-R
 			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT);
 			break;
@@ -394,7 +396,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 		}
 		#if	(halUSE_LITTLEFS == 1)
-		case CHR_C: halSTORAGE_InfoFS(""); break;
+		case CHR_C:
+			halSTORAGE_InfoFS("");
+			break;
 		#endif
 
 		case CHR_D:
@@ -490,5 +494,24 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		if (iRV < erSUCCESS)
 			xSyslogError(__FUNCTION__, iRV);
 	}
-	halVARS_ReportFlags(0);
+}
+
+int xCommandProcess(int cCmd, bool bEcho, bool bFlag, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
+	if (bFlag) {
+		xStdioBufLock(portMAX_DELAY);
+		setSYSFLAGS(sfRTCBUF_USE);
+	}
+	halVARS_ReportFlags(0);								// handle flag changes since previously here
+	if (cCmd != 0 && cCmd != EOF)						// if we have a valid command
+		vCommandInterpret(cCmd, bEcho);					// process it..
+	halVARS_CheckChanges();								// handle VARS if changed
+	halVARS_ReportFlags(0);								// report flags if changed
+	int iRV = 0;
+	if (Hdlr)
+		iRV = Hdlr(pV, pCC);									// empty buffer
+	if (bFlag) {
+		clrSYSFLAGS(sfRTCBUF_USE);
+		xStdioBufUnLock();
+	}
+	return iRV;
 }

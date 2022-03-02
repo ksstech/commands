@@ -24,7 +24,7 @@ extern "C" {
 
 // ################################### GLOBAL Function Prototypes ##################################
 
-void vCommandInterpret(int cCmd, bool bEcho);
+int xCommandProcess(int cCmd, bool bEcho, bool bFlag, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...);
 
 #ifdef __cplusplus
 }
