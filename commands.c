@@ -521,22 +521,38 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	}
 }
 
-int xCommandProcess(int cCmd, bool bEcho, bool bFlag, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
-	if (bFlag) {
+/* HTTP / TNET / CONS vs BUF / UART mapping
+ *  ToUART ioSTDIO Destination  Semaphore
+ * -------+-------+-----------+-----------+
+ *    0       0      Buffer       Lock
+ * -------+-------+-----------+-----------+
+ *    0       1      Buffer       Lock
+ * -------+-------+-----------+-----------+
+ *    1       0       UART       NoLock
+ * -------+-------+-----------+-----------+
+ *    1       1      Buffer       Lock
+ * -------+-------+-----------+-----------+
+ */
+int xCommandProcess(int cCmd, bool bEcho, bool ToUART, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
+	bool ioFlag = ioB1GET(ioSTDIO);
+	if ((ToUART == 0) || ioFlag)
 		xStdioBufLock(portMAX_DELAY);
-		setSYSFLAGS(sfRTCBUF_USE);
-	}
+	if (ToUART)
+		setSYSFLAGS(sfTO_UART);
+
 	halVARS_ReportFlags(0);								// handle flag changes since previously here
 	if (cCmd != 0 && cCmd != EOF)						// if we have a valid command
 		vCommandInterpret(cCmd, bEcho);					// process it..
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
+
 	int iRV = 0;
 	if (Hdlr)
-		iRV = Hdlr(pV, pCC);									// empty buffer
-	if (bFlag) {
-		clrSYSFLAGS(sfRTCBUF_USE);
+		iRV = Hdlr(pV, pCC);							// empty buffer
+
+	if (ToUART)
+		clrSYSFLAGS(sfTO_UART);
+	if ((ToUART == 0) || ioFlag)
 		xStdioBufUnLock();
-	}
 	return iRV;
 }
