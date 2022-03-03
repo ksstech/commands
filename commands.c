@@ -376,7 +376,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		#if	(halXXX_XXX_OUT > 0)
-		case CHR_A:	vTaskActuatorReport(); break;
+		case CHR_A:
+			vTaskActuatorReport();
+			break;
 		#endif
 
 		case CHR_B: {
@@ -433,30 +435,50 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#endif
 		// ############################ Normal (non-dangerous) options
 //		case CHR_E:
-		case CHR_F: halVARS_ReportFlags(1); break;
+		case CHR_F:
+			halVARS_ReportFlags(1);
+			break;
 //		case CHR_G:
-		case CHR_H: printfx(HelpMessage); break;
+		case CHR_H:
+			printfx(HelpMessage);
+			break;
 	#if	(configUSE_IDENT == 1)
-		case CHR_I: vID1_ReportAll(); break;
+		case CHR_I:
+			vID1_ReportAll();
+			break;
 	#elif (configUSE_IDENT == 2)
-		case CHR_I: vID2_ReportAll(); break;
+		case CHR_I:
+			vID2_ReportAll();
+			break;
 	#endif
 //		case CHR_J: case CHR_K:
-		case CHR_L: halVARS_ReportGeoloc(); break;
+		case CHR_L:
+			halVARS_ReportGeoloc();
+			break;
 		case CHR_M:
 			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
 			vRtosReportMemory(sFM, NULL, 0);
 			break;
-		case CHR_N: xNetReportStats(); break;
-		case CHR_O: vOptionsShow(); break;
+		case CHR_N:
+			xNetReportStats();
+			break;
+		case CHR_O:
+			vOptionsShow();
+			break;
 	#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
 	#endif
 //		case CHR_Q:
-		case CHR_R: vRulesDecode(); break;
-		case CHR_S: vTaskSensorsReport(); break;
+		case CHR_R:
+			vRulesDecode();
+			break;
+		case CHR_S:
+			vTaskSensorsReport();
+			break;
 	#if	(configPRODUCTION == 0)
-		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
+		case CHR_T:
+			vSysTimerShow(0xFFFFFFFF);
+			break;
 	#endif
 		case CHR_U:
 			sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF);
@@ -480,7 +502,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vControlReportTimeout();
 			vHBufReport(&sCLI);
 			break ;
-		case CHR_W: halWL_Report(); break;
+		case CHR_W:
+			halWL_Report();
+			break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
 		case CHR_L_SQUARE:
 			if (allSYSFLAGS(sfESCAPE) && allSYSFLAGS(sfLSBRACKET) == 0) {
@@ -489,7 +513,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 				clrSYSFLAGS(sfESCAPE|sfLSBRACKET);
 			}
 			break;
-		default: xCommandBuffer(cCmd, bEcho);
+		default:
+			xCommandBuffer(cCmd, bEcho);
 		}
 		if (iRV < erSUCCESS)
 			xSyslogError(__FUNCTION__, iRV);
