@@ -2,17 +2,17 @@
  * commands.c - command interpreter
  */
 
-#include	"hal_variables.h"
-#include	"commands.h"
-#include	"hbuf.h"
+#include "hal_variables.h"
+#include "commands.h"
+#include "hbuf.h"
 
-#include	"FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
-#include	"actuators.h"
+#include "FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
+#include "actuators.h"
 
 #if (SW_AEP == 1)
-	#include	"task_sitewhere.h"
+	#include "task_sitewhere.h"
 #elif (SW_AEP == 2)
-	#include	"task_thingsboard.h"
+	#include "task_thingsboard.h"
 #endif
 
 #if (configUSE_IDENT == 1)
@@ -21,25 +21,26 @@
 	#include	"ident2.h"
 #endif
 
-#include	"options.h"
-#include 	"printfx.h"
-#include	"syslog.h"
-#include	"systiming.h"
+#include "options.h"
+#include "printfx.h"
+#include "syslog.h"
+#include "systiming.h"
 
-#include	"x_http_server.h"
-#include	"x_string_general.h"						// xstrncmp()
-#include	"x_string_to_values.h"
+#include "x_http_server.h"
+#include "x_string_general.h"						// xstrncmp()
+#include "x_string_to_values.h"
 
-#include	"x_errors_events.h"
-#include	"x_builddefs.h"
-#include	"x_telnet_server.h"
+#include "x_errors_events.h"
+#include "x_builddefs.h"
+#include "x_telnet_server.h"
 
-#include	"hal_usart.h"
-#include 	"hal_mcu.h"									// halMCU_Report()
-#include	"hal_fota.h"
-#include	"hal_storage.h"
+#include "hal_usart.h"
+#include "hal_mcu.h"									// halMCU_Report()
+#include "hal_fota.h"
+#include "hal_gpio.h"
+#include "hal_storage.h"
 
-#include	"MQTTClient.h"								// QOSx levels
+#include "MQTTClient.h"								// QOSx levels
 
 #if (configUSE_RULES > 0)
 	#include	"rules_decode.h"
