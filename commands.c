@@ -458,7 +458,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 		case CHR_M:
 			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
-			vRtosReportMemory(sFM, NULL, 0);
+			vRtosReportMemory(NULL, 0, sFM);
 			break;
 		case CHR_N:
 			xNetReportStats();
@@ -483,7 +483,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 	#endif
 		case CHR_U:
 			sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF);
-			xRtosReportTasks(sFM, NULL, 0);
+			xRtosReportTasks(NULL, 0, sFM);
 			break;
 		case CHR_V:
 			halMCU_Report();
