@@ -541,9 +541,10 @@ int xCommandProcess(int cCmd, bool bEcho, bool ToUART, int (*Hdlr)(void *, const
 	if (ToUART)
 		setSYSFLAGS(sfTO_UART);
 
-	halVARS_ReportFlags(0);								// handle flag changes since previously here
-	if (cCmd != 0 && cCmd != EOF)						// if we have a valid command
+	if (cCmd != 0 && cCmd != EOF) {						// if we have a valid command
+		halVARS_ReportFlags(0);							// handle flag changes since previously here
 		vCommandInterpret(cCmd, bEcho);					// process it..
+	}
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
 
