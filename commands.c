@@ -11,14 +11,10 @@
 
 #if (SW_AEP == 1)
 	#include "task_sitewhere.h"
+	#include "ident1.h"
 #elif (SW_AEP == 2)
 	#include "task_thingsboard.h"
-#endif
-
-#if (configUSE_IDENT == 1)
-	#include	"ident1.h"
-#elif (configUSE_IDENT == 2)
-	#include	"ident2.h"
+	#include "ident2.h"
 #endif
 
 #include "options.h"
@@ -443,15 +439,15 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_H:
 			printfx(HelpMessage);
 			break;
-	#if	(configUSE_IDENT == 1)
+		#if	(configUSE_IDENT > 0)
 		case CHR_I:
+			#if (SW_AEP == 1)
 			vID1_ReportAll();
-			break;
-	#elif (configUSE_IDENT == 2)
-		case CHR_I:
+			#elif (SW_AEP == 2)
 			vID2_ReportAll();
+			#endif
 			break;
-	#endif
+		#endif
 //		case CHR_J: case CHR_K:
 		case CHR_L:
 			halVARS_ReportGeoloc();
