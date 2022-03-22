@@ -402,7 +402,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_D:
 		#if (halSOC_DIG_IN > 0)
-			halGPIO_DIreport();
+			halGPDI_Report();
 		#endif
 		#if	(halHAS_LIS2HH12 > 0)
 			lis2hh12ReportAll();
