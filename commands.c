@@ -530,27 +530,21 @@ void vCommandInterpret(int cCmd, bool bEcho) {
  *    1       1      Buffer       Lock
  * -------+-------+-----------+-----------+
  */
-int xCommandProcess(int cCmd, bool bEcho, bool ToUART, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
-	bool ioFlag = ioB1GET(ioSTDIO);
-	if ((ToUART == 0) || ioFlag)
-		xStdioBufLock(portMAX_DELAY);
-	if (ToUART)
-		setSYSFLAGS(sfTO_UART);
 
-	if (cCmd != 0 && cCmd != EOF) {						// if we have a valid command
+int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
+	xStdioBufLock(portMAX_DELAY);
+	int iRV = 0;
+	while (*pCmd) {
 		halVARS_ReportFlags(0);							// handle flag changes since previously here
-		vCommandInterpret(cCmd, bEcho);					// process it..
+		vCommandInterpret(*pCmd++, bEcho);				// process it..
+		++iRV;
 	}
+	if (iRV > 1)
+		vCommandInterpret('\r', bEcho);
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
-
-	int iRV = 0;
 	if (Hdlr)
 		iRV = Hdlr(pV, pCC);							// empty buffer
-
-	if (ToUART)
-		clrSYSFLAGS(sfTO_UART);
-	if ((ToUART == 0) || ioFlag)
-		xStdioBufUnLock();
+	xStdioBufUnLock();
 	return iRV;
 }
