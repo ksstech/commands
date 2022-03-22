@@ -462,9 +462,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_O:
 			vOptionsShow();
 			break;
-	#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
+		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
-	#endif
+		#endif
 //		case CHR_Q:
 		case CHR_R:
 			vRulesDecode();
@@ -472,11 +472,11 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_S:
 			vTaskSensorsReport();
 			break;
-	#if	(configPRODUCTION == 0)
+		#if	(configPRODUCTION == 0)
 		case CHR_T:
 			vSysTimerShow(0xFFFFFFFF);
 			break;
-	#endif
+		#endif
 		case CHR_U:
 			sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF);
 			xRtosReportTasks(NULL, 0, sFM);
