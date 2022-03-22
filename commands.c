@@ -309,7 +309,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			unlink("syslog.txt");
 			break;
 		case CHR_DC2: 									// c-R
-			halFOTA_RevertToPreviousFirmware(fotaBOOT_REBOOT);
+			halFOTA_SetBootNumber(PrvPart, fotaBOOT_REBOOT);
 			break;
 		case CHR_DC4: 									// c-T WatchDog timeout crash
 			while(1);
@@ -318,10 +318,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			*((char *) 0xFFFFFFFF) = 1;
 			break;
 		case CHR_SYN:									// c-V Erase VARS blob then reboot
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(), fotaERASE_VARS|fotaBOOT_REBOOT);
+			halFOTA_SetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
 		case CHR_ETB:									// c-W Erase VARS & WIFI blobs then reboot
-			halFOTA_SetBootNumber(halFOTA_GetBootNumber(),fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
+			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
 	#endif
 
