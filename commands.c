@@ -531,7 +531,10 @@ void vCommandInterpret(int cCmd, bool bEcho) {
  * -------+-------+-----------+-----------+
  */
 
-int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...) {
+/**
+ * @brief	process a command string and call the [optional handler] to process the buffered output
+ */
+int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
 	xStdioBufLock(portMAX_DELAY);
 	int iRV = 0;
 	while (*pCmd) {
@@ -543,8 +546,12 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 		vCommandInterpret('\r', bEcho);
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
-	if (Hdlr)
-		iRV = Hdlr(pV, pCC);							// empty buffer
+	if (Hdlr) {
+		va_list vaList;
+		va_start(vaList, pCC);
+		iRV = Hdlr(pV, pCC, vaList);					// empty buffer
+		va_end(vaList);
+	}
 	xStdioBufUnLock();
 	return iRV;
 }

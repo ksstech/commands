@@ -24,7 +24,7 @@ extern "C" {
 
 // ################################### GLOBAL Function Prototypes ##################################
 
-int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, ...), void * pV, const char * pCC, ...);
+int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void *, const char *, ...);
 
 #ifdef __cplusplus
 }
