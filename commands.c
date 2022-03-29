@@ -30,7 +30,8 @@
 #include "x_builddefs.h"
 #include "x_telnet_server.h"
 
-#include "hal_usart.h"
+//#include "hal_usart.h"
+#include "hal_stdio.h"
 #include "hal_mcu.h"									// halMCU_Report()
 #include "hal_fota.h"
 #include "hal_gpio.h"
@@ -209,8 +210,12 @@ static const char HelpMessage[] = {
 	"ACT\tadjust ch# stage# Adj\n"
 	"ACT\tque|seq ch# S0 [... S23]]\n"
 	#endif
-	"GMAP\tioset 134 idx (-1 -> 3) ssid pswd\n"
 	"GMAP\tioset option para1 para2\n"
+	"GMAP\tioset 134(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\n"
+	"GMAP\tioset 135(mqtt) w.x.y.z port\n"
+	#if	(configPRODUCTION == 0)
+	"GMAP\tioset 136(peek) address size\n"
+	#endif
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\n"
 	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
 	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
@@ -517,19 +522,6 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			xSyslogError(__FUNCTION__, iRV);
 	}
 }
-
-/* HTTP / TNET / CONS vs BUF / UART mapping
- *  ToUART ioSTDIO Destination  Semaphore
- * -------+-------+-----------+-----------+
- *    0       0      Buffer       Lock
- * -------+-------+-----------+-----------+
- *    0       1      Buffer       Lock
- * -------+-------+-----------+-----------+
- *    1       0       UART       NoLock
- * -------+-------+-----------+-----------+
- *    1       1      Buffer       Lock
- * -------+-------+-----------+-----------+
- */
 
 /**
  * @brief	process a command string and call the [optional handler] to process the buffered output
