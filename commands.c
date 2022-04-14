@@ -258,7 +258,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			// Do nothing
 		}
 	} else {
-		if (cCmd == '\r' && Lidx) {				// CR and something in buffer?
+		if (cCmd == CHR_CR && Lidx) {					// CR and something in buffer?
 			if (bEcho) {								// yes, ....
 				printfx(" -> ");
 			}
@@ -535,7 +535,7 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 		++iRV;
 	}
 	if (iRV > 1)
-		vCommandInterpret('\r', bEcho);
+		vCommandInterpret(CHR_CR, bEcho);
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
 	if (Hdlr) {
