@@ -455,7 +455,8 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 //		case CHR_J: case CHR_K:
 		case CHR_L:
-			halVARS_ReportGeoloc();
+			halVARS_ReportGLinfo();
+			halVARS_ReportTZinfo();
 			break;
 		case CHR_M:
 			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
