@@ -378,9 +378,7 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		#if	(halXXX_XXX_OUT > 0)
-		case CHR_A:
-			vTaskActuatorReport();
-			break;
+		case CHR_A: vTaskActuatorReport(); break;
 		#endif
 
 		case CHR_B: {
@@ -399,10 +397,9 @@ void vCommandInterpret(int cCmd, bool bEcho) {
 			vRtosFree(pBuffer);
 			break;
 		}
+
 		#if	(halUSE_LITTLEFS == 1)
-		case CHR_C:
-			halSTORAGE_InfoFS("");
-			break;
+		case CHR_C: halSTORAGE_InfoFS(""); break;
 		#endif
 
 		case CHR_D:
