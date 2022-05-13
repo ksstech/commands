@@ -243,6 +243,17 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 	hbuf_t * psHB = &sCLI;
 	if (allSYSFLAGS(sfESCAPE|sfLSBRACKET)) {
 		Lidx = 0;
+		#if (buildNEW_CODE == 1)
+		if (cCmd == CHR_A) {							// Cursor UP
+			Lidx = vHBufPrvCmd(psHB, Lbuf, sizeof(Lbuf));
+			if (Lidx)
+				setSYSFLAGS(sfHISTORY);
+		} else if (cCmd == CHR_B) {						// Cursor DOWN
+			Lidx = vHBufNxtCmd(psHB, Lbuf, sizeof(Lbuf));
+			if (Lidx)
+				setSYSFLAGS(sfHISTORY);
+		}
+		#else
 		if (psHB->iCur == psHB->iFree) {				// history empty?
 			// Do nothing
 		} else if (cCmd == CHR_A) {						// Cursor UP
@@ -256,6 +267,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else {										// unknown command....
 			// Do nothing
 		}
+		#endif
 	} else {
 		if (cCmd == CHR_CR && Lidx) {					// CR and something in buffer?
 			if (bEcho)									// yes, ....
