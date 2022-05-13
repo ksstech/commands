@@ -6,7 +6,7 @@
 #include "commands.h"
 #include "hbuf.h"
 
-#include "FreeRTOS_Support.h"						// freertos statistics complex_vars struct_unions x_time definitions stdint time
+#include "FreeRTOS_Support.h"		// freertos statistics complex_vars struct_unions x_time definitions stdint time
 #include "actuators.h"
 
 #if (SW_AEP == 1)
@@ -23,72 +23,71 @@
 #include "systiming.h"
 
 #include "x_http_server.h"
-#include "x_string_general.h"						// xstrncmp()
+#include "x_string_general.h"		// xstrncmp()
 #include "x_string_to_values.h"
 
 #include "x_errors_events.h"
 #include "x_builddefs.h"
 #include "x_telnet_server.h"
 
-//#include "hal_usart.h"
 #include "hal_stdio.h"
-#include "hal_mcu.h"									// halMCU_Report()
+#include "hal_mcu.h"				// halMCU_Report()
 #include "hal_fota.h"
 #include "hal_gpio.h"
 #include "hal_storage.h"
 
-#include "MQTTClient.h"								// QOSx levels
+#include "MQTTClient.h"				// QOSx levels
 
 #if (configUSE_RULES > 0)
-	#include	"rules_decode.h"
-	#include	"rules_parse_text.h"
+	#include "rules_decode.h"
+	#include "rules_parse_text.h"
 #endif
 
 #if (halHAS_LIS2HH12 > 0)
-	#include	"lis2hh12.h"
+	#include "lis2hh12.h"
 #endif
 
 #if (halHAS_LTR329ALS > 0)
-	#include	"ltr329als.h"
+	#include "ltr329als.h"
 #endif
 
 #if (halHAS_M90E26 > 0)
-	#include	"m90e26.h"
+	#include "m90e26.h"
 #endif
 
 #if (halHAS_MCP342X > 0)
-	#include	"mcp342x.h"
+	#include "mcp342x.h"
 #endif
 
 #if (halHAS_MPL3115 > 0)
-	#include	"mpl3115.h"
+	#include "mpl3115.h"
 #endif
 
 #if (halHAS_ONEWIRE > 0)
-	#include	"onewire_platform.h"
+	#include "onewire_platform.h"
 	#if	(halHAS_DS18X20 > 0)
-	#include	"ds18x20.h"
+	#include "ds18x20.h"
 	#endif
 #endif
 
 #if (halHAS_PCA9555 > 0)
-	#include	"pca9555.h"
+	#include "pca9555.h"
 #endif
 
 #if (halHAS_PYCOPROC > 0)
-	#include	"pycoproc.h"
+	#include "pycoproc.h"
 #endif
 
 #if (halHAS_SI70XX > 0)
-	#include	"si70xx.h"
+	#include "si70xx.h"
 #endif
 
 #if (halHAS_SSD1306 > 0)
-	#include	"ssd1306.h"
+	#include "ssd1306.h"
 #endif
 
-#include	<string.h>
-#include	<stdbool.h>
+#include <string.h>
+#include <stdbool.h>
 
 #define	debugFLAG					0xC002
 
@@ -264,19 +263,16 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			}
 			Lbuf[Lidx] = 0;								// terminate command
 			iRV = xRulesProcessText((char *)Lbuf);		// then execute
-			if (allSYSFLAGS(sfHISTORY) == 0) {			// if new/modified command
+			if (allSYSFLAGS(sfHISTORY) == 0)			// if new/modified command
 				vHBufAddCmd(psHB, Lbuf, Lidx);			// save into buffer
-			}
 			Lidx = 0;
 		} else {
-			if (cCmd == CHR_BS) {				// BS to remove last character
-				if (Lidx) {
+			if (cCmd == CHR_BS) {						// BS to remove last character
+				if (Lidx)
 					--Lidx;
-				}
-			} else if (cCmd == CHR_ESC) {		// ESC to clear the buffer
+			} else if (cCmd == CHR_ESC) {				// ESC to clear the buffer
 				Lidx = 0;
-			} else if (isprint(cCmd) &&			// printable character
-				(Lidx < (sizeof(Lbuf) - 1))) {			// and space in buffer
+			} else if (isprint(cCmd) && (Lidx < (sizeof(Lbuf) - 1))) {	// printable and space in buffer
 				Lbuf[Lidx++] = cCmd;					// store character & step index
 			}
 		}
@@ -285,14 +281,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 	clrSYSFLAGS(sfESCAPE|sfLSBRACKET);
 	if (Lidx) {											// anything in buffer?
 		setSYSFLAGS(sfCLI);								// ensure flag is set
-		if (bEcho) {									// option refresh whole line
+		if (bEcho)										// optional refresh whole line
 			printfx("\r%.*s \b", Lidx, Lbuf);
-		}
 	} else {
 		clrSYSFLAGS(sfCLI);								// buffer empty, clear flag
-		if (bEcho) {									// optional clear line
+		if (bEcho)										// optional clear line
 			printfx("\r\033[0K");
-		}
 	}
 	return iRV;
 }
