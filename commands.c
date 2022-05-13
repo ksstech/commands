@@ -258,9 +258,8 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		}
 	} else {
 		if (cCmd == CHR_CR && Lidx) {					// CR and something in buffer?
-			if (bEcho) {								// yes, ....
-				printfx(" -> ");
-			}
+			if (bEcho)									// yes, ....
+				printfx("\n");
 			Lbuf[Lidx] = 0;								// terminate command
 			iRV = xRulesProcessText((char *)Lbuf);		// then execute
 			if (allSYSFLAGS(sfHISTORY) == 0)			// if new/modified command
