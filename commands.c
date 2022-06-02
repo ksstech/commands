@@ -240,7 +240,7 @@ void vControlReportTimeout(void) ;
 
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	if (cmdFlag.esc |cmdFlag.lsb) {
+	if (cmdFlag.esc | cmdFlag.lsb) {
 		cmdIdx = 0;
 		if (cCmd == CHR_A) {							// Cursor UP
 			cmdIdx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
@@ -251,7 +251,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			if (cmdIdx)
 				cmdFlag.his = 1;
 		} else {
-			P("ESC=%d  LFS-%d  cCmd=%d\n", cmdFlag.esc, cmdFlag.lsb, cCmd);
+			P("ESC=%d  LSB=%d  cCmd=%d\n", cmdFlag.esc, cmdFlag.lsb, cCmd);
 		}
 		cmdFlag.esc = cmdFlag.lsb = 0;
 	} else {
@@ -296,7 +296,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
-	#if defined(ESP_PLATFORM)
+		#if defined(ESP_PLATFORM)
 		case CHR_SOH:									// c-A
 		case CHR_STX:									// c-B
 		case CHR_ETX: 									// c-C
@@ -320,7 +320,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_ETB:									// c-W Erase VARS & WIFI blobs then reboot
 			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
-	#endif
+		#endif
 
 		case CHR_ESC:
 			if (cmdFlag.cli || cmdFlag.esc) {
@@ -331,7 +331,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		// ########################### Unusual (possibly dangerous) options
-	#if	(configPRODUCTION == 0)
+		#if	(configPRODUCTION == 0)
 		case CHR_0:
 		case CHR_1:
 		case CHR_2:
@@ -423,7 +423,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			ssd1306Report();
 		#endif
 			break;
-	#endif
+		#endif
 		// ############################ Normal (non-dangerous) options
 //		case CHR_E:
 		case CHR_F:
