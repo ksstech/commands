@@ -342,15 +342,14 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_7:
 		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
 			cCmd -= CHR_0 ;
-			iRV = xActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
-			if (iRV >= erSUCCESS)
-				iRV = xActuatorLoad(cCmd, 6, 0, 500, 0, 500);
+			vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
+			vActuatorLoad(cCmd, 6, 0, 500, 0, 500);
 			break;
 
 		#elif (HW_VARIANT == HW_WROVERKIT || HW_VARIANT == HW_DOITDEVKIT)
 			cCmd -= CHR_0 ;
 			if (cCmd < halSOC_DIG_OUT) {
-				iRV = xActuatorLoad(cCmd, 5, 500, 500, 500, 500);
+				vActuatorLoad(cCmd, 5, 500, 500, 500, 500);
 			} else {
 				iRV = erOUT_OF_RANGE;
 			}
