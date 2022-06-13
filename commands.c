@@ -219,14 +219,17 @@ static const char HelpMessage[] = {
 // #################################### Public variables ##########################################
 
 ubuf_t * psHB = NULL;
-static u8_t cmdBuf[127]= { 0 };
-static u8_t cmdIdx = 0;
-static struct __attribute__((packed)) {
-	u8_t esc : 1;
-	u8_t lsb : 1;
-	u8_t cli : 1;
-	u8_t his : 1;
-	u8_t spare : 4;
+static u8_t cmdBuf[128]= { 0 };
+
+static union {
+	struct __attribute__((packed)) {
+		u16_t esc:1;
+		u16_t lsb:1;
+		u16_t cli:1;
+		u16_t his:1;
+		u16_t idx:12;
+	};
+	u16_t u16;
 } cmdFlag;
 
 // ################################ Forward function declarations ##################################
@@ -238,6 +241,9 @@ void vControlReportTimeout(void) ;
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
+/*
+
+ */
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cmdFlag.esc | cmdFlag.lsb) {
@@ -425,13 +431,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 		// ############################ Normal (non-dangerous) options
 //		case CHR_E:
-		case CHR_F:
-			halVARS_ReportFlags(1);
-			break;
+		case CHR_F: halVARS_ReportFlags(1); break;
 //		case CHR_G:
-		case CHR_H:
-			printfx(HelpMessage);
-			break;
+		case CHR_H: printfx(HelpMessage); break;
 		#if	(configUSE_IDENT > 0)
 		case CHR_I:
 			#if (SW_AEP == 1)
@@ -450,26 +452,17 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
 			vRtosReportMemory(NULL, 0, sFM);
 			break;
-		case CHR_N:
-			xNetReportStats();
-			break;
-		case CHR_O:
-			vOptionsShow();
-			break;
+		case CHR_N: xNetReportStats(); break;
+		case CHR_O: vOptionsShow(); break;
+
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
 		#endif
 //		case CHR_Q:
-		case CHR_R:
-			vRulesDecode();
-			break;
-		case CHR_S:
-			vTaskSensorsReport();
-			break;
+		case CHR_R: vRulesDecode(); break;
+		case CHR_S: vTaskSensorsReport(); break;
 		#if	(configPRODUCTION == 0)
-		case CHR_T:
-			vSysTimerShow(0xFFFFFFFF);
-			break;
+		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		#endif
 		case CHR_U:
 			sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF);
@@ -493,9 +486,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vControlReportTimeout();
 			vUBufReport(psHB);
 			break ;
-		case CHR_W:
-			halWL_Report();
-			break;
+		case CHR_W: halWL_Report(); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
 		case CHR_L_SQUARE:
 			if (cmdFlag.esc && cmdFlag.lsb == 0) {
@@ -504,8 +495,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 				cmdFlag.esc = cmdFlag.lsb = 0;
 			}
 			break;
-		default:
-			xCommandBuffer(cCmd, bEcho);
+		default: xCommandBuffer(cCmd, bEcho);
 		}
 	}
 	if (iRV < erSUCCESS)
