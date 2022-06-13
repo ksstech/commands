@@ -104,116 +104,116 @@
 
 static const char HelpMessage[] = {
 	#ifdef ESP_PLATFORM
-	"ESP32 Specific:\n"
-	"\tc-A Boot OTA #1 FW as STA\n"
+	"ESP32 Specific:\r\n"
+	"\tc-A Boot OTA #1 FW as STA\r\n"
 	#if (fotaMAX_OTA_PARTITIONS > 2)
-	"\tc-B Boot OTA #2 FW as STA\n"
+	"\tc-B Boot OTA #2 FW as STA\r\n"
 	#endif
 	#if (fotaMAX_OTA_PARTITIONS > 3)
-	"\tc-C Boot OTA #3 FW as STA\n"
+	"\tc-C Boot OTA #3 FW as STA\r\n"
 	#endif
-	"\tc-E delete 'syslog.txt'\n"
-	"\tc-P switch Platform & reboot\n"
-	"\tc-Q Toggle QOS 0->1->2->0\n"
-	"\tc-R Revert to previous FW\n"
+	"\tc-E delete 'syslog.txt'\r\n"
+	"\tc-P switch Platform & reboot\r\n"
+	"\tc-Q Toggle QOS 0->1->2->0\r\n"
+	"\tc-R Revert to previous FW\r\n"
 	#if (configPRODUCTION == 0)
-	"\tc-T Generate WatchDog timeout\n"
-	"\tc-U generate Invalid memory access crash\n"
+	"\tc-T Generate WatchDog timeout\r\n"
+	"\tc-U generate Invalid memory access crash\r\n"
 	#endif
-	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\n"
-	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\n"
+	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\r\n"
+	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\r\n"
 	#endif
 
-	"General:\n"
+	"General:\r\n"
 	#if	(configPRODUCTION == 0) && (halXXX_XXX_OUT > 0)
-	"ACT\t(0-x) Trigger selected actuator\n"
+	"ACT\t(0-x) Trigger selected actuator\r\n"
 	#endif
 	#if	(halXXX_XXX_OUT > 0)
-	"ACT\t(A)ctuators Report\n"
+	"ACT\t(A)ctuators Report\r\n"
 	#endif
 	#if	(configPRODUCTION == 0)
-	"\t(B)lob report\n"
+	"\t(B)lob report\r\n"
 	#if	(halUSE_LITTLEFS == 1)
-	"\t(C)ontent of LFS\n"
+	"\t(C)ontent of LFS\r\n"
 	#endif
-	"\t(D)iagnostics\n"
+	"\t(D)iagnostics\r\n"
 	#if (halSOC_DIG_IN > 0)
-	"\t    DigIn Pins\n"
+	"GPDI\t    DigIn Pins\r\n"
 	#endif
 	#if	(halHAS_DS18X20 > 0)
-	"1W\t    DS18X20 device info\n"
+	"1W\t    DS18X20 device info\r\n"
 	#endif
 	#if (halHAS_LIS2HH12 > 0)
-	"lis2hh12    lis2hh12Report\n"
+	"lis2hh\t    lis2hh12Report\r\n"
 	#endif
 	#if	(halHAS_LTR329ALS > 0)
-	"ltr329als   ltr329alsReport\n"
+	"ltr329\t    ltr329alsReport\r\n"
 	#endif
 	#if	(halHAS_M90E26 > 0)
-	"M90E\t    m90e26Report\n"
+	"M90E\t    m90e26Report\r\n"
 	#endif
 	#if	(halHAS_MCP342X > 0)
-	"MCP342x\t    mcp342xReport\n"
+	"MCP342x\t    mcp342xReport\r\n"
 	#endif
 	#if	(halHAS_MPL3115 > 0)
-	"mpl3115     mpl3115Report\n"
+	"mpl3115\t    mpl3115Report\r\n"
 	#endif
 	#if	(halHAS_ONEWIRE > 0)
-	"1W\t    Onewire info\n"
+	"1W\t    Onewire info\r\n"
 	#endif
 	#if	(halHAS_SI70XX > 0)
-	"si70xx      si70xxReport\n"
+	"si70xx\t    si70xxReport\r\n"
 	#endif
 	#if	(halHAS_SSD1306 > 0)
-	"SSD1306\t    ssd1306Report\n"
+	"SSD1306\t    ssd1306Report\r\n"
 	#endif
 	#endif
 
-	"\t(F)lags Status\n"
-	"\t(H)elp screen display\n"
+	"\t(F)lags Status\r\n"
+	"\t(H)elp screen display\r\n"
 	#if	(configUSE_IDENT > 0)
-	"\t(I)dent table\n"
+	"\t(I)dent table\r\n"
 	#endif
-	"\t(L)ocation info\n"
-	"\t(M)emory info\n"
-	"\t(N)etwork (IP4) info\n"
-	"\t(O)ptions display\n"
+	"\t(L)ocation info\r\n"
+	"\t(M)emory info\r\n"
+	"\t(N)etwork (IP4) info\r\n"
+	"\t(O)ptions display\r\n"
 	#if	(configPRODUCTION == 0)
-	"\t(P)artitions report\n"
+	"\t(P)artitions report\r\n"
 	#endif
-	"\t(R)ules display\n"
-	"\t(S)ensors statistics\n"
+	"\t(R)ules display\r\n"
+	"\t(S)ensors statistics\r\n"
 	#if	(configPRODUCTION == 0)
-	"\t(T)imer/Scatter Info\n"
+	"\t(T)imer/Scatter Info\r\n"
 	#endif
-	"\t(U)tilization (task) statistics\n"
-	"\t(V)erbose system info\n"
-	"\t(W)ifi Stats\n"
+	"\t(U)tilization (task) statistics\r\n"
+	"\t(V)erbose system info\r\n"
+	"\t(W)ifi Stats\r\n"
 
-	"Extended commands:\n"
+	"Extended commands:\r\n"
 	#if (halHAS_LIS2HH12 > 0)
-	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\n"
+	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
 	#endif
 	#if	(halXXX_XXX_OUT > 0)
-	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\n"
-	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\n"
-	"ACT\tadjust ch# stage# Adj\n"
-	"ACT\tque|seq ch# S0 [... S23]]\n"
+	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\r\n"
+	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\r\n"
+	"ACT\tadjust ch# stage# Adj\r\n"
+	"ACT\tque|seq ch# S0 [... S23]]\r\n"
 	#endif
-	"GMAP\tioset option para1 para2\n"
-	"GMAP\tioset 134(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\n"
-	"GMAP\tioset 135(mqtt) w.x.y.z port\n"
+	"GMAP\tioset option para1 para2\r\n"
+	"GMAP\tioset 134(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\r\n"
+	"GMAP\tioset 135(mqtt) w.x.y.z port\r\n"
 	#if	(configPRODUCTION == 0)
-	"GMAP\tioset 136(peek) address size\n"
+	"GMAP\tioset 136(peek) address size\r\n"
 	#endif
-	"GMAP\tmode /uri para1 [para2 .. [para6]]\n"
-	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\n"
-	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\n"
-	"\tregister\n"
-	"\trestart\n"
-	"\tshow W0 [... [W23]]\n"
-	"\tupgrade\n"
-	"\n"
+	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
+	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
+	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\r\n"
+	"\tregister\r\n"
+	"\trestart\r\n"
+	"\tshow W0 [... [W23]]\r\n"
+	"\tupgrade\r\n"
+	"\r\n"
 } ;
 
 // #################################### Public variables ##########################################
