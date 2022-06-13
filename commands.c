@@ -246,51 +246,56 @@ void vControlReportTimeout(void) ;
  */
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	if (cmdFlag.esc | cmdFlag.lsb) {
-		cmdIdx = 0;
+	if (cCmd == CHR_ESC) {
+		if ((cmdFlag.idx && cmdFlag.his) ||
+			(!cmdFlag.idx && !cmdFlag.his)) {
+			cmdFlag.esc = 1;							// set ESC flag
+			cmdFlag.his = 0;
+		} else {
+			cmdFlag.u16 = 0;	// buffer NOT empty or NOT history mode, rest to default
+		}
+	} else if (cmdFlag.esc && cCmd == CHR_L_SQUARE) {
+		cmdFlag.cli = cmdFlag.lsb = 1;					// force into CLI mode for next key
+	} else if (cmdFlag.esc && cmdFlag.lsb) {
 		if (cCmd == CHR_A) {							// Cursor UP
-			cmdIdx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdIdx)
+			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
+			if (cmdFlag.idx)
 				cmdFlag.his = 1;
 		} else if (cCmd == CHR_B) {						// Cursor DOWN
-			cmdIdx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdIdx)
+			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
+			if (cmdFlag.idx)
 				cmdFlag.his = 1;
 		} else {
-			P("ESC=%d  LSB=%d  cCmd=%d\n", cmdFlag.esc, cmdFlag.lsb, cCmd);
+			P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 		}
 		cmdFlag.esc = cmdFlag.lsb = 0;
 	} else {
 		if (cCmd == CHR_CR) {
-			if (cmdIdx) {			// CR and something in buffer?
+			if (cmdFlag.idx) {							// CR and something in buffer?
 				if (bEcho)								// yes, ....
-					printfx("\n");
-				cmdBuf[cmdIdx] = 0;						// terminate command
+					printfx("\r\n");
+				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0)					// if new/modified command
-					vUBufStringAdd(psHB, cmdBuf, cmdIdx); // save into buffer
-				cmdIdx = 0;
+					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
 			}
+			cmdFlag.u16 = 0;
 		} else if (cCmd == CHR_BS) {					// BS to remove last character
-			if (cmdIdx)
-				--cmdIdx;
-		} else if (cCmd == CHR_ESC) {					// ESC to clear the buffer
-			cmdIdx = 0;
-		} else if (isprint(cCmd) && (cmdIdx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
-			cmdBuf[cmdIdx++] = cCmd;					// store character & step index
+			if (cmdFlag.idx)
+				--cmdFlag.idx;
+		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
+			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 		} else {
-			P("CLI=%d  ESC=%d  LFS=%d  cCmd=%d\n", cmdFlag.cli, cmdFlag.esc, cmdFlag.lsb, cCmd);
+			P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 		}
 		cmdFlag.his = 0;
 	}
-	if (cmdIdx) {										// anything in buffer?
+	if (bEcho)											// if requested
+		printfx("\r\033[0K");							// clear line
+	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
 		if (bEcho)										// optional refresh whole line
-			printfx("\r%.*s \b", cmdIdx, cmdBuf);
-	} else {
-		cmdFlag.cli = 0;								// buffer empty, clear flag
-		if (bEcho)										// optional clear line
-			printfx("\r\033[0K");
+			printfx("%.*s \b", cmdFlag.idx, cmdBuf);
 	}
 	return iRV;
 }
@@ -298,7 +303,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 static void vCommandInterpret(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	flagmask_t sFM;
-	if (cmdFlag.cli || cmdFlag.esc || cmdFlag.lsb) {
+	if (cmdFlag.cli) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
@@ -327,14 +332,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
 		#endif
-
-		case CHR_ESC:
-			if (cmdFlag.cli || cmdFlag.esc) {
-				cmdFlag.esc = cmdFlag.lsb = 0;
-			} else {
-				cmdFlag.esc = 1;
-			}
-			break;
 
 		// ########################### Unusual (possibly dangerous) options
 		#if	(configPRODUCTION == 0)
@@ -488,13 +485,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break ;
 		case CHR_W: halWL_Report(); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
-		case CHR_L_SQUARE:
-			if (cmdFlag.esc && cmdFlag.lsb == 0) {
-				cmdFlag.lsb = 1;
-			} else {
-				cmdFlag.esc = cmdFlag.lsb = 0;
-			}
-			break;
 		default: xCommandBuffer(cCmd, bEcho);
 		}
 	}
@@ -507,11 +497,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
  */
 int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
 	xStdioBufLock(portMAX_DELAY);
-	int iRV = 0;
-	if (psHB == NULL && ioB4GET(ioCLIbuf)) {
+	if (psHB == NULL) {
 		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
 		psHB->f_history = 1;
 	}
+	int iRV = 0;
 	while (*pCmd) {
 		halVARS_ReportFlags(0);							// handle flag changes since previously here
 		vCommandInterpret(*pCmd++, bEcho);				// process it..
