@@ -35,6 +35,7 @@
 #include "hal_fota.h"
 #include "hal_gpio.h"
 #include "hal_storage.h"
+#include "hal_usart.h"
 
 #include "MQTTClient.h"				// QOSx levels
 
@@ -519,4 +520,23 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 	}
 	xStdioBufUnLock();
 	return iRV;
+}
+
+int vCommandEmptyBuffer(void * pV, const char * pCC, va_list vaList) {
+	int iRV = 0;
+	if (allSYSFLAGS(sfU0ACTIVE << configSTDIO_UART_CHAN)) {
+		while (xStdioBufAvail()) {
+			putcharRT(xStdioBufGetC());
+			++iRV;
+		}
+	}
+	return iRV;
+}
+
+void vCommandProcessUART(void) {
+	char caChr[2];
+	int iRV = halUART_GetChar(configSTDIO_UART_CHAN);
+	caChr[0] = (iRV == EOF) ? 0 : iRV;
+	caChr[1] = 0;
+	xCommandProcessString(caChr, 1, vCommandEmptyBuffer, NULL, NULL);
 }
