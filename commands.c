@@ -1,8 +1,7 @@
 /*
  * commands.c - command interpreter
+ * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
-
-#include <string.h>
 
 #include "hal_variables.h"
 #include "commands.h"
@@ -87,10 +86,7 @@
 	#include "ssd1306.h"
 #endif
 
-#define	debugFLAG					0xC002
-
-#define	debugCMND					(debugFLAG & 0x0001)
-#define	debugLEVEL					(debugFLAG & 0x0002)
+#define	debugFLAG					0xC000
 
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
