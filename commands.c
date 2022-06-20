@@ -8,10 +8,10 @@
 
 #include "actuators.h"
 
-#if (SW_AEP == 1)
+#if (doAEP == 1)
 	#include "task_sitewhere.h"
 	#include "ident1.h"
-#elif (SW_AEP == 2)
+#elif (doAEP == 2)
 	#include "task_thingsboard.h"
 	#include "ident2.h"
 #endif
@@ -430,9 +430,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_H: printfx(HelpMessage); break;
 		#if	(configUSE_IDENT > 0)
 		case CHR_I:
-			#if (SW_AEP == 1)
+			#if (doAEP == 1)
 			vID1_ReportAll();
-			#elif (SW_AEP == 2)
+			#elif (doAEP == 2)
 			vID2_ReportAll();
 			#endif
 			break;
@@ -469,10 +469,10 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
-			#if	(SW_AEP == 1)
+			#if	(doAEP == 1)
 			#include "task_sitewhere.h"
 			vSW_Report() ;
-			#elif (SW_AEP == 2)
+			#elif (doAEP == 2)
 			#include "task_thingsboard.h"
 			vTB_Report();
 			#endif
