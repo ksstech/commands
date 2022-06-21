@@ -8,10 +8,10 @@
 
 #include "actuators.h"
 
-#if (doAEP == 1)
+#if (halUSE_AEP == 1)
 	#include "task_sitewhere.h"
 	#include "ident1.h"
-#elif (doAEP == 2)
+#elif (halUSE_AEP == 2)
 	#include "task_thingsboard.h"
 	#include "ident2.h"
 #endif
@@ -340,13 +340,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-		#if	(HW_VARIANT == HW_AC00) || (HW_VARIANT == HW_AC01)
+		#if	(halVARIANT == HW_AC00) || (halVARIANT == HW_AC01)
 			cCmd -= CHR_0 ;
 			vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
 			vActuatorLoad(cCmd, 6, 0, 500, 0, 500);
 			break;
 
-		#elif (HW_VARIANT == HW_WROVERKIT || HW_VARIANT == HW_DOITDEVKIT)
+		#elif (halVARIANT == HW_WROVERKIT || halVARIANT == HW_DOITDEVKIT)
 			cCmd -= CHR_0 ;
 			if (cCmd < halSOC_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 500, 500, 500, 500);
@@ -355,7 +355,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			}
 			break;
 
-		#elif (HW_VARIANT == HW_EM1P2)
+		#elif (halVARIANT == HW_EM1P2)
 			cCmd -= CHR_0;
 			if (cCmd < 3) {
 				m90e26Report() ;
@@ -381,7 +381,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
-			#if	(HW_VARIANT == HW_EM1P2)
+			#if	(halVARIANT == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob);
 			#endif
@@ -430,9 +430,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_H: printfx(HelpMessage); break;
 		#if	(configUSE_IDENT > 0)
 		case CHR_I:
-			#if (doAEP == 1)
+			#if (halUSE_AEP == 1)
 			vID1_ReportAll();
-			#elif (doAEP == 2)
+			#elif (halUSE_AEP == 2)
 			vID2_ReportAll();
 			#endif
 			break;
@@ -469,10 +469,10 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
-			#if	(doAEP == 1)
+			#if	(halUSE_AEP == 1)
 			#include "task_sitewhere.h"
 			vSW_Report() ;
-			#elif (doAEP == 2)
+			#elif (halUSE_AEP == 2)
 			#include "task_thingsboard.h"
 			vTB_Report();
 			#endif
