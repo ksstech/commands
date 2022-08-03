@@ -238,8 +238,12 @@ void vControlReportTimeout(void) ;
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
-/*
+void xCommandReport(int cCmd) {
+	P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+}
 
+/*
+ *
  */
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
@@ -263,7 +267,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			if (cmdFlag.idx)
 				cmdFlag.his = 1;
 		} else {
-			P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+			xCommandReport(cCmd);
 		}
 		cmdFlag.esc = cmdFlag.lsb = 0;
 	} else {
@@ -272,6 +276,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 				if (bEcho)								// yes, ....
 					printfx("\r\n");
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
+				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0)					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -283,7 +288,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 		} else {
-			P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+			xCommandReport(cCmd);
 		}
 		cmdFlag.his = 0;
 	}
