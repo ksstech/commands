@@ -59,6 +59,10 @@
 	#include "mcp342x.h"
 #endif
 
+#if (buildMB_SEN > 0 || buildMB_ACT > 0)
+	#include "mb_tcp_client.h"
+#endif
+
 #if (halHAS_MPL3115 > 0)
 	#include "mpl3115.h"
 #endif
@@ -474,6 +478,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
+			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
+			mbClientReport();
+			#endif
 			#if	(halUSE_AEP == 1)
 			#include "task_sitewhere.h"
 			vSW_Report() ;
