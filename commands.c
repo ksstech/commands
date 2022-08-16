@@ -214,7 +214,7 @@ static const char HelpMessage[] = {
 	"\trestart\r\n"
 	"\tshow W0 [... [W23]]\r\n"
 	"\tupgrade\r\n"
-	"\r\n"
+	strCRLF
 } ;
 
 // #################################### Public variables ##########################################
@@ -278,7 +278,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				if (bEcho)								// yes, ....
-					printfx("\r\n");
+					printfx(strCRLF);
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
