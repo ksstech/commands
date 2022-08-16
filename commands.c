@@ -308,7 +308,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 
 static void vCommandInterpret(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	flagmask_t sFM;
+	fm_t sFM;
 	if (cmdFlag.cli) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
