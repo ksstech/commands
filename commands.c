@@ -481,13 +481,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
 			mbClientReport();
 			#endif
-			#if	(halUSE_AEP == 1)
-			#include "task_sitewhere.h"
-			vSW_Report() ;
-			#elif (halUSE_AEP == 2)
-			#include "task_thingsboard.h"
-			vTB_Report();
-			#endif
+			void vAEP_Report(void); vAEP_Report();
 			halVARS_ReportSystem();
 			vControlReportTimeout();
 			vUBufReport(psHB);
