@@ -8,12 +8,8 @@
 
 #include "actuators.h"
 
-#if (halUSE_AEP == 1)
-	#include "task_sitewhere.h"
-	#include "ident1.h"
-#elif (halUSE_AEP == 2)
-	#include "task_thingsboard.h"
-	#include "ident2.h"
+#if (halUSE_AEP > 0)
+	#include "paho_mqtt.h"
 #endif
 
 #include "options.h"
@@ -202,10 +198,11 @@ static const char HelpMessage[] = {
 	"ACT\tque|seq ch# S0 [... S23]]\r\n"
 	#endif
 	"GMAP\tioset option para1 para2\r\n"
-	"GMAP\tioset 134(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\r\n"
-	"GMAP\tioset 135(mqtt) w.x.y.z port\r\n"
+	"GMAP\tioset 141(nwmo) {0->3} off/sta/ap/sta+ap\r\n"
+	"GMAP\tioset 142(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\r\n"
+	"GMAP\tioset 143(mqtt) w.x.y.z port\r\n"
 	#if	(configPRODUCTION == 0)
-	"GMAP\tioset 136(peek) address size\r\n"
+	"GMAP\tioset 144(peek) address size\r\n"
 	#endif
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
 	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
@@ -455,7 +452,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
 			vRtosReportMemory(NULL, 0, sFM);
 			break;
+
+		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(); break;
+		#endif
+
 		case CHR_O: vOptionsShow(); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
