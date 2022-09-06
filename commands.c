@@ -216,16 +216,16 @@ static const char HelpMessage[] = {
 
 // #################################### Public variables ##########################################
 
-ubuf_t * psHB = NULL;
+static ubuf_t * psHB = NULL;
 static u8_t cmdBuf[128]= { 0 };
 
 static union {
 	struct __attribute__((packed)) {
 		u16_t esc:1;
-		u16_t lsb:1;
-		u16_t cli:1;
-		u16_t his:1;
-		u16_t idx:12;
+		u16_t lsb:1;				// 1=Left Square Bracket (LSB) received, multi char key start
+		u16_t cli:1;				// 1= non single char UC command buffer mode
+		u16_t his:1;				// in HIStory mode, scrolling up (A) or down (B)
+		u16_t idx:12;				// slot in buffer where next key to be stored, 0=empty
 	};
 	u16_t u16;
 } cmdFlag;
@@ -244,29 +244,33 @@ void xCommandReport(int cCmd) {
 }
 
 /*
+ * @brief
  *
  */
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_ESC) {
 		if ((cmdFlag.idx && cmdFlag.his) ||
-			(!cmdFlag.idx && !cmdFlag.his)) {
-			cmdFlag.esc = 1;							// set ESC flag
+			(cmdFlag.idx == 0 && cmdFlag.his == 0)) {
+			cmdFlag.esc = 1;		// set ESC flag
 			cmdFlag.his = 0;
 		} else {
-			cmdFlag.u16 = 0;	// buffer NOT empty or NOT history mode, rest to default
+			cmdFlag.u16 = 0;		// buffer NOT empty or NOT history mode, reset to default
 		}
 	} else if (cmdFlag.esc && cCmd == CHR_L_SQUARE) {
 		cmdFlag.cli = cmdFlag.lsb = 1;					// force into CLI mode for next key
 	} else if (cmdFlag.esc && cmdFlag.lsb) {
+		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
 			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx)
+			if (cmdFlag.idx) {
 				cmdFlag.his = 1;
+			}
 		} else if (cCmd == CHR_B) {						// Cursor DOWN
 			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx)
+			if (cmdFlag.idx) {
 				cmdFlag.his = 1;
+			}
 		} else {
 			xCommandReport(cCmd);
 		}
@@ -274,18 +278,21 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 	} else {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
-				if (bEcho)								// yes, ....
-					printfx(strCRLF);
+				if (bEcho) {							// yes, ....
+					P(strCRLF);
+				}
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
-				if (cmdFlag.his == 0)					// if new/modified command
+				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
+				}
 			}
 			cmdFlag.u16 = 0;
-		} else if (cCmd == CHR_BS) {					// BS to remove last character
-			if (cmdFlag.idx)
-				--cmdFlag.idx;
+		} else if (cCmd == CHR_BS) {		// BS to remove previous character
+			if (cmdFlag.idx) {				// yes,
+				--cmdFlag.idx;				// step 1 slot back
+			}
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 		} else {
@@ -293,12 +300,14 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho)											// if requested
-		printfx("\r\033[0K");							// clear line
+	if (bEcho) {										// if requested
+		P("\r\033[0K");							// clear line
+	}
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho)										// optional refresh whole line
-			printfx("%.*s \b", cmdFlag.idx, cmdBuf);
+		if (bEcho) {									// optional refresh whole line
+			P("%.*s \b", cmdFlag.idx, cmdBuf);
+		}
 	}
 	return iRV;
 }
