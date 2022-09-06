@@ -258,7 +258,8 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			cmdFlag.u16 = 0;		// buffer NOT empty or NOT history mode, reset to default
 		}
 	} else if (cmdFlag.esc && cCmd == CHR_L_SQUARE) {
-		cmdFlag.cli = cmdFlag.lsb = 1;					// force into CLI mode for next key
+		cmdFlag.lsb = 1;			// Left Square Bracket received, set flag
+		cmdFlag.cli = 1;			// force into CLI mode for next key
 	} else if (cmdFlag.esc && cmdFlag.lsb) {
 		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
@@ -274,7 +275,8 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else {
 			xCommandReport(cCmd);
 		}
-		cmdFlag.esc = cmdFlag.lsb = 0;
+		cmdFlag.lsb = 0;
+		cmdFlag.esc = 0;
 	} else {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
@@ -292,6 +294,9 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else if (cCmd == CHR_BS) {		// BS to remove previous character
 			if (cmdFlag.idx) {				// yes,
 				--cmdFlag.idx;				// step 1 slot back
+				if (cmdFlag.idx == 0) {		// if buffer now empty
+					cmdFlag.u16 = 0;		// reset to default (non cli/history) mode
+				}
 			}
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
