@@ -512,6 +512,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 /**
  * @brief	process a command string and call the [optional handler] to process the buffered output
+ * @param	pCmd - command string to process, can be single character null terminated
+ * @param	bEcho - if true all command characters will be echo'd
+ * @param	Hdlr - pointer to function to empty buffer once processing done
+ * @param	pV - context pointer as parameter 1 for handler
+ * @param	pCC - printf style format control string
+ * @param	... - optional list of parameters as required by format string
+ * @return	number of characters passed to output
  */
 int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
 	xStdioBufLock(portMAX_DELAY);
