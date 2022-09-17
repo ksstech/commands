@@ -188,6 +188,7 @@ static const char HelpMessage[] = {
 	"\t(W)ifi Stats\r\n"
 
 	"Extended commands:\r\n"
+	"\treboot\tregister\tupgrade\r\n"
 	#if (halHAS_LIS2HH12 > 0)
 	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
 	#endif
