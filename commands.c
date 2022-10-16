@@ -367,7 +367,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vActuatorLoad(cCmd, 6, 0, 500, 0, 500);
 			break;
 
-		#elif (halVARIANT == HW_WROVERKIT || halVARIANT == HW_DOITDEVKIT)
+		#elif (halVARIANT == HW_WROVERKIT)
 			cCmd -= CHR_0 ;
 			if (cCmd < halSOC_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 500, 500, 500, 500);
