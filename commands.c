@@ -56,7 +56,7 @@
 #endif
 
 #if (buildMB_SEN > 0 || buildMB_ACT > 0)
-	#include "mb_tcp_client.h"
+	#include "endpoint_mbc.h"
 #endif
 
 #if (halHAS_MPL3115 > 0)
@@ -495,7 +495,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
 			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
-			mbClientReport();
+			xEpMBC_ClientReport();
 			#endif
 			void vAEP_Report(void); vAEP_Report();
 			halVARS_ReportSystem();
