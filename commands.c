@@ -3,16 +3,16 @@
  * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
+#include "main.h"
 #include "hal_variables.h"
 #include "commands.h"
 
 #include "actuators.h"
 
-#if (halUSE_AEP > 0)
+#if (cmakeAEP > 0)
 	#include "paho_mqtt.h"
 #endif
 
-#include "options.h"
 #include "printfx.h"
 #include "syslog.h"
 #include "systiming.h"
@@ -34,7 +34,7 @@
 
 #include "MQTTClient.h"				// QOSx levels
 
-#if (configUSE_RULES > 0)
+#if (appUSE_RULES > 0)
 	#include "rules_decode.h"
 	#include "rules_parse_text.h"
 #endif
@@ -168,7 +168,7 @@ static const char HelpMessage[] = {
 
 	"\t(F)lags Status\r\n"
 	"\t(H)elp screen display\r\n"
-	#if	(configUSE_IDENT > 0)
+	#if	(appUSE_IDENT > 0)
 	"\t(I)dent table\r\n"
 	#endif
 	"\t(L)ocation info\r\n"
@@ -361,13 +361,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-		#if	(halVARIANT == HW_AC00) || (halVARIANT == HW_AC01)
+		#if	(cmakeVARIANT == HW_AC00) || (cmakeVARIANT == HW_AC01)
 			cCmd -= CHR_0 ;
 			vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
 			vActuatorLoad(cCmd, 6, 0, 500, 0, 500);
 			break;
 
-		#elif (halVARIANT == HW_WROVERKIT)
+		#elif (cmakeVARIANT == HW_WROVERKIT)
 			cCmd -= CHR_0 ;
 			if (cCmd < halSOC_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 500, 500, 500, 500);
@@ -376,7 +376,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			}
 			break;
 
-		#elif (halVARIANT == HW_EM1P2)
+		#elif (cmakeVARIANT == HW_EM1P2)
 			cCmd -= CHR_0;
 			if (cCmd < 3) {
 				m90e26Report() ;
@@ -402,7 +402,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
-			#if	(halVARIANT == HW_EM1P2)
+			#if	(cmakeVARIANT == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob);
 			#endif
@@ -449,11 +449,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_F: halVARS_ReportFlags(1); break;
 //		case CHR_G:
 		case CHR_H: printfx(HelpMessage); break;
-		#if	(configUSE_IDENT > 0)
+		#if	(appUSE_IDENT > 0)
 		case CHR_I:
-			#if (halUSE_AEP == 1)
+			#if (cmakeAEP == 1)
 			vID1_ReportAll();
-			#elif (halUSE_AEP == 2)
+			#elif (cmakeAEP == 2)
 			vID2_ReportAll();
 			#endif
 			break;
@@ -489,7 +489,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 		case CHR_V:
 			halMCU_Report();
-			halVARS_ReportFirmware();
 			halWL_ReportLx();
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
@@ -497,7 +496,10 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
 			xEpMBC_ClientReport();
 			#endif
+			#if (cmakeAEP == 1) || (cmakeAEP == 2)
 			void vAEP_Report(void); vAEP_Report();
+			#endif
+			app_Report();
 			halVARS_ReportSystem();
 			vControlReportTimeout();
 			vUBufReport(psHB);
