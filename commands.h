@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <stdarg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,7 +24,9 @@ extern "C" {
 
 // ################################### GLOBAL Function Prototypes ##################################
 
-int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void *, const char *, ...);
+int xCommandProcessString(char * pCmd, bool bEcho,
+		int (*Hdlr)(void *, const char *, va_list),
+		void *, const char *, ...);
 void vCommandProcessUART(void);
 
 #ifdef __cplusplus

@@ -3,17 +3,13 @@
  * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "main.h"
 #include "hal_variables.h"
 #include "commands.h"
 
 #include "actuators.h"
 
-#if (cmakeAEP > 0)
-	#include "paho_mqtt.h"
-#endif
-
 #include "printfx.h"
+#include "rules.h"					// xRulesProcessText
 #include "syslog.h"
 #include "systiming.h"
 
@@ -25,6 +21,7 @@
 #include "x_builddefs.h"
 #include "x_telnet_server.h"
 
+#include "hal_network.h"
 #include "hal_stdio.h"
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_fota.h"
@@ -34,9 +31,16 @@
 
 #include "MQTTClient.h"				// QOSx levels
 
+#if (cmakeAEP > 0)
+	#include "paho_mqtt.h"
+#endif
+
 #if (appUSE_RULES > 0)
-	#include "rules_decode.h"
-	#include "rules_parse_text.h"
+	#include "rules.h"
+#endif
+
+#if (buildMB_SEN > 0 || buildMB_ACT > 0)
+	#include "endpoints.h"
 #endif
 
 #if (halHAS_LIS2HH12 > 0)
@@ -55,19 +59,12 @@
 	#include "mcp342x.h"
 #endif
 
-#if (buildMB_SEN > 0 || buildMB_ACT > 0)
-	#include "endpoint_mbc.h"
-#endif
-
 #if (halHAS_MPL3115 > 0)
 	#include "mpl3115.h"
 #endif
 
 #if (halHAS_ONEWIRE > 0)
 	#include "onewire_platform.h"
-	#if	(halHAS_DS18X20 > 0)
-	#include "ds18x20.h"
-	#endif
 #endif
 
 #if (halHAS_PCA9555 > 0)
@@ -233,10 +230,7 @@ static union {
 
 // ################################ Forward function declarations ##################################
 
-void halWL_Report(void) ;
-void halWL_ReportLx(void) ;
-void vTaskSensorsReport(void) ;
-void vControlReportTimeout(void) ;
+void vTaskSensorsReport(void);
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
@@ -246,7 +240,6 @@ void xCommandReport(int cCmd) {
 
 /*
  * @brief
- *
  */
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
@@ -273,6 +266,10 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			if (cmdFlag.idx) {
 				cmdFlag.his = 1;
 			}
+		} else if (cCmd == CHR_C) {						// Cursor RIGHT
+			//
+		} else if (cCmd == CHR_D) {						// Cursor LEFT
+			//
 		} else {
 			xCommandReport(cCmd);
 		}
@@ -281,9 +278,6 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 	} else {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
-				if (bEcho) {							// yes, ....
-					P(strCRLF);
-				}
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
@@ -499,9 +493,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (cmakeAEP == 1) || (cmakeAEP == 2)
 			void vAEP_Report(void); vAEP_Report();
 			#endif
-			app_Report();
+			void app_Report(void); app_Report();
 			halVARS_ReportSystem();
-			vControlReportTimeout();
+			halWL_TimeoutReport();
 			vUBufReport(psHB);
 			break ;
 		case CHR_W: halWL_Report(); break;
