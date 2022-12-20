@@ -3,22 +3,20 @@
  * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "hal_variables.h"
-#include "commands.h"
+#include "task_aep.h"
 
 #include "actuators.h"
-
+#include "commands.h"
 #include "printfx.h"
 #include "rules.h"					// xRulesProcessText
 #include "syslog.h"
 #include "systiming.h"
 
+#include "x_builddefs.h"
+#include "x_errors_events.h"
 #include "x_http_server.h"
 #include "x_string_general.h"		// xstrncmp()
 #include "x_string_to_values.h"
-
-#include "x_errors_events.h"
-#include "x_builddefs.h"
 #include "x_telnet_server.h"
 
 #include "hal_network.h"
@@ -31,16 +29,8 @@
 
 #include "MQTTClient.h"				// QOSx levels
 
-#if (cmakeAEP > 0)
-	#include "paho_mqtt.h"
-#endif
-
 #if (appUSE_RULES > 0)
 	#include "rules.h"
-#endif
-
-#if (buildMB_SEN > 0 || buildMB_ACT > 0)
-	#include "endpoints.h"
 #endif
 
 #if (halHAS_LIS2HH12 > 0)
@@ -314,29 +304,18 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 
 static void vCommandInterpret(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
-	fm_t sFM;
 	if (cmdFlag.cli) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
 		switch (cCmd) {
 		#if defined(ESP_PLATFORM)
-		case CHR_SOH:									// c-A
-		case CHR_STX:									// c-B
-		case CHR_ETX: 									// c-C
-			halFOTA_SetBootNumber(cCmd, fotaBOOT_REBOOT);
-			break;
-		case CHR_ENQ:									// c-E
-			unlink("syslog.txt");
-			break;
-		case CHR_DC2: 									// c-R
-			halFOTA_SetBootNumber(PrvPart, fotaBOOT_REBOOT);
-			break;
-		case CHR_DC4: 									// c-T WatchDog timeout crash
-			while(1);
-			break;
-		case CHR_NAK:									// c-U Illegal memory write crash
-			*((char *) 0xFFFFFFFF) = 1;
-			break;
+		case CHR_SOH:															// c-A
+		case CHR_STX:															// c-B
+		case CHR_ETX: halFOTA_SetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
+		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
+		case CHR_DC2: halFOTA_SetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
+		case CHR_DC4: while(1); break;					// c-T WatchDog timeout crash
+		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;	// c-U Illegal memory write crash
 		case CHR_SYN:									// c-V Erase VARS blob then reboot
 			halFOTA_SetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
@@ -444,23 +423,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 //		case CHR_G:
 		case CHR_H: printfx(HelpMessage); break;
 		#if	(appUSE_IDENT > 0)
-		case CHR_I:
-			#if (cmakeAEP == 1)
-			vID1_ReportAll();
-			#elif (cmakeAEP == 2)
-			vID2_ReportAll();
-			#endif
-			break;
+		case CHR_I: vID_Report(); break;
 		#endif
 //		case CHR_J: case CHR_K:
-		case CHR_L:
-			halVARS_ReportGLinfo();
-			halVARS_ReportTZinfo();
-			break;
-		case CHR_M:
-			sFM.u32Val = makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0);
-			vRtosReportMemory(NULL, 0, sFM);
-			break;
+		case CHR_L: halVARS_ReportGLinfo(); halVARS_ReportTZinfo(); break;
+		case CHR_M: vRtosReportMemory(NULL, 0, (fm_t) makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0)); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(); break;
@@ -477,22 +444,22 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		#endif
-		case CHR_U:
-			sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF);
-			xRtosReportTasks(NULL, 0, sFM);
-			break;
+		case CHR_U: xRtosReportTasks(NULL, 0, (fm_t) makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF)); break;
 		case CHR_V:
 			halMCU_Report();
 			halWL_ReportLx();
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
+
 			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
 			xEpMBC_ClientReport();
 			#endif
-			#if (cmakeAEP == 1) || (cmakeAEP == 2)
-			void vAEP_Report(void); vAEP_Report();
+
+			#if (cmakeAEP > 0)
+			vAEP_Report();
 			#endif
+
 			void app_Report(void); app_Report();
 			halVARS_ReportSystem();
 			halWL_TimeoutReport();
