@@ -89,13 +89,7 @@
 static const char HelpMessage[] = {
 	#ifdef ESP_PLATFORM
 	"ESP32 Specific:\r\n"
-	"\tc-A Boot OTA #1 FW as STA\r\n"
-	#if (fotaMAX_OTA_PARTITIONS > 2)
-	"\tc-B Boot OTA #2 FW as STA\r\n"
-	#endif
-	#if (fotaMAX_OTA_PARTITIONS > 3)
-	"\tc-C Boot OTA #3 FW as STA\r\n"
-	#endif
+	"\tc-A/B/C Boot OTA #1/2/3 FW as STA\r\n"
 	"\tc-E delete 'syslog.txt'\r\n"
 	"\tc-P switch Platform & reboot\r\n"
 	"\tc-Q Toggle QOS 0->1->2->0\r\n"
