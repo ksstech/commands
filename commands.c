@@ -314,6 +314,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 	if (cmdFlag.cli) {
 		xCommandBuffer(cCmd, bEcho);
 	} else {
+		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {
 		#if defined(ESP_PLATFORM)
 		case CHR_SOH:															// c-A
@@ -332,6 +333,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
+		case CHR_SUB: setSYSFLAGS(sfKEY_EOF); break;
+
 		#if	(configPRODUCTION == 0)
 		case CHR_0:
 		case CHR_1:
