@@ -393,8 +393,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		case CHR_D:
+		#if (halSOC_ANA_IN > 0)
+			halGAI_Report();
+		#endif
 		#if (halSOC_DIG_IN > 0)
-			halGPDI_Report();
+			halGDI_Report();
 		#endif
 		#if	(halHAS_LIS2HH12 > 0)
 			lis2hh12ReportAll();
@@ -457,7 +460,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
 
-			#if (buildMB_SEN > 0 || buildMB_ACT > 0)
+			#if (halHAS_MB_SEN > 0 || halHAS_MB_ACT > 0)
 			xEpMBC_ClientReport();
 			#endif
 
