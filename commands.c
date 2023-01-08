@@ -5,6 +5,7 @@
 
 #include "main.h"
 #include "task_aep.h"
+#include "identity.h"
 
 #include "actuators.h"
 #include "commands.h"
@@ -195,7 +196,7 @@ static const char HelpMessage[] = {
 	"\tshow W0 [... [W23]]\r\n"
 	"\tupgrade\r\n"
 	strCRLF
-} ;
+};
 
 // #################################### Public variables ##########################################
 
