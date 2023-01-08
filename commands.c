@@ -341,33 +341,28 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-		#if	(cmakeVARIANT == HW_AC00) || (cmakeVARIANT == HW_AC01)
-			cCmd -= CHR_0 ;
-			vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
-			vActuatorLoad(cCmd, 6, 0, 500, 0, 500);
-			break;
-
-		#elif (cmakeVARIANT == HW_WROVERKIT)
-			cCmd -= CHR_0 ;
-			if (cCmd < halSOC_DIG_OUT) {
-				vActuatorLoad(cCmd, 5, 500, 500, 500, 500);
-			} else {
-				iRV = erOUT_OF_RANGE;
-			}
-			break;
-
-		#elif (cmakeVARIANT == HW_EM1P2)
+		{
 			cCmd -= CHR_0;
+			#if (cmakeVARIANT == HW_EM1P2 || cmakeVARIANT == HW_EM3P2)
 			if (cCmd < 3) {
-				m90e26Report() ;
-				m90e26LoadNVSConfig(0, cCmd) ;
-				m90e26LoadNVSConfig(1, cCmd) ;
-				m90e26Report() ;
-			} else {
+				m90e26Report();
+				m90e26LoadNVSConfig(0, cCmd);
+				m90e26LoadNVSConfig(1, cCmd);
+				m90e26Report();
+			} else
+			#elif (cmakeVARIANT == HW_AC00 || cmakeVARIANT == HW_AC01 || cmakeVARIANT == HW_WROVERKIT || cmakeVARIANT == HW_KC868A4)
+			if (cCmd < halSOC_DIG_OUT) {
+				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
+				#if	(cmakeVARIANT == HW_AC00 || cmakeVARIANT == HW_AC01)
+				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
+				#endif
+			} else
+			#endif
+			{
 				iRV = erOUT_OF_RANGE;
 			}
-			break ;
-		#endif
+			break;
+		}
 
 		#if	(halXXX_XXX_OUT > 0)
 		case CHR_A: vTaskActuatorReport(); break;
