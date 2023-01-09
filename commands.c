@@ -471,7 +471,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			vAEP_Report();
 			#endif
 
-			void app_Report(void); app_Report();
+			app_Report();
 			halVARS_ReportSystem();
 			halWL_TimeoutReport();
 			vUBufReport(psHB);
