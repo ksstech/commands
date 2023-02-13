@@ -346,17 +346,17 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_7:
 		{
 			cCmd -= CHR_0;
-			#if (cmakeVARIANT == HW_EM1P2 || cmakeVARIANT == HW_EM3P2)
+			#if (cmakePLTFRM == HW_EM1P2) || (cmakePLTFRM == HW_EM3P2)
 			if (cCmd < 3) {
 				m90e26Report();
 				m90e26LoadNVSConfig(0, cCmd);
 				m90e26LoadNVSConfig(1, cCmd);
 				m90e26Report();
 			} else
-			#elif (cmakeVARIANT == HW_AC00 || cmakeVARIANT == HW_AC01 || cmakeVARIANT == HW_WROVERKIT || cmakeVARIANT == HW_KC868A4)
+			#elif (cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01 || cmakePLTFRM == HW_DK41 || cmakePLTFRM == HW_KC868A4)
 			if (cCmd < halSOC_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
-				#if	(cmakeVARIANT == HW_AC00 || cmakeVARIANT == HW_AC01)
+				#if	(cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01)
 				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
 				#endif
 			} else
@@ -380,7 +380,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
-			#if	(cmakeVARIANT == HW_EM1P2)
+			#if	(cmakePLTFRM == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob);
 			#endif
