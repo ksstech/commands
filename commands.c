@@ -171,7 +171,7 @@ static const char HelpMessage[] = {
 	"\t(W)ifi Stats\r\n"
 
 	"Extended commands:\r\n"
-	"\treboot\tregister\tupgrade\r\n"
+	"\treboot | register | upgrade | show W0 [... [W23]]\r\n"
 	#if (halHAS_LIS2HH12 > 0)
 	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
 	#endif
@@ -191,10 +191,6 @@ static const char HelpMessage[] = {
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
 	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
 	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\r\n"
-	"\tregister\r\n"
-	"\trestart\r\n"
-	"\tshow W0 [... [W23]]\r\n"
-	"\tupgrade\r\n"
 	strCRLF
 };
 
