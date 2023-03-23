@@ -425,6 +425,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if	(halHAS_SSD1306 > 0)
 			ssd1306Report();
 			#endif
+			halWL_TimeoutReport();
+			vUBufReport(psHB);
 			break;
 		#endif						// (configPRODUCTION == 0)
 
@@ -472,9 +474,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 
 			app_Report();
-			halVARS_ReportSystem();
-			halWL_TimeoutReport();
-			vUBufReport(psHB);
 			break ;
 		case CHR_W: halWL_Report(); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
