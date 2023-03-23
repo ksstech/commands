@@ -141,6 +141,9 @@ static const char HelpMessage[] = {
 	#if	(halHAS_ONEWIRE > 0)
 	"1W\t    Onewire info\r\n"
 	#endif
+	#if (halHAS_PCA9555 > 0)
+	"pca9555\t    pca9555Report\r\n"
+	#endif
 	#if	(halHAS_SI70XX > 0)
 	"si70xx\t    si70xxReport\r\n"
 	#endif
