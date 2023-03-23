@@ -350,7 +350,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 				m90e26Report();
 			} else
 			#elif (cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01 || cmakePLTFRM == HW_DK41 || cmakePLTFRM == HW_KC868A4)
-			if (cCmd < halSOC_DIG_OUT) {
+			if (cCmd < halXXX_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
 				#if	(cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01)
 				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
