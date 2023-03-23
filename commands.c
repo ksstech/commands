@@ -389,41 +389,45 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		case CHR_D:
-		#if (halSOC_ANA_IN > 0)
+			#if (halSOC_ANA_IN > 0)
 			halGAI_Report();
-		#endif
-		#if (halSOC_ANA_OUT > 0)
+			#endif
+			#if (halSOC_ANA_OUT > 0)
 			halGAO_Report();
-		#endif
-		#if (halSOC_DIG_IN > 0)
+			#endif
+			#if (halSOC_DIG_IN > 0)
 			halGDI_Report();
-		#endif
-		#if	(halHAS_LIS2HH12 > 0)
+			#endif
+			#if	(halHAS_LIS2HH12 > 0)
 			lis2hh12ReportAll();
-		#endif
-		#if	(halHAS_LTR329ALS > 0)
+			#endif
+			#if	(halHAS_LTR329ALS > 0)
 			ltr329alsReportAll();
-		#endif
-		#if	(halHAS_M90E26 > 0)
+			#endif
+			#if	(halHAS_M90E26 > 0)
 			m90e26Report();
-		#endif
-		#if	(halHAS_MCP342X > 0)
+			#endif
+			#if	(halHAS_MCP342X > 0)
 			mcp342xReportAll();
-		#endif
-		#if	(halHAS_MPL3115 > 0)
+			#endif
+			#if	(halHAS_MPL3115 > 0)
 			mpl3115ReportAll();
-		#endif
-		#if	(halHAS_ONEWIRE > 0)
+			#endif
+			#if	(halHAS_ONEWIRE > 0)
 			OWP_Report();
-		#endif
-		#if	(halHAS_SI70XX > 0)
+			#endif
+			#if (halHAS_PCA9555 > 0)
+			pca9555Report();
+			#endif
+			#if	(halHAS_SI70XX > 0)
 			si70xxReportAll();
-		#endif
-		#if	(halHAS_SSD1306 > 0)
+			#endif
+			#if	(halHAS_SSD1306 > 0)
 			ssd1306Report();
-		#endif
+			#endif
 			break;
-		#endif
+		#endif						// (configPRODUCTION == 0)
+
 		// ############################ Normal (non-dangerous) options
 //		case CHR_E:
 		case CHR_F: halVARS_ReportFlags(1); break;
