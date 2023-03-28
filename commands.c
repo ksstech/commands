@@ -116,40 +116,41 @@ static const char HelpMessage[] = {
 	#if	(halUSE_LITTLEFS == 1)
 	"\t(C)ontent of LFS\r\n"
 	#endif
-	"\t(D)iagnostics\r\n"
-	#if (halSOC_DIG_IN > 0)
-	"GPDI\t    DigIn Pins\r\n"
-	#endif
-	#if	(halHAS_DS18X20 > 0)
-	"1W\t    DS18X20 device info\r\n"
-	#endif
-	#if (halHAS_LIS2HH12 > 0)
-	"lis2hh\t    lis2hh12Report\r\n"
-	#endif
-	#if	(halHAS_LTR329ALS > 0)
-	"ltr329\t    ltr329alsReport\r\n"
-	#endif
-	#if	(halHAS_M90E26 > 0)
-	"M90E\t    m90e26Report\r\n"
-	#endif
-	#if	(halHAS_MCP342X > 0)
-	"MCP342x\t    mcp342xReport\r\n"
-	#endif
-	#if	(halHAS_MPL3115 > 0)
-	"mpl3115\t    mpl3115Report\r\n"
-	#endif
-	#if	(halHAS_ONEWIRE > 0)
-	"1W\t    Onewire info\r\n"
-	#endif
-	#if (halHAS_PCA9555 > 0)
-	"pca9555\t    pca9555Report\r\n"
-	#endif
-	#if	(halHAS_SI70XX > 0)
-	"si70xx\t    si70xxReport\r\n"
-	#endif
-	#if	(halHAS_SSD1306 > 0)
-	"SSD1306\t    ssd1306Report\r\n"
-	#endif
+	"\t(D)iagnostics ["
+		#if (halSOC_DIG_IN > 0)
+		"gpi\t"
+		#endif
+		#if	(halHAS_DS18X20 > 0)
+		"ds18\x20\t"
+		#endif
+		#if (halHAS_LIS2HH12 > 0)
+		"lis2hh\t"
+		#endif
+		#if	(halHAS_LTR329ALS > 0)
+		"ltr329\t"
+		#endif
+		#if	(halHAS_M90E26 > 0)
+		"m90e26\t"
+		#endif
+		#if	(halHAS_MCP342X > 0)
+		"mcp342x\t"
+		#endif
+		#if	(halHAS_MPL3115 > 0)
+		"mpl3115\t"
+		#endif
+		#if	(halHAS_ONEWIRE > 0)
+		"Onewire\t"
+		#endif
+		#if (halHAS_PCA9555 > 0)
+		"pca9555\t"
+		#endif
+		#if	(halHAS_SI70XX > 0)
+		"si70xx\t"
+		#endif
+		#if	(halHAS_SSD1306 > 0)
+		"ssd1306\t"
+		#endif
+	"]\r\n"
 	#endif
 
 	"\t(F)lags Status\r\n"
@@ -175,9 +176,6 @@ static const char HelpMessage[] = {
 
 	"Extended commands:\r\n"
 	"\treboot | register | upgrade | show W0 [... [W23]]\r\n"
-	#if (halHAS_LIS2HH12 > 0)
-	"mode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
-	#endif
 	#if	(halXXX_XXX_OUT > 0)
 	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\r\n"
 	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\r\n"
@@ -191,9 +189,63 @@ static const char HelpMessage[] = {
 	#if	(configPRODUCTION == 0)
 	"GMAP\tioset 144(peek) address size\r\n"
 	#endif
+
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
-	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
+		#if	(halHAS_DS18X20 > 0)
+		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
+		#endif
+		#if	(halHAS_LIS2HH12 > 0)
+		"\tmode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
+		#endif
+		#if	(halHAS_LTR329ALS > 0)
+		"\tmode /ltr329als idx gain=0~3/6/7 time=0~7 rate=0~7\r\n"
+		#endif
+		#if	(halHAS_M90E26 > 0)
+		"\tmode /m90e26 idx 1=gainL val=1/4/8/16/24\r\n"
+		#if	(m90e26NEUTRAL > 0)
+		"\t\t2=gainN val=1/2/4\r\n"
+		#endif
+		"\t\t4=reCalib\r\n"
+		"\t\t5=Calc CurOfst\r\n"
+		"\t\t6=Calc PwrOfst\r\n"
+		"\t\t7=Save pos=0~" mySTRINGIFY(m90e26CALIB_NUM-1) " 'Calibration Data'\r\n"
+		"\t\t8=Delete 'ALL Calibration data'\r\n"
+		"\t\t9=WriteReg reg=" mySTRINGIFY(SOFTRESET) "~" mySTRINGIFY(CRC_2) " val=0~0xFFFF\r\n"
+		#endif
+		#if (configPRODUCTION == 0) && (halHAS_MB_ACT > 0 || halHAS_MB_SEN > 0)
+		"\tcmd /mb TBC\r\n"
+		#endif
+		#if (halHAS_MB_ACT > 0)
+		"\tcmd /mb/act \r\n"
+		"\tmode /mb/act idx TBC\r\n"
+		#endif
+		#if (halHAS_MB_SEN > 0)
+		"\tcmd /mb/sen  \r\n"
+		"\tmode /mb/sen idx TBC\r\n"
+		#endif
+		#if	(halHAS_MCP342X > 0)
+		"\tmode /mcp342x idx TBC\r\n"
+		#endif
+		#if	(halHAS_MPL3115 > 0)
+		"\tmode /mpl3115 idx TBC\r\n"
+		#endif
+		#if	(halHAS_PYCOPROC > 0)
+		"\tmode /pycoproc idx TBC\r\n"
+		#endif
+		#if	(halHAS_SI70XX > 0)
+		"\tmode /si70xx idx TBC\r\n"
+		#endif
+		#if (halSOC_DIG_IN > 0)
+		"\tmode /gdi idx inv=0~1 type=0~5 dly=0~255\r\n"
+		#endif
+		#if	(halSOC_ANA_IN > 0)
+		"\tmode /gai idx attn=0~11db width=9~11]\r\n"
+		#endif
+		#if	(halXXX_XXX_OUT > 0)
+		"\tmode /act idx TBC\r\n"
+		#endif
 	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\r\n"
+	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
 	strCRLF
 };
 
