@@ -490,9 +490,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_F: halVARS_ReportFlags(1); break;
 //		case CHR_G:
 		case CHR_H: printfx(HelpMessage); break;
-		#if	(appUSE_IDENT > 0)
-		case CHR_I: vID_Report(); break;
-		#endif
+		case CHR_I:
+			#if	(appUSE_IDENT > 0)
+			vID_Report();
+			#else
+			printfx("No identity support\r\n");
+			#endif
+			break;
 //		case CHR_J: case CHR_K:
 		case CHR_L: halVARS_ReportGLinfo(); halVARS_ReportTZinfo(); break;
 		case CHR_M: xRtosReportMemory(NULL, 0, (fm_t) makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0)); break;
