@@ -9,8 +9,12 @@
 
 #include "actuators.h"
 #include "commands.h"
+#if (statsMQTT_RX > 0) || (statsMQTT_TX > 0)
+	#include "paho_mqtt.h"
+#endif
 #include "printfx.h"
 #include "rules.h"					// xRulesProcessText
+#include "statistics.h"
 #include "syslog.h"
 #include "systiming.h"
 
@@ -538,7 +542,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (cmakeAEP > 0)
 			vAEP_Report();
 			#endif
-
 			app_Report();
 			break ;
 		case CHR_W: halWL_Report(); break;
