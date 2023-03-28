@@ -499,8 +499,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 //		case CHR_J: case CHR_K:
 		case CHR_L: halVARS_ReportGLinfo(); halVARS_ReportTZinfo(); break;
-		case CHR_M: xRtosReportMemory(NULL, 0, (fm_t) makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0)); break;
-
+		case CHR_M: {
+			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0) };
+			xRtosReportMemory(&sRprt);
+			break;
+		}
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(); break;
 		#endif
@@ -516,7 +519,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		#endif
-		case CHR_U: xRtosReportTasks(NULL, 0, (fm_t) makeMASK09x23(0,1,1,1,1,1,1,1,1,0x007FFFFF)); break;
+		case CHR_U: {
+			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,0,0x007FFFFF) };
+			xRtosReportTasks(&sRprt);
+			break;
+		}
 		case CHR_V:
 			halMCU_Report();
 			halWL_ReportLx();
