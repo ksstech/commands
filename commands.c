@@ -3,12 +3,14 @@
  * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "main.h"
-#include "task_aep.h"
-#include "identity.h"
+#include "hal_variables.h"
 
 #include "actuators.h"
 #include "commands.h"
+#include "task_aep.h"
+#include "identity.h"
+#include "options.h"
+
 #if (statsMQTT_RX > 0) || (statsMQTT_TX > 0)
 	#include "paho_mqtt.h"
 #endif
