@@ -271,10 +271,6 @@ static union {
 	u16_t u16;
 } cmdFlag;
 
-// ################################ Forward function declarations ##################################
-
-void vTaskSensorsReport(void);
-
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(int cCmd) {
@@ -521,7 +517,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 //		case CHR_Q:
 		case CHR_R: vRulesDecode(); break;
-		case CHR_S: vTaskSensorsReport(); break;
+		case CHR_S:
+			int xTaskSensorsReport(report_t *);
+			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1,0x000FFFFF) };
+			xTaskSensorsReport(&sRprt);
+			break;
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		#endif
