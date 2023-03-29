@@ -544,7 +544,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (cmakeAEP > 0)
 			vAEP_Report();
 			#endif
-			app_Report();
+			halVARS_ReportApp();
 			break ;
 		case CHR_W: halWL_Report(); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
