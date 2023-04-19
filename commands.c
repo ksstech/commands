@@ -318,7 +318,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
-				xCommandReport(cCmd);
+//				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -334,7 +334,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			}
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
-		} else {
+		} else if (cCmd != CHR_LF) {
 			xCommandReport(cCmd);
 		}
 		cmdFlag.his = 0;
