@@ -7,7 +7,7 @@ set( requires )
 set( priv_requires 
 	main
 	common hal_esp32
-	lis2hh12 ltr329als m90e26 mcp342x modbus mpl3115 mqtt onewire pca9555 pycoproc ssd1306 si70xx 
+	lis2hh12 ltr329als m90e26 mcp342x modbus mpl3115 mqtt onewire pca9555 pcf8574 pycoproc ssd1306 si70xx 
 	actuators http identity printfx rtos-support rules stringsX syslog systiming telnet_server
 )
 

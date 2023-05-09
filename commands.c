@@ -69,6 +69,10 @@
 	#include "pca9555.h"
 #endif
 
+#if (halHAS_PCF8574 > 0)
+	#include "pcf8574.h"
+#endif
+
 #if (halHAS_PYCOPROC > 0)
 	#include "pycoproc.h"
 #endif
@@ -149,6 +153,9 @@ static const char HelpMessage[] = {
 		#endif
 		#if (halHAS_PCA9555 > 0)
 		"pca9555\t"
+		#endif
+		#if (halHAS_PCF8574 > 0)
+		"pcf8574\t"
 		#endif
 		#if	(halHAS_SI70XX > 0)
 		"si70xx\t"
@@ -399,14 +406,21 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_7:
 		{
 			cCmd -= CHR_0;
-			#if (cmakePLTFRM == HW_EM1P2) || (cmakePLTFRM == HW_EM3P2)
+			#if (cmakePLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
 				m90e26Report();
 				m90e26LoadNVSConfig(0, cCmd);
 				m90e26LoadNVSConfig(1, cCmd);
 				m90e26Report();
 			} else
-			#elif (cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01 || cmakePLTFRM == HW_DK41 || cmakePLTFRM == HW_KC868A4)
+			#elif (cmakePLTFRM == HW_EM3P2)
+			if (cCmd < 3) {
+				m90e36Report();
+				m90e36LoadNVSConfig(0, cCmd);
+				m90e36LoadNVSConfig(1, cCmd);
+				m90e36Report();
+			} else
+			#elif (cmakePLTFRM==HW_AC00 || cmakePLTFRM==HW_AC01 || cmakePLTFRM==HW_DK41 || cmakePLTFRM==HW_KC868A4 || cmakePLTFRM==HW_KC868A6)
 			if (cCmd < halXXX_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
 				#if	(cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01)
