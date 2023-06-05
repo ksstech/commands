@@ -41,6 +41,10 @@
 	#include "rules.h"
 #endif
 
+#if (halHAS_ADE7953 > 0)
+	#include "ade7953.h"
+#endif
+
 #if (halHAS_LIS2HH12 > 0)
 	#include "lis2hh12.h"
 #endif
