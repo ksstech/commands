@@ -45,6 +45,10 @@
 	#include "ade7953.h"
 #endif
 
+#if	(halHAS_DS1307 > 0)
+	#include "ds1307.h"
+#endif
+
 #if (halHAS_LIS2HH12 > 0)
 	#include "lis2hh12.h"
 #endif
@@ -476,6 +480,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			#if (halSOC_DIG_IN > 0)
 			halGDI_Report();
+			#endif
+			#if	(halHAS_DS1307 > 0)
+			ds1307Report(NULL, strNUL);
 			#endif
 			#if	(halHAS_LIS2HH12 > 0)
 			lis2hh12ReportAll();
