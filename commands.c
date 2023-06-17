@@ -343,11 +343,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 				}
 			}
 			cmdFlag.u16 = 0;
-		} else if (cCmd == CHR_BS) {		// BS to remove previous character
-			if (cmdFlag.idx) {				// yes,
-				--cmdFlag.idx;				// step 1 slot back
-				if (cmdFlag.idx == 0) {		// if buffer now empty
-					cmdFlag.u16 = 0;		// reset to default (non cli/history) mode
+
+		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
+			if (cmdFlag.idx) {							// yes,
+				--cmdFlag.idx;							// step 1 slot back
+				if (cmdFlag.idx == 0) {					// if buffer now empty
+					cmdFlag.u16 = 0;					// reset to default (non cli/history) mode
 				}
 			}
 
