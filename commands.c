@@ -93,7 +93,7 @@
 	#include "ssd1306.h"
 #endif
 
-#define	debugFLAG					0xC000
+#define	debugFLAG					0xF000
 
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
@@ -305,9 +305,11 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else {
 			cmdFlag.u16 = 0;		// buffer NOT empty or NOT history mode, reset to default
 		}
+
 	} else if (cmdFlag.esc && cCmd == CHR_L_SQUARE) {
 		cmdFlag.lsb = 1;			// Left Square Bracket received, set flag
 		cmdFlag.cli = 1;			// force into CLI mode for next key
+
 	} else if (cmdFlag.esc && cmdFlag.lsb) {
 		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
@@ -329,6 +331,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		}
 		cmdFlag.lsb = 0;
 		cmdFlag.esc = 0;
+
 	} else {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
@@ -347,19 +350,21 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 					cmdFlag.u16 = 0;		// reset to default (non cli/history) mode
 				}
 			}
+
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
+
 		} else if (cCmd != CHR_LF) {
 			xCommandReport(cCmd);
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho) {										// if requested
-		P("\r\033[0K");							// clear line
+	if (bEcho) {							// if requested
+		P("\r\033[0K");						// clear line
 	}
-	if (cmdFlag.idx) {									// anything in buffer?
-		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho) {									// optional refresh whole line
+	if (cmdFlag.idx) {						// anything in buffer?
+		cmdFlag.cli = 1;					// ensure flag is set
+		if (bEcho) {						// optional refresh whole line
 			P("%.*s \b", cmdFlag.idx, cmdBuf);
 		}
 	}
