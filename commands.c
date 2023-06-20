@@ -139,7 +139,7 @@ static const char HelpMessage[] = {
 		"gpi\t"
 		#endif
 		#if	(halHAS_DS18X20 > 0)
-		"ds18\x20\t"
+		"ds18x20\t"
 		#endif
 		#if (halHAS_LIS2HH12 > 0)
 		"lis2hh\t"
@@ -157,7 +157,7 @@ static const char HelpMessage[] = {
 		"mpl3115\t"
 		#endif
 		#if	(halHAS_ONEWIRE > 0)
-		"Onewire\t"
+		"1Wire\t"
 		#endif
 		#if (halHAS_PCA9555 > 0)
 		"pca9555\t"
@@ -208,7 +208,8 @@ static const char HelpMessage[] = {
 	"GMAP\tioset 142(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\r\n"
 	"GMAP\tioset 143(mqtt) w.x.y.z port\r\n"
 	#if	(configPRODUCTION == 0)
-	"GMAP\tioset 144(peek) address size\r\n"
+		"GMAP\tioset 144(peek) address size\r\n"
+		"GMAP\tioset 145(poke) address size\r\n"
 	#endif
 
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
