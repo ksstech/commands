@@ -339,6 +339,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 //				xCommandReport(cCmd);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
+				printfx("\r\n");
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
 				}
@@ -362,12 +363,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		cmdFlag.his = 0;
 	}
 	if (bEcho) {							// if requested
-		P("\r\033[0K");						// clear line
+		printfx("\r\033[0K");				// clear line
 	}
 	if (cmdFlag.idx) {						// anything in buffer?
 		cmdFlag.cli = 1;					// ensure flag is set
 		if (bEcho) {						// optional refresh whole line
-			P("%.*s \b", cmdFlag.idx, cmdBuf);
+			printfx("%.*s \b", cmdFlag.idx, cmdBuf);
 		}
 	}
 	return iRV;
