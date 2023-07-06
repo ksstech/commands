@@ -23,7 +23,6 @@
 #include "x_builddefs.h"
 #include "x_errors_events.h"
 #include "x_http_server.h"
-#include "x_string_general.h"		// xstrncmp()
 #include "x_string_to_values.h"
 #include "x_telnet_server.h"
 
@@ -299,8 +298,7 @@ void xCommandReport(int cCmd) {
 int	xCommandBuffer(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_ESC) {
-		if ((cmdFlag.idx && cmdFlag.his) ||
-			(cmdFlag.idx == 0 && cmdFlag.his == 0)) {
+		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
 			cmdFlag.esc = 1;		// set ESC flag
 			cmdFlag.his = 0;
 		} else {
@@ -338,8 +336,8 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 //				xCommandReport(cCmd);
-				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				printfx("\r\n");
+				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
 				}
