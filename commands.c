@@ -413,10 +413,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			cCmd -= CHR_0;
 			#if (cmakePLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
-				m90e26Report();
 				m90e26LoadNVSConfig(0, cCmd);
 				m90e26LoadNVSConfig(1, cCmd);
-				m90e26Report();
 			} else
 			#elif (cmakePLTFRM == HW_EM3P2)
 			if (cCmd < 3) {
@@ -482,33 +480,39 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			ds1307Report(NULL, strNUL);
 			#endif
 			#if	(halHAS_LIS2HH12 > 0)
-			lis2hh12ReportAll();
+			lis2hh12ReportAll(NULL);
 			#endif
 			#if	(halHAS_LTR329ALS > 0)
-			ltr329alsReportAll();
+			ltr329alsReportAll(NULL);
 			#endif
 			#if	(halHAS_M90E26 > 0)
-			m90e26Report();
+			m90e26Report(NULL);
 			#endif
 			#if	(halHAS_MCP342X > 0)
-			mcp342xReportAll();
+			mcp342xReportAll(NULL);
 			#endif
 			#if	(halHAS_MPL3115 > 0)
-			mpl3115ReportAll();
+			mpl3115ReportAll(NULL);
 			#endif
 			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report();
+			OWP_Report(NULL);
 			#endif
 			#if (halHAS_PCA9555 > 0)
-			pca9555Report();
+			pca9555Report(NULL);
+			#endif
+			#if (halHAS_PCF8574 > 0)
+			pcf8574Report(NULL);
+			#endif
+			#if (halHAS_PYCOPROC > 0)
+			pycoprocReport(NULL);
 			#endif
 			#if	(halHAS_SI70XX > 0)
-			si70xxReportAll();
+			si70xxReportAll(NULL);
 			#endif
 			#if	(halHAS_SSD1306 > 0)
-			ssd1306Report();
+			ssd1306Report(NULL);
 			#endif
-			halWL_TimeoutReport();
+			halWL_TimeoutReport(NULL);
 			vUBufReport(psHB);
 			break;
 		#endif						// (configPRODUCTION == 0)
@@ -558,7 +562,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		}
 		case CHR_V:
 			halMCU_Report();
-			halWL_ReportLx();
+			halWL_ReportLx(NULL);
 			vSyslogReport();
 			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
 			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
@@ -572,7 +576,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			halVARS_ReportApp();
 			break ;
-		case CHR_W: halWL_Report(); break;
+		case CHR_W: halWL_Report(NULL); break;
 //		case CHR_X: case CHR_Y: case CHR_Z:
 		default: xCommandBuffer(cCmd, bEcho);
 		}
