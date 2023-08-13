@@ -288,14 +288,14 @@ static union {
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
-void xCommandReport(int cCmd) {
-	P("E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+void xCommandReport(report_t * psR, int cCmd) {
+	wprintfx(psR, "E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 }
 
 /*
  * @brief
  */
-int	xCommandBuffer(int cCmd, bool bEcho) {
+int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_ESC) {
 		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
@@ -326,7 +326,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		} else if (cCmd == CHR_D) {						// Cursor LEFT
 			//
 		} else {
-			xCommandReport(cCmd);
+			xCommandReport(psR, cCmd);
 		}
 		cmdFlag.lsb = 0;
 		cmdFlag.esc = 0;
@@ -335,8 +335,7 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 		if (cCmd == CHR_CR) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
-//				xCommandReport(cCmd);
-				printfx("\r\n");
+				wprintfx(psR, "\r\n");
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -356,17 +355,17 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 
 		} else if (cCmd != CHR_LF) {
-			xCommandReport(cCmd);
+			xCommandReport(psR, cCmd);
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho) {							// if requested
-		printfx("\r\033[0K");				// clear line
+	if (bEcho) {										// if requested
+		wprintfx(psR, "\r\033[0K");						// clear line
 	}
-	if (cmdFlag.idx) {						// anything in buffer?
-		cmdFlag.cli = 1;					// ensure flag is set
-		if (bEcho) {						// optional refresh whole line
-			printfx("%.*s \b", cmdFlag.idx, cmdBuf);
+	if (cmdFlag.idx) {									// anything in buffer?
+		cmdFlag.cli = 1;								// ensure flag is set
+		if (bEcho) {									// optional refresh whole line
+			wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);
 		}
 	}
 	return iRV;
@@ -376,11 +375,12 @@ int	xCommandBuffer(int cCmd, bool bEcho) {
 
 static void vCommandInterpret(int cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
+	report_t sRprt = { 0 };
 	if (cmdFlag.cli) {
-		xCommandBuffer(cCmd, bEcho);
+		xCommandBuffer(&sRprt, cCmd, bEcho);
 	} else {
 		clrSYSFLAGS(sfKEY_EOF);
-		switch (cCmd) {
+		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if defined(ESP_PLATFORM)
 		case CHR_SOH:															// c-A
 		case CHR_STX:															// c-B
@@ -468,60 +468,59 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_D:
 			#if (halSOC_ANA_IN > 0)
-			halGAI_Report(NULL);
+			halGAI_Report(&sRprt);
 			#endif
 			#if (halSOC_ANA_OUT > 0)
-			halGAO_Report(NULL);
+			halGAO_Report(&sRprt);
 			#endif
 			#if (halSOC_DIG_IN > 0)
-			halGDI_Report(NULL);
+			halGDI_Report(&sRprt);
 			#endif
 			#if	(halHAS_DS1307 > 0)
 			ds1307Report(NULL, strNUL);
 			#endif
 			#if	(halHAS_LIS2HH12 > 0)
-			lis2hh12ReportAll(NULL);
+			lis2hh12ReportAll(&sRprt);
 			#endif
 			#if	(halHAS_LTR329ALS > 0)
-			ltr329alsReportAll(NULL);
+			ltr329alsReportAll(&sRprt);
 			#endif
 			#if	(halHAS_M90E26 > 0)
-			m90e26Report(NULL);
+			m90e26Report(&sRprt);
 			#endif
 			#if	(halHAS_MCP342X > 0)
-			mcp342xReportAll(NULL);
+			mcp342xReportAll(&sRprt);
 			#endif
 			#if	(halHAS_MPL3115 > 0)
-			mpl3115ReportAll(NULL);
+			mpl3115ReportAll(&sRprt);
 			#endif
 			#if	(halHAS_ONEWIRE > 0)
-			OWP_Report(NULL);
+			OWP_Report(&sRprt);
 			#endif
 			#if (halHAS_PCA9555 > 0)
-			pca9555Report(NULL);
+			pca9555Report(&sRprt);
 			#endif
 			#if (halHAS_PCF8574 > 0)
-			pcf8574Report(NULL);
+			pcf8574Report(&sRprt);
 			#endif
 			#if (halHAS_PYCOPROC > 0)
-			pycoprocReport(NULL);
+			pycoprocReport(&sRprt);
 			#endif
 			#if	(halHAS_SI70XX > 0)
-			si70xxReportAll(NULL);
+			si70xxReportAll(&sRprt);
 			#endif
 			#if	(halHAS_SSD1306 > 0)
-			ssd1306Report(NULL);
+			ssd1306Report(&sRprt);
 			#endif
-			halWL_TimeoutReport(NULL);
+			halWL_TimeoutReport(&sRprt);
 			vUBufReport(psHB);
 			break;
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-//		case CHR_E:
 		case CHR_F: halVARS_ReportFlags(1); break;
-//		case CHR_G:
 		case CHR_H: printfx(HelpMessage); break;
+
 		case CHR_I:
 			#if	(appUSE_IDENT > 0)
 			vID_Report();
@@ -529,15 +528,16 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			printfx("No identity support\r\n");
 			#endif
 			break;
-//		case CHR_J: case CHR_K:
+
 		case CHR_L: halVARS_ReportGLinfo(); halVARS_ReportTZinfo(); break;
-		case CHR_M: {
-			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK11x21(1,0,0,1,1,1,1,1,1,1,1,0) };
+
+		case CHR_M:
+			sRprt.sFM = (fm_t) makeMASK09x23(0,0,0,0,0,0,0,1,1, 0x0000FC0F);
 			xRtosReportMemory(&sRprt);
 			break;
-		}
+
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_N: xNetReportStats(); break;
+		case CHR_N: xNetReportStats(&sRprt); break;
 		#endif
 
 		case CHR_O: vOptionsShow(); break;
@@ -545,40 +545,44 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
 		#endif
-//		case CHR_Q:
+
 		case CHR_R: vRulesDecode(); break;
+
 		case CHR_S:
 			int xTaskSensorsReport(report_t *);
-			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1,0x000FFFFF) };
+			sRprt.sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
 			xTaskSensorsReport(&sRprt);
 			break;
+
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
 		#endif
-		case CHR_U: {
-			report_t sRprt = { .pcBuf = NULL, .Size = 0, .sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,0,0x007FFFFF) };
+
+		case CHR_U:
+			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,0, 0x007FFFFF);
 			xRtosReportTasks(&sRprt);
 			break;
-		}
+
 		case CHR_V:
-			halMCU_Report();
-			halWL_ReportLx(NULL);
-			vSyslogReport();
-			IF_EXEC_0(configCONSOLE_HTTP == 1, vHttpReport);
-			IF_EXEC_0(configCONSOLE_TELNET == 1, vTnetReport);
+			halMCU_Report(&sRprt);
+			halWL_ReportLx(&sRprt);
+			vSyslogReport(&sRprt);
+			vHttpReport(&sRprt);
+			vTnetReport(&sRprt);
 
 			#if (halHAS_MB_SEN > 0 || halHAS_MB_ACT > 0)
-			xEpMBC_ClientReport();
+			xEpMBC_ClientReport(&sRprt);
 			#endif
 
 			#if (cmakeAEP > 0)
-			vAEP_Report();
+			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
+			vAEP_Report(&sRprt);
 			#endif
 			halVARS_ReportApp();
-			break ;
-		case CHR_W: halWL_Report(NULL); break;
-//		case CHR_X: case CHR_Y: case CHR_Z:
-		default: xCommandBuffer(cCmd, bEcho);
+			break;
+
+		case CHR_W: halWL_Report(&sRprt); break;
+		default: xCommandBuffer(&sRprt, cCmd, bEcho);
 		}
 	}
 	if (iRV < erSUCCESS)
