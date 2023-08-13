@@ -468,13 +468,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_D:
 			#if (halSOC_ANA_IN > 0)
-			halGAI_Report();
+			halGAI_Report(NULL);
 			#endif
 			#if (halSOC_ANA_OUT > 0)
-			halGAO_Report();
+			halGAO_Report(NULL);
 			#endif
 			#if (halSOC_DIG_IN > 0)
-			halGDI_Report();
+			halGDI_Report(NULL);
 			#endif
 			#if	(halHAS_DS1307 > 0)
 			ds1307Report(NULL, strNUL);
