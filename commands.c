@@ -456,7 +456,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			#if	(cmakePLTFRM == HW_SP2PM)
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_ADE7953, pBuffer, &SizeBlob);
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			vRtosFree(pBuffer);
 			break;
