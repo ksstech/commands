@@ -392,8 +392,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_SYN:									// c-V Erase VARS blob then reboot
 			halFOTA_SetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
-		case CHR_ETB:									// c-W Erase VARS & WIFI blobs then reboot
-			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaBOOT_REBOOT);
+		case CHR_ETB:				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
+			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
 			break;
 		#endif
 
@@ -423,7 +423,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 				m90e36LoadNVSConfig(1, cCmd);
 				m90e36Report();
 			} else
-			#elif (cmakePLTFRM==HW_AC00 || cmakePLTFRM==HW_AC01 || cmakePLTFRM==HW_DK41 || cmakePLTFRM==HW_KC868A4 || cmakePLTFRM==HW_KC868A6)
+			#elif (cmakePLTFRM==HW_AC00 || cmakePLTFRM==HW_AC01 || cmakePLTFRM==HW_DK41 || cmakePLTFRM==HW_KC868A4 || cmakePLTFRM==HW_KC868A6 || cmakePLTFRM==HW_SP1PM || cmakePLTFRM==HW_SP2PM)
 			if (cCmd < halXXX_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
 				#if	(cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01)
@@ -452,7 +452,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
 			#if	(cmakePLTFRM == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_M90E26, pBuffer, &SizeBlob);
+			halSTORAGE_ReportBlob(halSTORAGE_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			#if	(cmakePLTFRM == HW_SP2PM)
 			SizeBlob = blobBUFFER_SIZE;
