@@ -137,6 +137,9 @@ static const char HelpMessage[] = {
 		#if (halSOC_DIG_IN > 0)
 		"gpi\t"
 		#endif
+		#if (halHAS_ADE7953 > 0)
+		"ade7953\t"
+		#endif
 		#if	(halHAS_DS18X20 > 0)
 		"ds18x20\t"
 		#endif
@@ -212,6 +215,9 @@ static const char HelpMessage[] = {
 	#endif
 
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
+		#if (halHAS_ADE7953 > 0)
+		"\tmode /ade7954 idx ???\r\n"
+		#endif
 		#if	(halHAS_DS18X20 > 0)
 		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
 		#endif
@@ -475,6 +481,9 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			#if (halSOC_DIG_IN > 0)
 			halGDI_Report(&sRprt);
+			#endif
+			#if	(halHAS_ADE7953 > 0)
+			ade7953Report(NULL);
 			#endif
 			#if	(halHAS_DS1307 > 0)
 			ds1307Report(NULL, strNUL);
