@@ -513,7 +513,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			pcf8574Report(&sRprt);
 			#endif
 			#if (halHAS_PYCOPROC > 0)
-			pycoprocReport(&sRprt);
+			pycoprocReportAll(&sRprt);
 			#endif
 			#if	(halHAS_SI70XX > 0)
 			si70xxReportAll(&sRprt);
