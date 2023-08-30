@@ -382,7 +382,6 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-		{
 			cCmd -= CHR_0;
 			#if (cmakePLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
@@ -404,11 +403,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 				#endif
 			} else
 			#endif
-			{
-				iRV = erOUT_OF_RANGE;
-			}
+			{	iRV = erOUT_OF_RANGE; }
 			break;
-		}
 
 		#if	(halXXX_XXX_OUT > 0)
 		case CHR_A: vTaskActuatorReport(); break;
@@ -561,8 +557,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		default: xCommandBuffer(&sRprt, cCmd, bEcho);
 		}
 	}
-	if (iRV < erSUCCESS)
-		xSyslogError(__FUNCTION__, iRV);
+	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
@@ -587,8 +582,7 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 		vCommandInterpret(*pCmd++, bEcho);				// process it..
 		++iRV;
 	}
-	if (iRV > 1)
-		vCommandInterpret(CHR_CR, bEcho);
+	if (iRV > 1) vCommandInterpret(CHR_CR, bEcho);
 	halVARS_CheckChanges();								// handle VARS if changed
 	halVARS_ReportFlags(0);								// report flags if changed
 	if (Hdlr) {
