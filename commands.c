@@ -26,6 +26,10 @@
 #include "x_string_to_values.h"
 #include "x_telnet_server.h"
 
+#if (halUSE_I2C > 0)
+	#include "hal_i2c_common.h"
+#endif
+
 #include "hal_network.h"
 #include "hal_stdio.h"
 #include "hal_mcu.h"				// halMCU_Report()
@@ -40,56 +44,8 @@
 	#include "rules.h"
 #endif
 
-#if (halHAS_ADE7953 > 0)
-	#include "ade7953.h"
-#endif
-
-#if	(halHAS_DS1307 > 0)
-	#include "ds1307.h"
-#endif
-
-#if (halHAS_LIS2HH12 > 0)
-	#include "lis2hh12.h"
-#endif
-
-#if (halHAS_LTR329ALS > 0)
-	#include "ltr329als.h"
-#endif
-
 #if (halHAS_M90E26 > 0)
 	#include "m90e26.h"
-#endif
-
-#if (halHAS_MCP342X > 0)
-	#include "mcp342x.h"
-#endif
-
-#if (halHAS_MPL3115 > 0)
-	#include "mpl3115.h"
-#endif
-
-#if (halHAS_ONEWIRE > 0)
-	#include "onewire_platform.h"
-#endif
-
-#if (halHAS_PCA9555 > 0)
-	#include "pca9555.h"
-#endif
-
-#if (halHAS_PCF8574 > 0)
-	#include "pcf8574.h"
-#endif
-
-#if (halHAS_PYCOPROC > 0)
-	#include "pycoproc.h"
-#endif
-
-#if (halHAS_SI70XX > 0)
-	#include "si70xx.h"
-#endif
-
-#if (halHAS_SSD1306 > 0)
-	#include "ssd1306.h"
 #endif
 
 #define	debugFLAG					0xF000
