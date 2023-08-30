@@ -407,7 +407,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		#if	(halXXX_XXX_OUT > 0)
-		case CHR_A: vTaskActuatorReport(); break;
+		case CHR_A: vTaskActuatorReport(&sRprt); break;
 		#endif
 
 		case CHR_B: {
@@ -432,7 +432,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		}
 
 		#if	(halUSE_LITTLEFS == 1)
-		case CHR_C: halSTORAGE_InfoFS(""); break;
+		case CHR_C: halSTORAGE_InfoFS(NULL, ""); break;
 		#endif
 
 		case CHR_D:
@@ -501,7 +501,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			break;
 
-		case CHR_L: halVARS_ReportGLinfo(); halVARS_ReportTZinfo(); break;
+		case CHR_L: halVARS_ReportGLinfo(&sRprt); halVARS_ReportTZinfo(&sRprt); break;
 
 		case CHR_M:
 			sRprt.sFM = (fm_t) makeMASK09x23(0,0,0,0,0,0,0,1,1, 0x0000FC0F);
@@ -550,7 +550,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
 			vAEP_Report(&sRprt);
 			#endif
-			halVARS_ReportApp();
+			halVARS_ReportApp(&sRprt);
 			break;
 
 		case CHR_W: halWL_Report(&sRprt); break;
