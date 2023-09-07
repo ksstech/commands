@@ -335,12 +335,8 @@ int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 
 static int vCommandEmptyBuffer(void * pV, const char * pCC, va_list vaList) {
 	int iRV = 0;
-	if (allSYSFLAGS(sfU0ACTIVE << configSTDIO_UART_CHAN)) {
-		while (xStdioBufAvail()) {
-			putcharRT(xStdioBufGetC());
-			++iRV;
-		}
-	}
+	if (allSYSFLAGS(sfU0ACTIVE << configSTDIO_UART_CHAN))
+		while (xStdioBufAvail()) { putcharRT(xStdioBufGetC()); ++iRV; }
 	return iRV;
 }
 
