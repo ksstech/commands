@@ -523,7 +523,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		#if	(configPRODUCTION == 0)
-		case CHR_T: vSysTimerShow(0xFFFFFFFF); break;
+		case CHR_T: vSysTimerShow(&sRprt, 0xFFFFFFFF); break;
 		#endif
 
 		case CHR_U:
