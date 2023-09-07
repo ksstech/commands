@@ -22,9 +22,13 @@
 
 #include "x_builddefs.h"
 #include "x_errors_events.h"
-#include "x_http_server.h"
+#if (includeHTTP_TASK > 0)
+	#include "x_http_server.h"
+#endif
 #include "x_string_to_values.h"
-#include "x_telnet_server.h"
+#if (includeTNET_TASK > 0)
+	#include "tnet_server.h"
+#endif
 
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
@@ -535,9 +539,12 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halMCU_Report(&sRprt);
 			halWL_ReportLx(&sRprt);
 			vSyslogReport(&sRprt);
+			#if (includeHTTP_TASK > 0)
 			vHttpReport(&sRprt);
+			#endif
+			#if (includeTNET_TASK > 0)
 			vTnetReport(&sRprt);
-
+			#endif
 			#if (halHAS_MB_SEN > 0 || halHAS_MB_ACT > 0)
 			xEpMBC_ClientReport(&sRprt);
 			#endif
