@@ -3,17 +3,13 @@
  * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "hal_variables.h"
+#include "hal_config.h"
 
 #include "actuators.h"
 #include "commands.h"
 #include "task_aep.h"
 #include "identity.h"
-#include "options.h"
 
-#if (statsMQTT_RX > 0) || (statsMQTT_TX > 0)
-	#include "paho_mqtt.h"
-#endif
 #include "printfx.h"
 #include "rules.h"					// xRulesProcessText
 #include "statistics.h"
@@ -30,6 +26,7 @@
 	#include "tnet_server.h"
 #endif
 
+#include "hal_device_includes.h"
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
 #endif
@@ -38,7 +35,6 @@
 #include "hal_stdio.h"
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_fota.h"
-#include "hal_gpio.h"
 #include "hal_storage.h"
 #include "hal_usart.h"
 
