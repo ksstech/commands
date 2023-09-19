@@ -178,7 +178,10 @@ static const char HelpMessage[] = {
 		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
 		#endif
 		#if	(halHAS_LIS2HH12 > 0)
-		"\tmode /lis2hh12 idx ths(0-127) dur(0-255) odr(0-7) hr(0/1)\r\n"
+		"\tmode /lis2hh12 0 ths(0-127) dur(0-255)\r\n"
+		"\tmode /lis2hh12 1 hr(0/1) odr(0-7) bdu(0/1) ?en(0->7)\r\n"
+		"\tmode /lis2hh12 3 CTRL1  IG_CFG1  \r\n"
+		"\tmode /lis2hh12 4 bw(0->3) fs(0->3) bw(0/1) Aincr(0/1)\r\n"
 		#endif
 		#if	(halHAS_LTR329ALS > 0)
 		"\tmode /ltr329als idx gain=0~3/6/7 time=0~7 rate=0~7\r\n"
