@@ -432,6 +432,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		case CHR_D:
+			sRprt.sFM.aNL = 1; sRprt.sFM.aColor = 1;
 			#if (halSOC_ANA_IN > 0)
 			halGAI_Report(&sRprt);
 			#endif
@@ -486,7 +487,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-		case CHR_F: halVARS_ReportFlags(1); break;
+		case CHR_F: halVARS_ReportFlags(&sRprt, 1); break;
 		case CHR_H: printfx(HelpMessage); break;
 
 		case CHR_I:
@@ -570,6 +571,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
  * @return	number of characters passed to output
  */
 int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
+	report_t sRprt = { 0 };
 	xStdioBufLock(portMAX_DELAY);
 	if (psHB == NULL) {
 		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
@@ -577,13 +579,13 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 	}
 	int iRV = 0;
 	while (*pCmd) {
-		halVARS_ReportFlags(0);							// handle flag changes since previously here
+		halVARS_ReportFlags(&sRprt, 0);					// handle flag changes since previously here
 		vCommandInterpret(*pCmd++, bEcho);				// process it..
 		++iRV;
 	}
 	if (iRV > 1) vCommandInterpret(CHR_CR, bEcho);
 	halVARS_CheckChanges();								// handle VARS if changed
-	halVARS_ReportFlags(0);								// report flags if changed
+	halVARS_ReportFlags(&sRprt, 0);						// report flags if changed
 	if (Hdlr) {
 		va_list vaList;
 		va_start(vaList, pCC);
