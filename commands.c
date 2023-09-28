@@ -4,6 +4,17 @@
  */
 
 #include "hal_config.h"
+#include "hal_device_includes.h"
+#if (halUSE_I2C > 0)
+	#include "hal_i2c_common.h"
+#endif
+#include "hal_fota.h"
+#include "hal_mcu.h"				// halMCU_Report()
+#include "hal_network.h"
+#include "hal_options.h"
+#include "hal_stdio.h"
+#include "hal_storage.h"
+#include "hal_usart.h"
 
 #include "actuators.h"
 #include "commands.h"
@@ -25,19 +36,6 @@
 #if (includeTNET_TASK > 0)
 	#include "tnet_server.h"
 #endif
-
-#include "hal_device_includes.h"
-#if (halUSE_I2C > 0)
-	#include "hal_i2c_common.h"
-#endif
-
-#include "hal_network.h"
-#include "hal_stdio.h"
-#include "hal_mcu.h"				// halMCU_Report()
-#include "hal_fota.h"
-#include "hal_storage.h"
-#include "hal_usart.h"
-
 #include "MQTTClient.h"				// QOSx levels
 
 #if (appUSE_RULES > 0)
@@ -411,7 +409,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_B: {
 			#define	blobBUFFER_SIZE			1024
-			uint8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE);
+			u8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
