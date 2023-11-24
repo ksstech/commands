@@ -529,7 +529,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		#endif
 
 		case CHR_U:
-			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,0, 0x007FFFFF);
+			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x007FFFFF);
 			xRtosReportTasks(&sRprt);
 			break;
 
