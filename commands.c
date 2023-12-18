@@ -380,22 +380,22 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_6:
 		case CHR_7:
 			cCmd -= CHR_0;
-			#if (cmakePLTFRM == HW_EM1P2)
+			#if (buildPLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
 				m90e26LoadNVSConfig(0, cCmd);
 				m90e26LoadNVSConfig(1, cCmd);
 			} else
-			#elif (cmakePLTFRM == HW_EM3P2)
+			#elif (buildPLTFRM == HW_EM3P2)
 			if (cCmd < 3) {
 				m90e36Report();
 				m90e36LoadNVSConfig(0, cCmd);
 				m90e36LoadNVSConfig(1, cCmd);
 				m90e36Report();
 			} else
-			#elif (cmakePLTFRM==HW_AC00 || cmakePLTFRM==HW_AC01 || cmakePLTFRM==HW_DK41 || cmakePLTFRM==HW_KC868A4 || cmakePLTFRM==HW_KC868A6 || cmakePLTFRM==HW_SP1PM || cmakePLTFRM==HW_SP2PM)
+			#elif (buildPLTFRM==HW_AC00 || buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
 			if (cCmd < halXXX_DIG_OUT) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
-				#if	(cmakePLTFRM == HW_AC00 || cmakePLTFRM == HW_AC01)
+				#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
 				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
 				#endif
 			} else
@@ -416,11 +416,11 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
-			#if	(cmakePLTFRM == HW_EM1P2)
+			#if	(buildPLTFRM == HW_EM1P2)
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
-			#if	(cmakePLTFRM == HW_SP2PM)
+			#if	(buildPLTFRM == HW_SP2PM)
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
@@ -547,7 +547,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			xEpMBC_ClientReport(&sRprt);
 			#endif
 
-			#if (cmakeAEP > 0)
+			#if (buildAEP > 0)
 			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
 			vAEP_Report(&sRprt);
 			#endif
