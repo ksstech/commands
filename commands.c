@@ -1,6 +1,5 @@
 /*
- * commands.c - command interpreter
- * Copyright (c) 2017-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
+ * commands.c - Copyright (c) 2017-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
 #include "hal_config.h"
@@ -9,6 +8,7 @@
 	#include "hal_i2c_common.h"
 #endif
 #include "hal_fota.h"
+#include "hal_gpio.h"
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_network.h"
 #include "hal_options.h"
