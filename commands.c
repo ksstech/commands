@@ -1,5 +1,5 @@
 /*
- * commands.c - Copyright (c) 2017-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
+ * commands.c - Copyright (c) 2017-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
 #include "hal_config.h"
