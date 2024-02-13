@@ -42,7 +42,7 @@
 	#include "rules.h"
 #endif
 
-#if (halHAS_M90E26 > 0)
+#if (HAL_M90E26 > 0)
 	#include "m90e26.h"
 #endif
 
@@ -76,10 +76,10 @@ static const char HelpMessage[] = {
 	#endif
 
 	"General:\r\n"
-	#if	(configPRODUCTION == 0) && (halXXX_XXX_OUT > 0)
+	#if	(configPRODUCTION == 0) && (HAL_XXO > 0)
 	"ACT\t(0-x) Trigger selected actuator\r\n"
 	#endif
-	#if	(halXXX_XXX_OUT > 0)
+	#if	(HAL_XXO > 0)
 	"ACT\t(A)ctuators Report\r\n"
 	#endif
 	#if	(configPRODUCTION == 0)
@@ -88,43 +88,43 @@ static const char HelpMessage[] = {
 	"\t(C)ontent of LFS\r\n"
 	#endif
 	"\t(D)iagnostics ["
-		#if (halSOC_DIG_IN > 0)
+		#if (HAL_GDI > 0)
 		"gpi\t"
 		#endif
-		#if (halHAS_ADE7953 > 0)
+		#if (HAL_ADE7953 > 0)
 		"ade7953\t"
 		#endif
-		#if	(halHAS_DS18X20 > 0)
+		#if	(HAL_DS18X20 > 0)
 		"ds18x20\t"
 		#endif
-		#if (halHAS_LIS2HH12 > 0)
+		#if (HAL_LIS2HH12 > 0)
 		"lis2hh\t"
 		#endif
-		#if	(halHAS_LTR329ALS > 0)
+		#if	(HAL_LTR329ALS > 0)
 		"ltr329\t"
 		#endif
-		#if	(halHAS_M90E26 > 0)
+		#if	(HAL_M90E26 > 0)
 		"m90e26\t"
 		#endif
-		#if	(halHAS_MCP342X > 0)
+		#if	(HAL_MCP342X > 0)
 		"mcp342x\t"
 		#endif
-		#if	(halHAS_MPL3115 > 0)
+		#if	(HAL_MPL3115 > 0)
 		"mpl3115\t"
 		#endif
-		#if	(halHAS_ONEWIRE > 0)
+		#if	(HAL_ONEWIRE > 0)
 		"1Wire\t"
 		#endif
-		#if (halHAS_PCA9555 > 0)
+		#if (HAL_PCA9555 > 0)
 		"pca9555\t"
 		#endif
-		#if (halHAS_PCF8574 > 0)
+		#if (HAL_PCF8574 > 0)
 		"pcf8574\t"
 		#endif
-		#if	(halHAS_SI70XX > 0)
+		#if	(HAL_SI70XX > 0)
 		"si70xx\t"
 		#endif
-		#if	(halHAS_SSD1306 > 0)
+		#if	(HAL_SSD1306 > 0)
 		"ssd1306\t"
 		#endif
 	"]\r\n"
@@ -153,7 +153,7 @@ static const char HelpMessage[] = {
 
 	"Extended commands:\r\n"
 	"\treboot | register | upgrade | show W0 [... [W23]]\r\n"
-	#if	(halXXX_XXX_OUT > 0)
+	#if	(HAL_XXO > 0)
 	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\r\n"
 	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\r\n"
 	"ACT\tadjust ch# stage# Adj\r\n"
@@ -169,22 +169,22 @@ static const char HelpMessage[] = {
 	#endif
 
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
-		#if (halHAS_ADE7953 > 0)
+		#if (HAL_ADE7953 > 0)
 		"\tmode /ade7954 idx ???\r\n"
 		#endif
-		#if	(halHAS_DS18X20 > 0)
+		#if	(HAL_DS18X20 > 0)
 		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
 		#endif
-		#if	(halHAS_LIS2HH12 > 0)
+		#if	(HAL_LIS2HH12 > 0)
 		"\tmode /lis2hh12 0 ths(0-127) dur(0-255)\r\n"
 		"\tmode /lis2hh12 1 hr(0/1) odr(0-7) bdu(0/1) ?en(0->7)\r\n"
 		"\tmode /lis2hh12 3 CTRL1  IG_CFG1  \r\n"
 		"\tmode /lis2hh12 4 bw(0->3) fs(0->3) bw(0/1) Aincr(0/1)\r\n"
 		#endif
-		#if	(halHAS_LTR329ALS > 0)
+		#if	(HAL_LTR329ALS > 0)
 		"\tmode /ltr329als idx gain=0~3/6/7 time=0~7 rate=0~7\r\n"
 		#endif
-		#if	(halHAS_M90E26 > 0)
+		#if	(HAL_M90E26 > 0)
 		"\tmode /m90e26 idx 1=gainL val=1/4/8/16/24\r\n"
 		#if	(m90e26NEUTRAL > 0)
 		"\t\t2=gainN val=1/2/4\r\n"
@@ -196,36 +196,36 @@ static const char HelpMessage[] = {
 		"\t\t8=Delete 'ALL Calibration data'\r\n"
 		"\t\t9=WriteReg reg=" mySTRINGIFY(SOFTRESET) "~" mySTRINGIFY(CRC_2) " val=0~0xFFFF\r\n"
 		#endif
-		#if (configPRODUCTION == 0) && (halHAS_MB_ACT > 0 || halHAS_MB_SEN > 0)
+		#if (configPRODUCTION == 0) && (HAL_MB_ACT > 0 || HAL_MB_SEN > 0)
 		"\tcmd /mb TBC\r\n"
 		#endif
-		#if (halHAS_MB_ACT > 0)
+		#if (HAL_MB_ACT > 0)
 		"\tcmd /mb/act \r\n"
 		"\tmode /mb/act idx TBC\r\n"
 		#endif
-		#if (halHAS_MB_SEN > 0)
+		#if (HAL_MB_SEN > 0)
 		"\tcmd /mb/sen  \r\n"
 		"\tmode /mb/sen idx TBC\r\n"
 		#endif
-		#if	(halHAS_MCP342X > 0)
+		#if	(HAL_MCP342X > 0)
 		"\tmode /mcp342x idx TBC\r\n"
 		#endif
-		#if	(halHAS_MPL3115 > 0)
+		#if	(HAL_MPL3115 > 0)
 		"\tmode /mpl3115 idx TBC\r\n"
 		#endif
-		#if	(halHAS_PYCOPROC > 0)
+		#if	(HAL_PYCOPROC > 0)
 		"\tmode /pycoproc idx TBC\r\n"
 		#endif
-		#if	(halHAS_SI70XX > 0)
+		#if	(HAL_SI70XX > 0)
 		"\tmode /si70xx idx TBC\r\n"
 		#endif
-		#if (halSOC_DIG_IN > 0)
+		#if (HAL_GDI > 0)
 		"\tmode /gdi idx inv=0~1 type=0~5 dly=0~255\r\n"
 		#endif
-		#if	(halSOC_ANA_IN > 0)
+		#if	(HAL_GAI > 0)
 		"\tmode /gai idx attn=0~11db width=9~11]\r\n"
 		#endif
-		#if	(halXXX_XXX_OUT > 0)
+		#if	(HAL_XXO > 0)
 		"\tmode /act idx TBC\r\n"
 		#endif
 	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\r\n"
@@ -393,7 +393,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 				m90e36Report();
 			} else
 			#elif (buildPLTFRM==HW_AC00 || buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
-			if (cCmd < halXXX_DIG_OUT) {
+			if (cCmd < HAL_XDO) {
 				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
 				#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
 				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
@@ -403,7 +403,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			{	iRV = erOUT_OF_RANGE; }
 			break;
 
-		#if	(halXXX_XXX_OUT > 0)
+		#if	(HAL_XXO > 0)
 		case CHR_A: vTaskActuatorReport(&sRprt); break;
 		#endif
 
@@ -434,52 +434,52 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_D:
 			sRprt.sFM.aNL = 1; sRprt.sFM.aColor = 1;
-			#if (halSOC_ANA_IN > 0)
+			#if (HAL_GAI > 0)
 			halGAI_Report(&sRprt);
 			#endif
-			#if (halSOC_ANA_OUT > 0)
+			#if (HAL_GAO > 0)
 			halGAO_Report(&sRprt);
 			#endif
-			#if (halSOC_DIG_IN > 0)
+			#if (HAL_GDI > 0)
 			halGDI_Report(&sRprt);
 			#endif
-			#if	(halHAS_ADE7953 > 0)
+			#if	(HAL_ADE7953 > 0)
 			ade7953Report(NULL);
 			#endif
-			#if	(halHAS_DS1307 > 0)
+			#if	(HAL_DS1307 > 0)
 			ds1307Report(NULL, strNUL);
 			#endif
-			#if	(halHAS_LIS2HH12 > 0)
+			#if	(HAL_LIS2HH12 > 0)
 			lis2hh12ReportAll(&sRprt);
 			#endif
-			#if	(halHAS_LTR329ALS > 0)
+			#if	(HAL_LTR329ALS > 0)
 			ltr329alsReportAll(&sRprt);
 			#endif
-			#if	(halHAS_M90E26 > 0)
+			#if	(HAL_M90E26 > 0)
 			m90e26Report(&sRprt);
 			#endif
-			#if	(halHAS_MCP342X > 0)
+			#if	(HAL_MCP342X > 0)
 			mcp342xReportAll(&sRprt);
 			#endif
-			#if	(halHAS_MPL3115 > 0)
+			#if	(HAL_MPL3115 > 0)
 			mpl3115ReportAll(&sRprt);
 			#endif
-			#if	(halHAS_ONEWIRE > 0)
+			#if	(HAL_ONEWIRE > 0)
 			OWP_Report(&sRprt);
 			#endif
-			#if (halHAS_PCA9555 > 0)
+			#if (HAL_PCA9555 > 0)
 			pca9555Report(&sRprt);
 			#endif
-			#if (halHAS_PCF8574 > 0)
+			#if (HAL_PCF8574 > 0)
 			pcf8574Report(&sRprt);
 			#endif
-			#if (halHAS_PYCOPROC > 0)
+			#if (HAL_PYCOPROC > 0)
 			pycoprocReportAll(&sRprt);
 			#endif
-			#if	(halHAS_SI70XX > 0)
+			#if	(HAL_SI70XX > 0)
 			si70xxReportAll(&sRprt);
 			#endif
-			#if	(halHAS_SSD1306 > 0)
+			#if	(HAL_SSD1306 > 0)
 			ssd1306Report(&sRprt);
 			#endif
 			halWL_TimeoutReport(&sRprt);
@@ -543,7 +543,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (includeTNET_TASK > 0)
 			vTnetReport(&sRprt);
 			#endif
-			#if (halHAS_MB_SEN > 0 || halHAS_MB_ACT > 0)
+			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
 			xEpMBC_ClientReport(&sRprt);
 			#endif
 
