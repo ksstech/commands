@@ -170,7 +170,7 @@ static const char HelpMessage[] = {
 
 	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
 		#if (HAL_ADE7953 > 0)
-		"\tmode /ade7954 idx ???\r\n"
+		"\tmode /ade7953 idx ???\r\n"
 		#endif
 		#if	(HAL_DS18X20 > 0)
 		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
@@ -443,7 +443,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#if (HAL_GDI > 0)
 			halGDI_Report(&sRprt);
 			#endif
-			#if	(HAL_ADE7953 > 0)
+			#if (HAL_ADE7953 > 0)
 			ade7953Report(NULL);
 			#endif
 			#if	(HAL_DS1307 > 0)
