@@ -288,7 +288,7 @@ int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 		cmdFlag.esc = 0;
 
 	} else {
-		if (cCmd == CHR_CR) {
+		if (cCmd == CHR_CR || cCmd == CHR_LF) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				wprintfx(psR, "\r\n");
