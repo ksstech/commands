@@ -1,6 +1,4 @@
-/*
- * commands.c - Copyright (c) 2017-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
- */
+// commands.c - Copyright (c) 2017-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
 #include "hal_config.h"
 #include "hal_device_includes.h"
@@ -42,18 +40,13 @@
 	#include "rules.h"
 #endif
 
-#if (HAL_M90E26 > 0)
-	#include "m90e26.h"
-#endif
+// ######################################## Macros ################################################
 
 #define	debugFLAG					0xF000
-
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
 #define	debugPARAM					(debugFLAG_GLOBAL & debugFLAG & 0x4000)
 #define	debugRESULT					(debugFLAG_GLOBAL & debugFLAG & 0x8000)
-
-// ######################################## Macros ################################################
 
 #define	bufferMEMDUMP_SIZE			(1 * KILO)
 
