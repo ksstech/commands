@@ -327,16 +327,6 @@ int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 	return iRV;
 }
 
-static int vCommandEmptyBuffer(void * pV, const char * pCC, va_list vaList) {
-	int iRV = 0;
-	if (allSYSFLAGS(sfU0ACTIVE << configSTDIO_UART_CHAN))
-		while (xStdioBufAvail()) {
-			putchar_direct(xStdioBufGetC()); 
-			++iRV; 
-		}
-	return iRV;
-}
-
 // ################################# command string/character support ##############################
 
 static void vCommandInterpret(int cCmd, bool bEcho) {
@@ -591,14 +581,4 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 	}
 	xStdioBufUnLock();
 	return iRV;
-}
-
-// ######################################## UART specific support ##################################
-
-void vCommandProcessUART(void) {
-	char caChr[2];
-	int iRV = getchar();	// halUART_GetChar(configSTDIO_UART_CHAN);
-	caChr[0] = (iRV == EOF) ? 0 : iRV;
-	caChr[1] = 0;
-	xCommandProcessString(caChr, 1, vCommandEmptyBuffer, NULL, NULL);
 }

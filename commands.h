@@ -25,7 +25,6 @@ extern "C" {
 // ################################### GLOBAL Function Prototypes ##################################
 
 int xCommandProcessString(char *, bool, int (*)(void *, const char *, va_list), void *, const char *, ...);
-void vCommandProcessUART(void);
 
 #ifdef __cplusplus
 }
