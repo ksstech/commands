@@ -1,6 +1,6 @@
 // commands.c - Copyright (c) 2017-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
-#include "hal_config.h"
+#include "hal_platform.h"
 #include "hal_device_includes.h"
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
