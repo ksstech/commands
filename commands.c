@@ -488,7 +488,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		case CHR_L: halVARS_ReportGLinfo(&sRprt); halVARS_ReportTZinfo(&sRprt); break;
 
 		case CHR_M:
-			sRprt.sFM = (fm_t) makeMASK09x23(0,0,0,0,0,0,0,1,1, 0x0000FC0F);
+			sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,1,1,0x00FC0F);
 			xRtosReportMemory(&sRprt);
 			break;
 
@@ -559,7 +559,8 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
  */
 int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
 	report_t sRprt = { 0 };
-	xStdioBufLock(portMAX_DELAY);
+	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);
+	// init history buffer, variable size, blocks of 128 bytes
 	if (psHB == NULL) {
 		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
 		psHB->f_history = 1;
@@ -570,15 +571,16 @@ int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const cha
 		vCommandInterpret(*pCmd++, bEcho);				// process it..
 		++iRV;
 	}
+	// if more than 1 character supplied for processing, auto add CR to route through RULES engine
 	if (iRV > 1) vCommandInterpret(CHR_CR, bEcho);
-	halVARS_CheckChanges();								// handle VARS if changed
-	halVARS_ReportFlags(&sRprt, 0);						// report flags if changed
+	halVARS_CheckChanges();								// if VARS changed, write to NVS
+	halVARS_ReportFlags(&sRprt, 0);						// if flags changed, report
 	if (Hdlr) {
 		va_list vaList;
 		va_start(vaList, pCC);
 		iRV = Hdlr(pV, pCC, vaList);					// empty buffer
 		va_end(vaList);
 	}
-	xStdioBufUnLock();
+	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();
 	return iRV;
 }
