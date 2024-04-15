@@ -540,38 +540,23 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 /**
  * @brief	process a command string and call the [optional handler] to process the buffered output
- * @param	pCmd - command string to process, can be single character null terminated
- * @param	bEcho - if true all command characters will be echo'd
- * @param	Hdlr - pointer to function to empty buffer once processing done
- * @param	pV - context pointer as parameter 1 for handler
- * @param	pCC - printf style format control string
- * @param	... - optional list of parameters as required by format string
  * @return	number of characters passed to output
  */
-int xCommandProcessString(char * pCmd, bool bEcho, int (*Hdlr)(void *, const char *, va_list), void * pV, const char * pCC, ...) {
-	report_t sRprt = { 0 };
-	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);
-	// init history buffer, variable size, blocks of 128 bytes
-	if (psHB == NULL) {
-		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
-		psHB->f_history = 1;
-	}
+int xCommandProcess(command_t * psC) {
 	int iRV = 0;
-	while (*pCmd) {
-		halVARS_ReportFlags(&sRprt, 0);					// handle flag changes since previously here
-		vCommandInterpret(*pCmd++, bEcho);				// process it..
+	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);	// buffering enabled then lock
+	if (psC->fFlags) halVARS_ReportFlags(&psC->sRprt, 0);	// handle flag changes
+	while (psC->pCmd && *psC->pCmd) {
+		vCommandInterpret(psC);								// process it..
 		++iRV;
 	}
 	// if more than 1 character supplied for processing, auto add CR to route through RULES engine
-	if (iRV > 1) vCommandInterpret(CHR_CR, bEcho);
-	halVARS_CheckChanges();								// if VARS changed, write to NVS
-	halVARS_ReportFlags(&sRprt, 0);						// if flags changed, report
-	if (Hdlr) {
-		va_list vaList;
-		va_start(vaList, pCC);
-		iRV = Hdlr(pV, pCC, vaList);					// empty buffer
-		va_end(vaList);
-	}
-	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();
+	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->fEcho);
+
+	halVARS_CheckChanges();									// check if VARS changed, write to NVS
+	if (psC->fFlags) halVARS_ReportFlags(&psC->sRprt, 0);	// if flags changed, report
+
+	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);
+	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();			// buffering enabled then unlock
 	return iRV;
 }
