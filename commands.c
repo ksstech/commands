@@ -317,11 +317,11 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 
 // ################################# command string/character support ##############################
 
-static void vCommandInterpret(int cCmd, bool bEcho) {
+static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
-	report_t sRprt = { 0 };
+	u8_t cCmd = *psC->pCmd++;
 	if (cmdFlag.cli) {
-		xCommandBuffer(&sRprt, cCmd, bEcho);
+		xCommandBuffer(&psC->sRprt, cCmd, psC->fEcho);
 	} else {
 		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
@@ -378,7 +378,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		#if	(HAL_XXO > 0)
-		case CHR_A: vTaskActuatorReport(&sRprt); break;
+		case CHR_A: vTaskActuatorReport(&psC->sRprt); break;
 		#endif
 
 		case CHR_B: {
@@ -403,19 +403,21 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 		}
 
 		#if	(halUSE_LITTLEFS == 1)
-		case CHR_C: halSTORAGE_InfoFS(NULL, ""); break;
+		case CHR_C:
+			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,0,0,0,1,1,0,0x0);
+			halSTORAGE_InfoFS(&psC->sRprt, ""); break;
 		#endif
 
 		case CHR_D:
-			sRprt.sFM.aNL = 1; sRprt.sFM.aColor = 1;
+			psC->sRprt.sFM.aNL = 1; psC->sRprt.sFM.aColor = 1;
 			#if (HAL_GAI > 0)
-			halGAI_Report(&sRprt);
+			halGAI_Report(&psC->sRprt);
 			#endif
 			#if (HAL_GAO > 0)
-			halGAO_Report(&sRprt);
+			halGAO_Report(&psC->sRprt);
 			#endif
 			#if (HAL_GDI > 0)
-			halGDI_Report(&sRprt);
+			halGDI_Report(&psC->sRprt);
 			#endif
 			#if (HAL_ADE7953 > 0)
 			ade7953Report(NULL);
@@ -424,45 +426,45 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			ds1307Report(NULL, strNUL);
 			#endif
 			#if	(HAL_LIS2HH12 > 0)
-			lis2hh12ReportAll(&sRprt);
+			lis2hh12ReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_LTR329ALS > 0)
-			ltr329alsReportAll(&sRprt);
+			ltr329alsReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_M90E26 > 0)
-			m90e26Report(&sRprt);
+			m90e26Report(&psC->sRprt);
 			#endif
 			#if	(HAL_MCP342X > 0)
-			mcp342xReportAll(&sRprt);
+			mcp342xReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_MPL3115 > 0)
-			mpl3115ReportAll(&sRprt);
+			mpl3115ReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_ONEWIRE > 0)
-			OWP_Report(&sRprt);
+			OWP_Report(&psC->sRprt);
 			#endif
 			#if (HAL_PCA9555 > 0)
-			pca9555Report(&sRprt);
+			pca9555Report(&psC->sRprt);
 			#endif
 			#if (HAL_PCF8574 > 0)
-			pcf8574Report(&sRprt);
+			pcf8574Report(&psC->sRprt);
 			#endif
 			#if (HAL_PYCOPROC > 0)
-			pycoprocReportAll(&sRprt);
+			pycoprocReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_SI70XX > 0)
-			si70xxReportAll(&sRprt);
+			si70xxReportAll(&psC->sRprt);
 			#endif
 			#if	(HAL_SSD1306 > 0)
-			ssd1306Report(&sRprt);
+			ssd1306Report(&psC->sRprt);
 			#endif
-			halWL_TimeoutReport(&sRprt);
+			halWL_TimeoutReport(&psC->sRprt);
 			vUBufReport(psHB);
 			break;
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-		case CHR_F: halVARS_ReportFlags(&sRprt, 1); break;
+		case CHR_F: halVARS_ReportFlags(&psC->sRprt, 1); break;
 		case CHR_H: printfx(HelpMessage); break;
 
 		case CHR_I:
@@ -479,12 +481,13 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			break;
 
 		case CHR_M:
-			sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,1,1,0x00FC0F);
-			xRtosReportMemory(&sRprt);
+			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,1,1,0x00FC0F);
+			xRtosReportMemory(&psC->sRprt);
+			halMEM_MemoryHistoryReport(NULL);
 			break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_N: xNetReportStats(&sRprt); break;
+		case CHR_N: xNetReportStats(&psC->sRprt); break;
 		#endif
 
 		case CHR_O: vOptionsShow(); break;
@@ -497,42 +500,42 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_S:
 			int xTaskSensorsReport(report_t *);
-			sRprt.sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
-			xTaskSensorsReport(&sRprt);
+			psC->sRprt.sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
+			xTaskSensorsReport(&psC->sRprt);
 			break;
 
 		#if	(configPRODUCTION == 0)
-		case CHR_T: vSysTimerShow(&sRprt, 0xFFFFFFFF); break;
+		case CHR_T: vSysTimerShow(&psC->sRprt, 0xFFFFFFFF); break;
 		#endif
 
 		case CHR_U:
-			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x007FFFFF);
-			xRtosReportTasks(&sRprt);
+			psC->sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x007FFFFF);
+			xRtosReportTasks(&psC->sRprt);
 			break;
 
 		case CHR_V:
-			halMCU_Report(&sRprt);
-			halWL_ReportLx(&sRprt);
-			vSyslogReport(&sRprt);
+			halMCU_Report(&psC->sRprt);
+			halWL_ReportLx(&psC->sRprt);
+			vSyslogReport(&psC->sRprt);
 			#if (includeHTTP_TASK > 0)
-			vHttpReport(&sRprt);
+			vHttpReport(&psC->sRprt);
 			#endif
 			#if (includeTNET_TASK > 0)
-			vTnetReport(&sRprt);
+			vTnetReport(&psC->sRprt);
 			#endif
 			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
-			xEpMBC_ClientReport(&sRprt);
+			xEpMBC_ClientReport(&psC->sRprt);
 			#endif
 
 			#if (buildAEP > 0)
-			sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
-			vAEP_Report(&sRprt);
+			psC->sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
+			vAEP_Report(&psC->sRprt);
 			#endif
-			halVARS_ReportApp(&sRprt);
+			halVARS_ReportApp(&psC->sRprt);
 			break;
 
-		case CHR_W: halWL_Report(&sRprt); break;
-		default: xCommandBuffer(&sRprt, cCmd, bEcho);
+		case CHR_W: halWL_Report(&psC->sRprt); break;
+		default: xCommandBuffer(&psC->sRprt, cCmd, psC->fEcho);
 		}
 	}
 	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
