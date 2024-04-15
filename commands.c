@@ -8,6 +8,7 @@
 #include "hal_fota.h"
 #include "hal_gpio.h"
 #include "hal_mcu.h"				// halMCU_Report()
+#include "hal_memory.h"
 #include "hal_network.h"
 #include "hal_options.h"
 #include "hal_stdio.h"
@@ -228,7 +229,6 @@ static const char HelpMessage[] = {
 
 // #################################### Public variables ##########################################
 
-static ubuf_t * psHB = NULL;
 static u8_t cmdBuf[128]= { 0 };
 
 static union {
@@ -251,7 +251,7 @@ void xCommandReport(report_t * psR, int cCmd) {
 /*
  * @brief
  */
-int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
+int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_ESC) {
 		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
@@ -269,14 +269,10 @@ int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
 			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) {
-				cmdFlag.his = 1;
-			}
+			if (cmdFlag.idx) cmdFlag.his = 1;
 		} else if (cCmd == CHR_B) {						// Cursor DOWN
 			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) {
-				cmdFlag.his = 1;
-			}
+			if (cmdFlag.idx) cmdFlag.his = 1;
 		} else if (cCmd == CHR_C) {						// Cursor RIGHT
 			//
 		} else if (cCmd == CHR_D) {						// Cursor LEFT
@@ -302,27 +298,19 @@ int	xCommandBuffer(report_t * psR, int cCmd, bool bEcho) {
 		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
 			if (cmdFlag.idx) {							// yes,
 				--cmdFlag.idx;							// step 1 slot back
-				if (cmdFlag.idx == 0) {					// if buffer now empty
-					cmdFlag.u16 = 0;					// reset to default (non cli/history) mode
-				}
+				if (cmdFlag.idx == 0) cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
 			}
 
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 
-		} else if (cCmd != CHR_LF) {
-			xCommandReport(psR, cCmd);
-		}
+		} else if (cCmd != CHR_LF) xCommandReport(psR, cCmd);
 		cmdFlag.his = 0;
 	}
-	if (bEcho) {										// if requested
-		wprintfx(psR, "\r\033[0K");						// clear line
-	}
-	if (cmdFlag.idx) {									// anything in buffer?
-		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho) {									// optional refresh whole line
-			wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);
-		}
+	if (bEcho) wprintfx(psR, "\r\033[0K");							// if requested clear line
+	if (cmdFlag.idx) {												// anything in buffer?
+		cmdFlag.cli = 1;											// ensure flag is set
+		if (bEcho) wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
 	}
 	return iRV;
 }
@@ -485,7 +473,10 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			#endif
 			break;
 
-		case CHR_L: halVARS_ReportGLinfo(&sRprt); halVARS_ReportTZinfo(&sRprt); break;
+		case CHR_L:
+			halVARS_ReportGLinfo(&psC->sRprt); 
+			halVARS_ReportTZinfo(&psC->sRprt);
+			break;
 
 		case CHR_M:
 			sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,1,1,0x00FC0F);
