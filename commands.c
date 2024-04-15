@@ -383,7 +383,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 
 		case CHR_B: {
 			#define	blobBUFFER_SIZE			1024
-			u8_t * pBuffer = pvRtosMalloc(blobBUFFER_SIZE);
+			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
@@ -398,7 +398,7 @@ static void vCommandInterpret(int cCmd, bool bEcho) {
 			SizeBlob = blobBUFFER_SIZE;
 			halSTORAGE_ReportBlob(halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
-			vRtosFree(pBuffer);
+			free(pBuffer);
 			break;
 		}
 
