@@ -17,8 +17,9 @@
 
 #include "actuators.h"
 #include "commands.h"
-#include "task_aep.h"
 #include "identity.h"
+#include "task_aep.h"
+#include "task_sensors.h"
 
 #include "printfx.h"
 #include "rules.h"					// xRulesProcessText
@@ -321,7 +322,7 @@ static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
 	u8_t cCmd = *psC->pCmd++;
 	if (cmdFlag.cli) {
-		xCommandBuffer(&psC->sRprt, cCmd, psC->fEcho);
+		xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 	} else {
 		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
@@ -409,7 +410,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		case CHR_D:
-			psC->sRprt.sFM.aNL = 1; psC->sRprt.sFM.aColor = 1;
+			psC->sRprt.sFM.aNL = 1;
 			#if (HAL_GAI > 0)
 			halGAI_Report(&psC->sRprt);
 			#endif
@@ -420,10 +421,10 @@ static void vCommandInterpret(command_t * psC) {
 			halGDI_Report(&psC->sRprt);
 			#endif
 			#if (HAL_ADE7953 > 0)
-			ade7953Report(NULL);
+			ade7953Report(&psC->sRprt);
 			#endif
 			#if	(HAL_DS1307 > 0)
-			ds1307Report(NULL, strNUL);
+			ds1307Report(&psC->sRprt, strNUL);
 			#endif
 			#if	(HAL_LIS2HH12 > 0)
 			lis2hh12ReportAll(&psC->sRprt);
@@ -464,12 +465,17 @@ static void vCommandInterpret(command_t * psC) {
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-		case CHR_F: halVARS_ReportFlags(&psC->sRprt, 1); break;
+		case CHR_F:
+			psC->sRprt.fForce = 1; 
+			halVARS_ReportFlags(&psC->sRprt); 
+			psC->sRprt.fForce = 0;
+			break;
+
 		case CHR_H: printfx(HelpMessage); break;
 
 		case CHR_I:
 			#if	(appUSE_IDENT > 0)
-			vID_Report();
+			vID_Report(&psC->sRprt);
 			#else
 			printfx("No identity support\r\n");
 			#endif
@@ -481,16 +487,17 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 
 		case CHR_M:
-			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,1,1,0x00FC0F);
-			xRtosReportMemory(&psC->sRprt);
-			halMEM_MemoryHistoryReport(NULL);
+			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,0,1,0x00FC0F);
+			halMEM_ReportHistory(&psC->sRprt);
+			halMEM_Report(&psC->sRprt);
+//			xRtosReportMemory(&psC->sRprt);
 			break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(&psC->sRprt); break;
 		#endif
 
-		case CHR_O: vOptionsShow(); break;
+		case CHR_O: vOptionsShow(&psC->sRprt); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_P: halFOTA_ReportPartitions(); break ;
@@ -499,8 +506,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_R: vRulesDecode(); break;
 
 		case CHR_S:
-			int xTaskSensorsReport(report_t *);
-			psC->sRprt.sFM = (fm_t) makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
+			psC->sRprt.sFM.u32Val = makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
 			xTaskSensorsReport(&psC->sRprt);
 			break;
 
@@ -509,7 +515,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		case CHR_U:
-			psC->sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x007FFFFF);
+			psC->sRprt.sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x007FFFFF);
 			xRtosReportTasks(&psC->sRprt);
 			break;
 
@@ -528,14 +534,14 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 
 			#if (buildAEP > 0)
-			psC->sRprt.sFM = (fm_t) makeMASK09x23(1,1,1,1,1,1,1,1,1, 0x0);
+			psC->sRprt.sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x0);
 			vAEP_Report(&psC->sRprt);
 			#endif
 			halVARS_ReportApp(&psC->sRprt);
 			break;
 
 		case CHR_W: halWL_Report(&psC->sRprt); break;
-		default: xCommandBuffer(&psC->sRprt, cCmd, psC->fEcho);
+		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 		}
 	}
 	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
@@ -546,20 +552,21 @@ static void vCommandInterpret(command_t * psC) {
  * @return	number of characters passed to output
  */
 int xCommandProcess(command_t * psC) {
+	IF_myASSERT(debugPARAM, halCONFIG_inSRAM(psC));
 	int iRV = 0;
-	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);	// buffering enabled then lock
-	if (psC->fFlags) halVARS_ReportFlags(&psC->sRprt, 0);	// handle flag changes
+	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);	// buffering enabled, lock
+	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
 	while (psC->pCmd && *psC->pCmd) {
-		vCommandInterpret(psC);								// process it..
+		vCommandInterpret(psC);							// process it..
 		++iRV;
 	}
-	// if more than 1 character supplied for processing, auto add CR to route through RULES engine
-	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->fEcho);
+	// if >1 character supplied for processing add CR to route through RULES engine
+	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
 
-	halVARS_CheckChanges();									// check if VARS changed, write to NVS
-	if (psC->fFlags) halVARS_ReportFlags(&psC->sRprt, 0);	// if flags changed, report
+	halVARS_CheckChanges();								// check if VARS changed, write to NVS
+	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
 
-	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);
-	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();			// buffering enabled then unlock
+	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);			// Empty buffer if required
+	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();		// buffering enabled, unlock
 	return iRV;
 }

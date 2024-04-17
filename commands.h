@@ -13,15 +13,11 @@ extern "C" {
 // ######################################### enumerations ##########################################
 // ########################################## structures ###########################################
 
-
 typedef struct __attribute__((packed)) command_t {
 	report_t sRprt;
-	u8_t * pCmd;                    // command string to process
+	u8_t *pCmd;						// command string to process
 	int (*Hdlr)(void *);			// pointer to function to empty buffer once processing done
 	void *pVoid;                    // context pointer as parameter 1 for handler
-	bool fEcho;                     // if true all command characters will be echo'd
-	bool fEmpty;
-	bool fFlags;
 } command_t;
 
 // ###################################### Global variables #########################################
