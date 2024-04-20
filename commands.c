@@ -557,16 +557,16 @@ int xCommandProcess(command_t * psC) {
 	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);	// buffering enabled, lock
 	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
 	while (psC->pCmd && *psC->pCmd) {
-		vCommandInterpret(psC);							// process it..
+		vCommandInterpret(psC);									// process it..
 		++iRV;
 	}
 	// if >1 character supplied for processing add CR to route through RULES engine
 	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
 
-	halVARS_CheckChanges();								// check if VARS changed, write to NVS
+	halVARS_CheckChanges();										// check if VARS changed, write to NVS
 	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
 
-	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);			// Empty buffer if required
-	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();		// buffering enabled, unlock
+	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);					// Empty buffer if required
+	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();				// buffering enabled, unlock
 	return iRV;
 }
