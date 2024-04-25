@@ -452,6 +452,9 @@ static void vCommandInterpret(command_t * psC) {
 			#if (HAL_GDI > 0)
 			halGDI_Report(&psC->sRprt);
 			#endif
+			#if (HAL_GDO > 0)
+			halGDO_Report(&psC->sRprt);
+			#endif
 			#if (HAL_ADE7953 > 0)
 			ade7953Report(&psC->sRprt);
 			#endif
