@@ -288,7 +288,7 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		if (cCmd == CHR_CR || cCmd == CHR_LF) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
-				wprintfx(psR, "\r\n");
+				wprintfx(psR, strCRLF);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -299,19 +299,26 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
 			if (cmdFlag.idx) {							// yes,
 				--cmdFlag.idx;							// step 1 slot back
-				if (cmdFlag.idx == 0) cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
+				if (cmdFlag.idx == 0) {
+					cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
+				}
 			}
 
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 
-		} else if (cCmd != CHR_LF) xCommandReport(psR, cCmd);
+		} else if (cCmd != CHR_LF) {
+			xCommandReport(psR, cCmd);
+		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho) wprintfx(psR, "\r\033[0K");							// if requested clear line
-	if (cmdFlag.idx) {												// anything in buffer?
-		cmdFlag.cli = 1;											// ensure flag is set
-		if (bEcho) wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
+	if (bEcho)
+		wprintfx(psR, "\r\033[0K");						// if requested clear line
+	if (cmdFlag.idx) {									// anything in buffer?
+		cmdFlag.cli = 1;								// ensure flag is set
+		if (bEcho) {
+			wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
+		}
 	}
 	return iRV;
 }
@@ -343,7 +350,9 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		case CHR_SUB: setSYSFLAGS(sfKEY_EOF); break;
+		case CHR_SUB: 
+			setSYSFLAGS(sfKEY_EOF);
+			break;
 
 		#if	(configPRODUCTION == 0)
 		case CHR_0:
@@ -373,9 +382,14 @@ static void vCommandInterpret(command_t * psC) {
 				#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
 				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
 				#endif
+				default:
+					break;
+				}
 			} else
 			#endif
-			{	iRV = erOUT_OF_RANGE; }
+			{	
+				iRV = erOUT_OF_RANGE; 
+			}
 			break;
 
 		#if	(HAL_XXO > 0)
@@ -406,7 +420,8 @@ static void vCommandInterpret(command_t * psC) {
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C:
 			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,0,0,0,1,1,0,0x0);
-			halSTORAGE_InfoFS(&psC->sRprt, ""); break;
+			halSTORAGE_InfoFS(&psC->sRprt, "");
+			break;
 		#endif
 
 		case CHR_D:
@@ -475,7 +490,7 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_I:
 			#if	(appUSE_IDENT > 0)
-			vID_Report(&psC->sRprt);
+				vID_Report(&psC->sRprt);
 			#else
 			printfx("No identity support\r\n");
 			#endif
@@ -524,27 +539,32 @@ static void vCommandInterpret(command_t * psC) {
 			halWL_ReportLx(&psC->sRprt);
 			vSyslogReport(&psC->sRprt);
 			#if (includeHTTP_TASK > 0)
-			vHttpReport(&psC->sRprt);
+				vHttpReport(&psC->sRprt);
 			#endif
 			#if (includeTNET_TASK > 0)
-			vTnetReport(&psC->sRprt);
+				vTnetReport(&psC->sRprt);
 			#endif
 			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
-			xEpMBC_ClientReport(&psC->sRprt);
+				xEpMBC_ClientReport(&psC->sRprt);
 			#endif
 
 			#if (buildAEP > 0)
-			psC->sRprt.sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x0);
-			vAEP_Report(&psC->sRprt);
+				// flags for RX/TX (x32MMA) stats reporting
+				psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
+				vAEP_Report(&psC->sRprt);
 			#endif
 			halVARS_ReportApp(&psC->sRprt);
 			break;
 
-		case CHR_W: halWL_Report(&psC->sRprt); break;
-		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
+		case CHR_W:
+			halWL_Report(&psC->sRprt); 
+			break;
+		default: 
+			xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 		}
 	}
-	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
+	if (iRV < erSUCCESS)
+		xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
@@ -554,19 +574,22 @@ static void vCommandInterpret(command_t * psC) {
 int xCommandProcess(command_t * psC) {
 	IF_myASSERT(debugPARAM, halCONFIG_inSRAM(psC));
 	int iRV = 0;
-	if (buildSTDOUT_LEVEL > 0) xStdioBufLock(portMAX_DELAY);	// buffering enabled, lock
-	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
+	if (buildSTDOUT_LEVEL > 0)
+		xStdioBufLock(portMAX_DELAY);					// buffering enabled, lock
+	if (psC->sRprt.fFlags)
+		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
 	while (psC->pCmd && *psC->pCmd) {
-		vCommandInterpret(psC);									// process it..
+		vCommandInterpret(psC);							// process it..
 		++iRV;
 	}
-	// if >1 character supplied for processing add CR to route through RULES engine
-	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
-
-	halVARS_CheckChanges();										// check if VARS changed, write to NVS
-	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);	// handle flag changes
-
-	if (psC->Hdlr) iRV = psC->Hdlr(psC->pVoid);					// Empty buffer if required
-	if (buildSTDOUT_LEVEL > 0) xStdioBufUnLock();				// buffering enabled, unlock
+	if (iRV > 1)	// if >1 character supplied, add CR to route through RULES engine
+		xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
+	halVARS_CheckChanges();								// check if VARS changed, write to NVS
+	if (psC->sRprt.fFlags)
+		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
+	if (psC->Hdlr)
+		iRV = psC->Hdlr(psC->pVoid);					// Empty buffer if required
+	if (buildSTDOUT_LEVEL > 0)
+		xStdioBufUnLock();								// buffering enabled, unlock
 	return iRV;
 }
