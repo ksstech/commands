@@ -377,10 +377,27 @@ static void vCommandInterpret(command_t * psC) {
 				m90e36Report();
 			} else
 			#elif (buildPLTFRM==HW_AC00 || buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
-			if (cCmd < HAL_XDO) {
-				vActuatorLoad(cCmd, 5, 0, 500, 0, 500);
-				#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
-				vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);
+			if (cCmd < HAL_XXO) {
+				u8_t Type = xActuatorGetType(cCmd);
+				switch(Type) {
+				#if (HAL_XDO > 0)
+					case actTYPE_DIG:
+					#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
+						vActuatorLoad(cCmd, 5, 0, 500, 0, 500);				// LED 0~7
+						vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);			// Relay 0~7
+					#elif (buildPLTFRM == HW_DK41)
+						vActuatorLoad(cCmd, 5, 0, 500, 0, 500);				// LED 0~2
+					#elif (buildPLTFRM == HW_KC868A4 || buildPLTFRM == HW_KC868A6)
+						vActuatorLoad(cCmd, 1, 0, 10, 0, 0);				// Relay 0~5
+					#elif (buildPLTFRM == HW_SP1PM || buildPLTFRM == HW_SP2PM)
+						vActuatorLoad(cCmd, 3, 0, 1000, 0, 1000);			// Relay 0~1
+					#endif
+					break;
+				#endif
+				#if	(buildPLTFRM == HW_KC868A4 || buildPLTFRM == HW_KC868A6)
+					case actTYPE_ANA:
+						vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// DAC 0~1
+						break;
 				#endif
 				default:
 					break;
