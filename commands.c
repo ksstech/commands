@@ -400,18 +400,18 @@ static void vCommandInterpret(command_t * psC) {
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
+			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
+			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
+			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
 			#if	(buildPLTFRM == HW_EM1P2)
-			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
+				SizeBlob = blobBUFFER_SIZE;
+				halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			#if	(buildPLTFRM == HW_SP2PM)
-			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
+				SizeBlob = blobBUFFER_SIZE;
+				halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			free(pBuffer);
 			break;
@@ -475,7 +475,7 @@ static void vCommandInterpret(command_t * psC) {
 			ssd1306Report(&psC->sRprt);
 			#endif
 			halWL_TimeoutReport(&psC->sRprt);
-			vUBufReport(psHB);
+			vUBufReport(&psC->sRprt, psHB);
 			break;
 		#endif						// (configPRODUCTION == 0)
 
@@ -486,13 +486,15 @@ static void vCommandInterpret(command_t * psC) {
 			psC->sRprt.fForce = 0;
 			break;
 
-		case CHR_H: printfx(HelpMessage); break;
+		case CHR_H:
+			wprintfx(&psC->sRprt, "%s", HelpMessage);
+			break;
 
 		case CHR_I:
 			#if	(appUSE_IDENT > 0)
 				vID_Report(&psC->sRprt);
 			#else
-			printfx("No identity support\r\n");
+				wprintfx(&psC->sRprt, "No identity support\r\n");
 			#endif
 			break;
 
@@ -515,10 +517,10 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_O: vOptionsShow(&psC->sRprt); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_P: halFOTA_ReportPartitions(); break ;
+		case CHR_P: halFOTA_ReportPartitions(&psC->sRprt); break;
 		#endif
 
-		case CHR_R: vRulesDecode(); break;
+		case CHR_R: vRulesDecode(&psC->sRprt); break;
 
 		case CHR_S:
 			psC->sRprt.sFM.u32Val = makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
