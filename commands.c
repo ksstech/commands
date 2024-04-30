@@ -525,8 +525,8 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_M:
 			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,0,1,0x00FC0F);
-			halMEM_ReportHistory(&psC->sRprt);
-			halMEM_Report(&psC->sRprt);
+			halMEM_HistoryReport(&psC->sRprt);
+			halMEM_SystemReport(&psC->sRprt);
 //			xRtosReportMemory(&psC->sRprt);
 			break;
 
