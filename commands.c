@@ -519,8 +519,7 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 
 		case CHR_L:
-			halVARS_ReportGLinfo(&psC->sRprt); 
-			halVARS_ReportTZinfo(&psC->sRprt);
+			halVARS_ReportGLinfo(&psC->sRprt);
 			break;
 
 		case CHR_M:
