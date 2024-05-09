@@ -412,7 +412,7 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 
 		#if	(HAL_XXO > 0)
-		case CHR_A: vTaskActuatorReport(&psC->sRprt); break;
+		case CHR_A: xTaskActuatorReport(&psC->sRprt); break;
 		#endif
 
 		case CHR_B: {
@@ -522,7 +522,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_L: halVARS_ReportGLinfo(&psC->sRprt); break;
 
 		case CHR_M:
-			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,0,1,0x00FC0F);
+			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,0,0x00FC0F);
 			halMEM_HistoryReport(&psC->sRprt);
 			halMEM_SystemReport(&psC->sRprt);
 //			xRtosReportMemory(&psC->sRprt);
@@ -569,10 +569,12 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 
 			#if (buildAEP > 0)
-				// flags for RX/TX (x32MMA) stats reporting
+	//			SAVE_XPC(); // flags for RX/TX (x32MMA) stats reporting
 				psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
-				vAEP_Report(&psC->sRprt);
+				xAEP_Report(&psC->sRprt);
+	//			REST_XPC();
 			#endif
+			psC->sRprt.sFM.aNL = 1;
 			halVARS_ReportApp(&psC->sRprt);
 			break;
 
