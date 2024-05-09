@@ -249,8 +249,12 @@ void xCommandReport(report_t * psR, int cCmd) {
 	wprintfx(psR, "E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 }
 
-/*
+/**
  * @brief
+ * @param
+ * @param
+ * @param
+ * @return
  */
 int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 	int iRV = erSUCCESS;
@@ -350,9 +354,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		case CHR_SUB: 
-			setSYSFLAGS(sfKEY_EOF);
-			break;
+		case CHR_SUB: setSYSFLAGS(sfKEY_EOF); break;
 
 		#if	(configPRODUCTION == 0)
 		case CHR_0:
@@ -441,7 +443,7 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 		#endif
 
-		case CHR_D:
+		case CHR_D: {
 			psC->sRprt.sFM.aNL = 1;
 			#if (HAL_GAI > 0)
 			halGAI_Report(&psC->sRprt);
@@ -497,6 +499,7 @@ static void vCommandInterpret(command_t * psC) {
 			halWL_TimeoutReport(&psC->sRprt);
 			vUBufReport(&psC->sRprt, psHB);
 			break;
+		}
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
@@ -506,9 +509,7 @@ static void vCommandInterpret(command_t * psC) {
 			psC->sRprt.fForce = 0;
 			break;
 
-		case CHR_H:
-			wprintfx(&psC->sRprt, "%s", HelpMessage);
-			break;
+		case CHR_H: wprintfx(&psC->sRprt, "%s", HelpMessage); break;
 
 		case CHR_I:
 			#if	(appUSE_IDENT > 0)
@@ -518,9 +519,7 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			break;
 
-		case CHR_L:
-			halVARS_ReportGLinfo(&psC->sRprt);
-			break;
+		case CHR_L: halVARS_ReportGLinfo(&psC->sRprt); break;
 
 		case CHR_M:
 			psC->sRprt.sFM = (fm_t) makeMASK09x23(0,0,1,1,0,0,0,0,1,0x00FC0F);
@@ -577,11 +576,8 @@ static void vCommandInterpret(command_t * psC) {
 			halVARS_ReportApp(&psC->sRprt);
 			break;
 
-		case CHR_W:
-			halWL_Report(&psC->sRprt); 
-			break;
-		default: 
-			xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
+		case CHR_W: halWL_Report(&psC->sRprt); break;
+		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 		}
 	}
 	if (iRV < erSUCCESS)
