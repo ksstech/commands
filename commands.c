@@ -56,31 +56,31 @@
 
 static const char HelpMessage[] = {
 	#ifdef ESP_PLATFORM
-	"ESP32 Specific:\r\n"
-	"\tc-A/B/C Boot OTA #1/2/3 FW as STA\r\n"
-	"\tc-E delete 'syslog.txt'\r\n"
-	"\tc-P switch Platform & reboot\r\n"
-	"\tc-Q Toggle QOS 0->1->2->0\r\n"
-	"\tc-R Revert to previous FW\r\n"
+	"ESP32 Specific:" strNL
+	"\tc-A/B/C Boot OTA #1/2/3 FW as STA" strNL
+	"\tc-E delete 'syslog.txt'" strNL
+	"\tc-P switch Platform & reboot" strNL
+	"\tc-Q Toggle QOS 0->1->2->0" strNL
+	"\tc-R Revert to previous FW" strNL
 	#if (configPRODUCTION == 0)
-	"\tc-T Generate WatchDog timeout\r\n"
-	"\tc-U generate Invalid memory access crash\r\n"
+	"\tc-T Generate WatchDog timeout" strNL
+	"\tc-U generate Invalid memory access crash" strNL
 	#endif
-	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)\r\n"
-	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)\r\n"
+	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)" strNL
+	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
 	#endif
 
-	"General:\r\n"
+	"General:" strNL
 	#if	(configPRODUCTION == 0) && (HAL_XXO > 0)
-	"ACT\t(0-x) Trigger selected actuator\r\n"
+	"ACT\t(0-x) Trigger selected actuator" strNL
 	#endif
 	#if	(HAL_XXO > 0)
-	"ACT\t(A)ctuators Report\r\n"
+	"ACT\t(A)ctuators Report" strNL
 	#endif
 	#if	(configPRODUCTION == 0)
-	"\t(B)lob report\r\n"
+	"\t(B)lob report" strNL
 	#if	(halUSE_LITTLEFS == 1)
-	"\t(C)ontent of LFS\r\n"
+	"\t(C)ontent of LFS" strNL
 	#endif
 	"\t(D)iagnostics ["
 		#if (HAL_GDI > 0)
@@ -122,110 +122,110 @@ static const char HelpMessage[] = {
 		#if	(HAL_SSD1306 > 0)
 		"ssd1306\t"
 		#endif
-	"]\r\n"
+	"]" strNL
 	#endif
 
-	"\t(F)lags Status\r\n"
-	"\t(H)elp screen display\r\n"
+	"\t(F)lags Status" strNL
+	"\t(H)elp screen display" strNL
 	#if	(appUSE_IDENT > 0)
-	"\t(I)dent table\r\n"
+	"\t(I)dent table" strNL
 	#endif
-	"\t(L)ocation info\r\n"
-	"\t(M)emory info\r\n"
-	"\t(N)etwork (IP4) info\r\n"
-	"\t(O)ptions display\r\n"
+	"\t(L)ocation info" strNL
+	"\t(M)emory info" strNL
+	"\t(N)etwork (IP4) info" strNL
+	"\t(O)ptions display" strNL
 	#if	(configPRODUCTION == 0)
-	"\t(P)artitions report\r\n"
+	"\t(P)artitions report" strNL
 	#endif
-	"\t(R)ules display\r\n"
-	"\t(S)ensors statistics\r\n"
+	"\t(R)ules display" strNL
+	"\t(S)ensors statistics" strNL
 	#if	(configPRODUCTION == 0)
-	"\t(T)imer/Scatter Info\r\n"
+	"\t(T)imer/Scatter Info" strNL
 	#endif
-	"\t(U)tilization (task) statistics\r\n"
-	"\t(V)erbose system info\r\n"
-	"\t(W)ifi Stats\r\n"
+	"\t(U)tilization (task) statistics" strNL
+	"\t(V)erbose system info" strNL
+	"\t(W)ifi Stats" strNL
 
-	"Extended commands:\r\n"
-	"\treboot | register | upgrade | show W0 [... [W23]]\r\n"
+	"Extended commands:" strNL
+	"\treboot | register | upgrade | show W0 [... [W23]]" strNL
 	#if	(HAL_XXO > 0)
-	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt\r\n"
-	"ACT\tload|update ch# Rpt tFI tON tFO tOFF\r\n"
-	"ACT\tadjust ch# stage# Adj\r\n"
-	"ACT\tque|seq ch# S0 [... S23]]\r\n"
+	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt" strNL
+	"ACT\tload|update ch# Rpt tFI tON tFO tOFF" strNL
+	"ACT\tadjust ch# stage# Adj" strNL
+	"ACT\tque|seq ch# S0 [... S23]]" strNL
 	#endif
-	"GMAP\tioset option para1 para2\r\n"
-	"GMAP\tioset 141(nwmo) {0->3} off/sta/ap/sta+ap\r\n"
-	"GMAP\tioset 142(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)\r\n"
-	"GMAP\tioset 143(mqtt) w.x.y.z port\r\n"
+	"GMAP\tioset option para1 para2" strNL
+	"GMAP\tioset 141(nwmo) {0->3} off/sta/ap/sta+ap" strNL
+	"GMAP\tioset 142(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)" strNL
+	"GMAP\tioset 143(mqtt) w.x.y.z port" strNL
 	#if	(configPRODUCTION == 0)
-		"GMAP\tioset 144(peek) address size\r\n"
-		"GMAP\tioset 145(poke) address size\r\n"
+		"GMAP\tioset 144(peek) address size" strNL
+		"GMAP\tioset 145(poke) address size" strNL
 	#endif
 
-	"GMAP\tmode /uri para1 [para2 .. [para6]]\r\n"
+	"GMAP\tmode /uri para1 [para2 .. [para6]]" strNL
 		#if (HAL_ADE7953 > 0)
-		"\tmode /ade7953 idx ???\r\n"
+		"\tmode /ade7953 idx ???" strNL
 		#endif
 		#if	(HAL_DS18X20 > 0)
-		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1\r\n"
+		"\tmode /ds18x20 idx lo=-128~127 hi=-128~127 res=9~12 wr=0/1" strNL
 		#endif
 		#if	(HAL_LIS2HH12 > 0)
-		"\tmode /lis2hh12 0 ths(0-127) dur(0-255)\r\n"
-		"\tmode /lis2hh12 1 hr(0/1) odr(0-7) bdu(0/1) ?en(0->7)\r\n"
-		"\tmode /lis2hh12 3 CTRL1  IG_CFG1  \r\n"
-		"\tmode /lis2hh12 4 bw(0->3) fs(0->3) bw(0/1) Aincr(0/1)\r\n"
+		"\tmode /lis2hh12 0 ths(0-127) dur(0-255)" strNL
+		"\tmode /lis2hh12 1 hr(0/1) odr(0-7) bdu(0/1) ?en(0->7)" strNL
+		"\tmode /lis2hh12 3 CTRL1  IG_CFG1  " strNL
+		"\tmode /lis2hh12 4 bw(0->3) fs(0->3) bw(0/1) Aincr(0/1)" strNL
 		#endif
 		#if	(HAL_LTR329ALS > 0)
-		"\tmode /ltr329als idx gain=0~3/6/7 time=0~7 rate=0~7\r\n"
+		"\tmode /ltr329als idx gain=0~3/6/7 time=0~7 rate=0~7" strNL
 		#endif
 		#if	(HAL_M90E26 > 0)
-		"\tmode /m90e26 idx 1=gainL val=1/4/8/16/24\r\n"
+		"\tmode /m90e26 idx 1=gainL val=1/4/8/16/24" strNL
 		#if	(m90e26NEUTRAL > 0)
-		"\t\t2=gainN val=1/2/4\r\n"
+		"\t\t2=gainN val=1/2/4" strNL
 		#endif
-		"\t\t4=reCalib\r\n"
-		"\t\t5=Calc CurOfst\r\n"
-		"\t\t6=Calc PwrOfst\r\n"
-		"\t\t7=Save pos=0~" mySTRINGIFY(m90e26CALIB_NUM-1) " 'Calibration Data'\r\n"
-		"\t\t8=Delete 'ALL Calibration data'\r\n"
-		"\t\t9=WriteReg reg=" mySTRINGIFY(SOFTRESET) "~" mySTRINGIFY(CRC_2) " val=0~0xFFFF\r\n"
+		"\t\t4=reCalib" strNL
+		"\t\t5=Calc CurOfst" strNL
+		"\t\t6=Calc PwrOfst" strNL
+		"\t\t7=Save pos=0~" mySTRINGIFY(m90e26CALIB_NUM-1) " 'Calibration Data'" strNL
+		"\t\t8=Delete 'ALL Calibration data'" strNL
+		"\t\t9=WriteReg reg=" mySTRINGIFY(SOFTRESET) "~" mySTRINGIFY(CRC_2) " val=0~0xFFFF" strNL
 		#endif
 		#if (configPRODUCTION == 0) && (HAL_MB_ACT > 0 || HAL_MB_SEN > 0)
-		"\tcmd /mb TBC\r\n"
+		"\tcmd /mb TBC" strNL
 		#endif
 		#if (HAL_MB_ACT > 0)
-		"\tcmd /mb/act \r\n"
-		"\tmode /mb/act idx TBC\r\n"
+		"\tcmd /mb/act " strNL
+		"\tmode /mb/act idx TBC" strNL
 		#endif
 		#if (HAL_MB_SEN > 0)
-		"\tcmd /mb/sen  \r\n"
-		"\tmode /mb/sen idx TBC\r\n"
+		"\tcmd /mb/sen  " strNL
+		"\tmode /mb/sen idx TBC" strNL
 		#endif
 		#if	(HAL_MCP342X > 0)
-		"\tmode /mcp342x idx TBC\r\n"
+		"\tmode /mcp342x idx TBC" strNL
 		#endif
 		#if	(HAL_MPL3115 > 0)
-		"\tmode /mpl3115 idx TBC\r\n"
+		"\tmode /mpl3115 idx TBC" strNL
 		#endif
 		#if	(HAL_PYCOPROC > 0)
-		"\tmode /pycoproc idx TBC\r\n"
+		"\tmode /pycoproc idx TBC" strNL
 		#endif
 		#if	(HAL_SI70XX > 0)
-		"\tmode /si70xx idx TBC\r\n"
+		"\tmode /si70xx idx TBC" strNL
 		#endif
 		#if (HAL_GDI > 0)
-		"\tmode /gdi idx inv=0~1 type=0~5 dly=0~255\r\n"
+		"\tmode /gdi idx inv=0~1 type=0~5 dly=0~255" strNL
 		#endif
 		#if	(HAL_GAI > 0)
-		"\tmode /gai idx attn=0~11db width=9~11]\r\n"
+		"\tmode /gai idx attn=0~11db width=9~11]" strNL
 		#endif
 		#if	(HAL_XXO > 0)
-		"\tmode /act idx TBC\r\n"
+		"\tmode /act idx TBC" strNL
 		#endif
-	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]\r\n"
-	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}\r\n"
-	strCRLF
+	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]" strNL
+	"GMAP\trule [ver] [val] IF /uri [idx] {cond} [AND/OR /uri [idx] {cond] THEN {actuation} ALSO {actuation}" strNL
+	strNL
 };
 
 // #################################### Public variables ##########################################
@@ -246,7 +246,7 @@ static union {
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(report_t * psR, int cCmd) {
-	wprintfx(psR, "E=%d L=%d H=%d I=%d cCmd=%d\r\n", cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+	wprintfx(psR, "E=%d L=%d H=%d I=%d cCmd=%d" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 }
 
 /**
@@ -292,7 +292,7 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		if (cCmd == CHR_CR || cCmd == CHR_LF) {
 			if (cmdFlag.idx) {							// CR and something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
-				wprintfx(psR, strCRLF);
+				wprintfx(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0) {					// if new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -515,7 +515,7 @@ static void vCommandInterpret(command_t * psC) {
 			#if	(appUSE_IDENT > 0)
 				vID_Report(&psC->sRprt);
 			#else
-				wprintfx(&psC->sRprt, "No identity support\r\n");
+				wprintfx(&psC->sRprt, "No identity support" strNL);
 			#endif
 			break;
 
