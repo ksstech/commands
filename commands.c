@@ -17,7 +17,9 @@
 
 #include "actuators.h"
 #include "commands.h"
-#include "identity.h"
+#if (appUSE_IDENT > 0)
+	#include "identity.h"
+#endif
 #include "task_aep.h"
 #include "task_sensors.h"
 
