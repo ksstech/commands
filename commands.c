@@ -65,8 +65,8 @@ static const char HelpMessage[] = {
 	"\tc-Q Toggle QOS 0->1->2->0" strNL
 	"\tc-R Revert to previous FW" strNL
 	#if (configPRODUCTION == 0)
-	"\tc-U generate Invalid memory access crash" strNL
 	"\tc-T Immediate restart" strNL
+	"\tc-U Generate 'Invalid memory access' crash" strNL
 	#endif
 	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)" strNL
 	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
@@ -367,7 +367,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_5:
 		case CHR_6:
 		case CHR_7:
-			cCmd -= CHR_0;
+		{	cCmd -= CHR_0;
 			#if (buildPLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
 				m90e26LoadNVSConfig(0, cCmd);
@@ -411,13 +411,13 @@ static void vCommandInterpret(command_t * psC) {
 			{	
 				iRV = erOUT_OF_RANGE; 
 			}
-			break;
+		}	break;
 
 		#if	(HAL_XXO > 0)
 		case CHR_A: xTaskActuatorReport(&psC->sRprt); break;
 		#endif
 
-		case CHR_B: {
+		case CHR_B: {					// List blobs with contents
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
@@ -435,8 +435,7 @@ static void vCommandInterpret(command_t * psC) {
 				halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			free(pBuffer);
-			break;
-		}
+		}	break;
 
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C:
@@ -445,8 +444,8 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 		#endif
 
-		case CHR_D: {
-			psC->sRprt.sFM.aNL = 1;
+		case CHR_D:
+		{	psC->sRprt.sFM.aNL = 1;
 			#if (HAL_GAI > 0)
 			halGAI_Report(&psC->sRprt);
 			#endif
@@ -500,8 +499,7 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			halWL_TimeoutReport(&psC->sRprt);
 			vUBufReport(&psC->sRprt, psHB);
-			break;
-		}
+		}	break;
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
@@ -597,18 +595,21 @@ int xCommandProcess(command_t * psC) {
 	int iRV = 0;
 	if (buildSTDOUT_LEVEL > 0)
 		xStdioBufLock(portMAX_DELAY);					// buffering enabled, lock
-	if (psC->sRprt.fFlags)
+	if (psC->sRprt.fFlags) {
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
+	}
 	while (psC->pCmd && *psC->pCmd) {
 		vCommandInterpret(psC);							// process it..
 		++iRV;
 	}
-	if (iRV > 1)	// if >1 character supplied, add CR to route through RULES engine
+	if (iRV > 1) {					// if >1 character supplied, add CR to route through RULES engine
 		xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
+	}
 	halVARS_CheckChanges();								// check if VARS changed, write to NVS
-	if (psC->sRprt.fFlags)
+	if (psC->sRprt.fFlags) {
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
 	if (buildSTDOUT_LEVEL > 0)
 		xStdioBufUnLock();								// buffering enabled, unlock
+	}
 	return iRV;
 }
