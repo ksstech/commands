@@ -65,8 +65,8 @@ static const char HelpMessage[] = {
 	"\tc-Q Toggle QOS 0->1->2->0" strNL
 	"\tc-R Revert to previous FW" strNL
 	#if (configPRODUCTION == 0)
-	"\tc-T Generate WatchDog timeout" strNL
 	"\tc-U generate Invalid memory access crash" strNL
+	"\tc-T Immediate restart" strNL
 	#endif
 	"\tc-V Reboot current FW as [AP]STA (delete VARS blob)" strNL
 	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
@@ -345,7 +345,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_ETX: halFOTA_SetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
 		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
 		case CHR_DC2: halFOTA_SetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
-		case CHR_DC4: while(1); break;					// c-T WatchDog timeout crash
+		case CHR_DC4: esp_restart(); break;				// c-T Immediate restart
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;	// c-U Illegal memory write crash
 		case CHR_SYN:									// c-V Erase VARS blob then reboot
 			halFOTA_SetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
