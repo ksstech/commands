@@ -608,8 +608,6 @@ int xCommandProcess(command_t * psC) {
 	halVARS_CheckChanges();								// check if VARS changed, write to NVS
 	if (psC->sRprt.fFlags)
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
-	if (psC->Hdlr)
-		iRV = psC->Hdlr(psC->pVoid);					// Empty buffer if required
 	if (buildSTDOUT_LEVEL > 0)
 		xStdioBufUnLock();								// buffering enabled, unlock
 	return iRV;
