@@ -439,7 +439,7 @@ static void vCommandInterpret(command_t * psC) {
 
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C:
-			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,0,0,0,1,1,0,0x0);
+			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,1,1,1,1,0,0,0);
 			halSTORAGE_InfoFS(&psC->sRprt, "");
 			break;
 		#endif
