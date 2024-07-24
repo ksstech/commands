@@ -5,14 +5,13 @@
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
 #endif
-#include "hal_fota.h"
+#include "hal_flash.h"
 #include "hal_gpio.h"
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_memory.h"
 #include "hal_network.h"
 #include "hal_options.h"
 #include "hal_stdio.h"
-#include "hal_storage.h"
 #include "hal_usart.h"
 
 #include "actuators.h"
@@ -342,16 +341,16 @@ static void vCommandInterpret(command_t * psC) {
 		#if defined(ESP_PLATFORM)
 		case CHR_SOH:															// c-A
 		case CHR_STX:															// c-B
-		case CHR_ETX: halFOTA_SetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
+		case CHR_ETX: halFlashSetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
 		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
-		case CHR_DC2: halFOTA_SetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
+		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: esp_restart(); break;				// c-T Immediate restart
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;	// c-U Illegal memory write crash
 		case CHR_SYN:									// c-V Erase VARS blob then reboot
-			halFOTA_SetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
+			halFlashSetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
 		case CHR_ETB:				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
-			halFOTA_SetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
+			halFlashSetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
 			break;
 		#endif
 
@@ -421,18 +420,18 @@ static void vCommandInterpret(command_t * psC) {
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_PART, pBuffer, &SizeBlob);
+			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_WIFI, pBuffer, &SizeBlob);
+			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, halSTORAGE_KEY_VARS, pBuffer, &SizeBlob);
+			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
 			#if	(buildPLTFRM == HW_EM1P2)
 				SizeBlob = blobBUFFER_SIZE;
-				halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
+				halFlashReportBlob(&psC->sRprt, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			#if	(buildPLTFRM == HW_SP2PM)
 				SizeBlob = blobBUFFER_SIZE;
-				halSTORAGE_ReportBlob(&psC->sRprt, halSTORAGE_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
+				halFlashReportBlob(&psC->sRprt, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			free(pBuffer);
 		}	break;
@@ -440,7 +439,7 @@ static void vCommandInterpret(command_t * psC) {
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C:
 			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,1,1,1,1,0,0,0);
-			halSTORAGE_InfoFS(&psC->sRprt, "");
+			halFlashInfoFS(&psC->sRprt, "");
 			break;
 		#endif
 
@@ -535,7 +534,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_O: vOptionsShow(&psC->sRprt); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_P: halFOTA_ReportPartitions(&psC->sRprt); break;
+		case CHR_P: halFlashReportPartitions(&psC->sRprt); break;
 		#endif
 
 		case CHR_R: vRulesDecode(&psC->sRprt); break;
