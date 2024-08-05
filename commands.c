@@ -590,7 +590,7 @@ static void vCommandInterpret(command_t * psC) {
  * @return	number of characters passed to output
  */
 int xCommandProcess(command_t * psC) {
-	IF_myASSERT(debugPARAM, halCONFIG_inSRAM(psC));
+	IF_myASSERT(debugPARAM, halMemorySRAM(psC));
 	int iRV = 0;
 	#if (buildSTDOUT_LEVEL > 0)
 	xStdioBufLock(portMAX_DELAY);						// buffering enabled, lock
