@@ -576,6 +576,11 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 
 		case CHR_W: halWL_Report(&psC->sRprt); break;
+	#if (CONFIG_PARTITION_TABLE_MD5 == 1)
+		case CHR_X: halFlashReportMD5(); break;
+		case CHR_Y: halFlashRemoveMD5(); break;
+		case CHR_Z: halFlashRestoreMD5(); break;
+	#endif
 		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 		}
 	}
