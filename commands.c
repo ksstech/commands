@@ -188,9 +188,9 @@ static const char HelpMessage[] = {
 		"\t\t4=reCalib" strNL
 		"\t\t5=Calc CurOfst" strNL
 		"\t\t6=Calc PwrOfst" strNL
-		"\t\t7=Save pos=0~" mySTRINGIFY(m90e26CALIB_NUM-1) " 'Calibration Data'" strNL
+		"\t\t7=Save pos=0~" toSTR(m90e26CALIB_NUM-1) " 'Calibration Data'" strNL
 		"\t\t8=Delete 'ALL Calibration data'" strNL
-		"\t\t9=WriteReg reg=" mySTRINGIFY(SOFTRESET) "~" mySTRINGIFY(CRC_2) " val=0~0xFFFF" strNL
+		"\t\t9=WriteReg reg=" toSTR(SOFTRESET) "~" toSTR(CRC_2) " val=0~0xFFFF" strNL
 		#endif
 		#if (configPRODUCTION == 0) && (HAL_MB_ACT > 0 || HAL_MB_SEN > 0)
 		"\tcmd /mb TBC" strNL
