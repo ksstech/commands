@@ -568,10 +568,8 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 
 			#if (buildAEP > 0)
-	//			SAVE_XPC(); // flags for RX/TX (x32MMA) stats reporting
 				psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
 				xAEP_Report(&psC->sRprt);
-	//			REST_XPC();
 			#endif
 			psC->sRprt.sFM.aNL = 1;
 			halVARS_ReportApp(&psC->sRprt);
