@@ -241,6 +241,8 @@ static union {
 	u16_t u16;
 } cmdFlag;
 
+ubuf_t * psHB = NULL;
+
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(report_t * psR, int cCmd) {
