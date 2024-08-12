@@ -435,7 +435,10 @@ static void vCommandInterpret(command_t * psC) {
 
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C:
-			psC->sRprt.sFM.u32Val = makeMASK08x24(0,1,1,1,1,1,0,0,0);
+			psC->sRprt.sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
+									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
+									(ioB2GET(ioFSlev) == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
+															  makeMASK08x24(0,1,1,0,0,0,0,0,0) ;
 			halFlashInfoFS(&psC->sRprt, "");
 			break;
 		#endif
