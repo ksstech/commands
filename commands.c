@@ -589,8 +589,12 @@ static void vCommandInterpret(command_t * psC) {
 int xCommandProcess(command_t * psC) {
 	IF_myASSERT(debugPARAM, halMemorySRAM(psC));
 	int iRV = 0;
-	#if (buildSTDOUT_LEVEL > 0)
-	xStdioBufLock(portMAX_DELAY);						// buffering enabled, lock
+	if (psHB == NULL) { 			// init history buffer, variable size, blocks of 128 bytes
+		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
+		psHB->f_history = 1;
+	}
+	#if (configCONSOLE_UART > (-1))
+		xStdioBufLock(portMAX_DELAY);					// buffering enabled, lock
 	#endif
 	if (psC->sRprt.fFlags) {
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
@@ -605,9 +609,8 @@ int xCommandProcess(command_t * psC) {
 	halVARS_CheckChanges();								// check if VARS changed, write to NVS
 	if (psC->sRprt.fFlags) {
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
-	}
-	#if (buildSTDOUT_LEVEL > 0)
-	xStdioBufUnLock();									// buffering enabled, unlock
+	#if (configCONSOLE_UART > (-1))
+		xStdioBufUnLock();								// buffering enabled, unlock
 	#endif
 	return iRV;
 }
