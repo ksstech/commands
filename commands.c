@@ -30,9 +30,6 @@
 
 #include "x_builddefs.h"
 #include "x_errors_events.h"
-#if (includeHTTP_TASK > 0)
-	#include "x_http_server.h"
-#endif
 #include "x_string_to_values.h"
 #if (includeTNET_TASK > 0)
 	#include "tnet_server.h"
@@ -557,9 +554,6 @@ static void vCommandInterpret(command_t * psC) {
 			halMCU_Report(&psC->sRprt);
 			halWL_ReportLx(&psC->sRprt);
 			vSyslogReport(&psC->sRprt);
-			#if (includeHTTP_TASK > 0)
-				vHttpReport(&psC->sRprt);
-			#endif
 			#if (includeTNET_TASK > 0)
 				vTnetReport(&psC->sRprt);
 			#endif
