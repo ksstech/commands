@@ -596,18 +596,16 @@ int xCommandProcess(command_t * psC) {
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufLock(portMAX_DELAY);					// buffering enabled, lock
 	#endif
-	if (psC->sRprt.fFlags) {
+	if (psC->sRprt.fFlags)
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
-	}
 	while (psC->pCmd && *psC->pCmd) {
 		vCommandInterpret(psC);							// process it..
 		++iRV;
 	}
-	if (iRV > 1) {					// if >1 character supplied, add CR to route through RULES engine
+	if (iRV > 1)					// if >1 character supplied, add CR to route through RULES engine
 		xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
-	}
 	halVARS_CheckChanges();								// check if VARS changed, write to NVS
-	if (psC->sRprt.fFlags) {
+	if (psC->sRprt.fFlags)
 		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();								// buffering enabled, unlock
