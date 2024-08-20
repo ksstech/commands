@@ -143,7 +143,11 @@ static const char HelpMessage[] = {
 	"\t(U)tilization (task) statistics" strNL
 	"\t(V)erbose system info" strNL
 	"\t(W)ifi Stats" strNL
-
+	#if (halFLASH_FIX_MD5 == 1)
+	"\t(X)MD5 Report" strNL
+	"\t(Y)MD5 Remove" strNL
+	"\t(Z)MD5 Restore" strNL
+	#endif
 	"Extended commands:" strNL
 	"\treboot | register | upgrade | show W0 [... [W23]]" strNL
 	#if	(HAL_XXO > 0)
