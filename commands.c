@@ -436,13 +436,13 @@ static void vCommandInterpret(command_t * psC) {
 		}	break;
 
 		#if	(halUSE_LITTLEFS == 1)
-		case CHR_C:
+		case CHR_C: {
 			psC->sRprt.sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
 									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
 									(ioB2GET(ioFSlev) == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
 															  makeMASK08x24(0,1,1,0,0,0,0,0,0) ;
 			halFlashInfoFS(&psC->sRprt, "");
-			break;
+		}	break;
 		#endif
 
 		case CHR_D:
@@ -504,30 +504,30 @@ static void vCommandInterpret(command_t * psC) {
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-		case CHR_F:
+		case CHR_F: {
 			psC->sRprt.fForce = 1; 
 			halVARS_ReportFlags(&psC->sRprt); 
 			psC->sRprt.fForce = 0;
-			break;
+		}	break;
 
 		case CHR_H: wprintfx(&psC->sRprt, "%s", HelpMessage); break;
 
-		case CHR_I:
+		case CHR_I: {
 			#if	(appUSE_IDENT > 0)
 				vID_Report(&psC->sRprt);
 			#else
 				wprintfx(&psC->sRprt, "No identity support" strNL);
 			#endif
-			break;
+		}	break;
 
 		case CHR_L: halVARS_ReportGLinfo(&psC->sRprt); break;
 
-		case CHR_M:
+		case CHR_M: {
 			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,0,0x00FC0F);
 			halMEM_HistoryReport(&psC->sRprt);
 			halMEM_SystemReport(&psC->sRprt);
 //			xRtosReportMemory(&psC->sRprt);
-			break;
+		}	break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(&psC->sRprt); break;
@@ -541,21 +541,22 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_R: vRulesDecode(&psC->sRprt); break;
 
-		case CHR_S:
+		case CHR_S: {
 			psC->sRprt.sFM.u32Val = makeMASK12x20(1,1,1,1,1,1,1,1,1,1,1,1, 0x000FFFFF);
 			xTaskSensorsReport(&psC->sRprt);
-			break;
+		}	break;
 
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(&psC->sRprt, 0xFFFFFFFF); break;
 		#endif
 
-		case CHR_U:
+		case CHR_U: {
 			psC->sRprt.sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x007FFFFF);
 			xRtosReportTasks(&psC->sRprt);
-			break;
+		
+		}	break;
 
-		case CHR_V:
+		case CHR_V: {
 			halMCU_Report(&psC->sRprt);
 			halWL_ReportLx(&psC->sRprt);
 			vSyslogReport(&psC->sRprt);
@@ -572,14 +573,16 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			psC->sRprt.sFM.aNL = 1;
 			halVARS_ReportApp(&psC->sRprt);
-			break;
+		}	break;
 
 		case CHR_W: halWL_Report(&psC->sRprt); break;
+
 		#if (halFLASH_FIX_MD5 == 1)
 		case CHR_X: halFlashReportMD5(); break;
 		case CHR_Y: halFlashRemoveMD5(); break;
 		case CHR_Z: halFlashRestoreMD5(); break;
 		#endif
+
 		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
 		}
 	}
