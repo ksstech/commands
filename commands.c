@@ -527,9 +527,9 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_L: halVARS_ReportGLinfo(&psC->sRprt); break;
 
 		case CHR_M: {
-			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,0,0x00FC0F);
-			halMEM_HistoryReport(&psC->sRprt);
-			halMEM_SystemReport(&psC->sRprt);
+			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,1,0xFFFFF);
+			halMemoryHistoryReport(&psC->sRprt);
+			halMemorySystemReport(&psC->sRprt);
 //			xRtosReportMemory(&psC->sRprt);
 		}	break;
 
