@@ -552,7 +552,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_R: vRulesDecode(&psC->sRprt); break;
 
 		case CHR_S: {
-			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,0,0xFFFFF);
+			psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
 			xTaskSensorsReport(&psC->sRprt);
 		}	break;
 
