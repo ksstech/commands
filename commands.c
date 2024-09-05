@@ -278,10 +278,12 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
 			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) cmdFlag.his = 1;
+			if (cmdFlag.idx)
+				cmdFlag.his = 1;
 		} else if (cCmd == CHR_B) {						// Cursor DOWN
 			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) cmdFlag.his = 1;
+			if (cmdFlag.idx)
+				cmdFlag.his = 1;
 		} else if (cCmd == CHR_C) {						// Cursor RIGHT
 			//
 		} else if (cCmd == CHR_D) {						// Cursor LEFT
@@ -601,24 +603,32 @@ static void vCommandInterpret(command_t * psC) {
 int xCommandProcess(command_t * psC) {
 	IF_myASSERT(debugPARAM, halMemorySRAM(psC));
 	int iRV = 0;
-	if (psHB == NULL) { 			// init history buffer, variable size, blocks of 128 bytes
+	// init history buffer, variable size, blocks of 128 bytes
+	if (psHB == NULL) {
 		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
 		psHB->f_history = 1;
 	}
+	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
 	#if (configCONSOLE_UART > (-1))
-		xStdioBufLock(portMAX_DELAY);					// buffering enabled, lock
+		xStdioBufLock(portMAX_DELAY);
 	#endif
+	// If flag reporting enabled, if any flag(s) have changed since last updated/displayed, update again
 	if (psC->sRprt.fFlags)
-		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
+		halVARS_ReportFlags(&psC->sRprt);
+	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
-		vCommandInterpret(psC);							// process it..
+		vCommandInterpret(psC);
 		++iRV;
 	}
-	if (iRV > 1)					// if >1 character supplied, add CR to route through RULES engine
+	// if >1 character supplied/processed, add CR to route through RULES engine
+	if (iRV > 1)
 		xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
-	halVARS_CheckChanges();								// check if VARS changed, write to NVS
+	// Process NVS blob changes, check if VARS changed, write to NVS
+	halVARS_CheckChanges();
+	// Again, if enabled, check if flags changed and log if so
 	if (psC->sRprt.fFlags)
-		halVARS_ReportFlags(&psC->sRprt);				// handle flag changes
+		halVARS_ReportFlags(&psC->sRprt);
+	// Unlock STDIO buffer, same rules as earlier locking
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();								// buffering enabled, unlock
 	#endif
