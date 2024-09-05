@@ -418,13 +418,17 @@ static void vCommandInterpret(command_t * psC) {
 		}	break;
 
 		#if	(HAL_XXO > 0)
-		case CHR_A: xTaskActuatorReport(&psC->sRprt); break;
+		case CHR_A:
+			psC->sRprt.fNoLock = 1;
+			xTaskActuatorReport(&psC->sRprt);
+			break;
 		#endif
 
 		case CHR_B: {					// List blobs with contents
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
+			psC->sRprt.fNoLock = 1;
 			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
 			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
