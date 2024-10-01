@@ -40,6 +40,10 @@
 	#include "rules.h"
 #endif
 
+#if (buildGUI > 0)
+	#include "gui_main.hpp"
+#endif
+
 // ######################################## Macros ################################################
 
 #define	debugFLAG					0xF000
@@ -508,6 +512,10 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			#if	(HAL_SSD1306 > 0)
 			ssd1306Report(psR);
+			#endif
+			#if (halUSE_BSP == 1 && buildGUI == 4)
+			psR->sFM = REP_LVGL(0,0,0,0,0,0,0,0,LV_PART_ANY) ;
+			vGuiObjectReport(psR, NULL);
 			#endif
 			halWL_TimeoutReport(psR);
 			vUBufReport(psR, psHB);
