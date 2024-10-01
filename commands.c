@@ -338,8 +338,9 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
 	u8_t cCmd = *psC->pCmd++;
+	report_t * psR = &psC->sRprt;
 	if (cmdFlag.cli) {
-		xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
+		xCommandBuffer(psR, cCmd, psR->fEcho);
 	} else {
 		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
@@ -419,8 +420,8 @@ static void vCommandInterpret(command_t * psC) {
 
 		#if	(HAL_XXO > 0)
 		case CHR_A:
-			psC->sRprt.fNoLock = 1;
-			xTaskActuatorReport(&psC->sRprt);
+			psR->fNoLock = 1;
+			xTaskActuatorReport(psR);
 			break;
 		#endif
 
@@ -428,164 +429,164 @@ static void vCommandInterpret(command_t * psC) {
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 			size_t	SizeBlob = blobBUFFER_SIZE;
-			psC->sRprt.fNoLock = 1;
-			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
+			psR->fNoLock = 1;
+			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
+			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
 			SizeBlob = blobBUFFER_SIZE;
-			halFlashReportBlob(&psC->sRprt, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
+			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
 			#if	(buildPLTFRM == HW_EM1P2)
 				SizeBlob = blobBUFFER_SIZE;
-				halFlashReportBlob(&psC->sRprt, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
+				halFlashReportBlob(psR, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			#if	(buildPLTFRM == HW_SP2PM)
 				SizeBlob = blobBUFFER_SIZE;
-				halFlashReportBlob(&psC->sRprt, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
+				halFlashReportBlob(psR, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			free(pBuffer);
 		}	break;
 
 		#if	(halUSE_LITTLEFS == 1)
 		case CHR_C: {
-			psC->sRprt.sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
+			psR->sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
 									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
 									(ioB2GET(ioFSlev) == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
 															  makeMASK08x24(0,1,1,0,0,0,0,0,0) ;
-			halFlashInfoFS(&psC->sRprt, "");
+			halFlashInfoFS(psR, "");
 		}	break;
 		#endif
 
 		case CHR_D:
-		{	psC->sRprt.sFM.aNL = 1;
+		{	psR->sFM.aNL = 1;
 			#if (HAL_GAI > 0)
-			halGAI_Report(&psC->sRprt);
+			halGAI_Report(psR);
 			#endif
 			#if (HAL_GAO > 0)
-			halGAO_Report(&psC->sRprt);
+			halGAO_Report(psR);
 			#endif
 			#if (HAL_GDI > 0)
-			halGDI_Report(&psC->sRprt);
+			halGDI_Report(psR);
 			#endif
 			#if (HAL_GDO > 0)
-			halGDO_Report(&psC->sRprt);
+			halGDO_Report(psR);
 			#endif
 			#if (HAL_ADE7953 > 0)
-			ade7953Report(&psC->sRprt);
+			ade7953Report(psR);
 			#endif
 			#if	(HAL_DS1307 > 0)
-			ds1307Report(&psC->sRprt, strNUL);
+			ds1307Report(psR, strNUL);
 			#endif
 			#if	(HAL_LIS2HH12 > 0)
-			lis2hh12ReportAll(&psC->sRprt);
+			lis2hh12ReportAll(psR);
 			#endif
 			#if	(HAL_LTR329ALS > 0)
-			ltr329alsReportAll(&psC->sRprt);
+			ltr329alsReportAll(psR);
 			#endif
 			#if	(HAL_M90E26 > 0)
-			m90e26Report(&psC->sRprt);
+			m90e26Report(psR);
 			#endif
 			#if	(HAL_MCP342X > 0)
-			mcp342xReportAll(&psC->sRprt);
+			mcp342xReportAll(psR);
 			#endif
 			#if	(HAL_MPL3115 > 0)
-			mpl3115ReportAll(&psC->sRprt);
+			mpl3115ReportAll(psR);
 			#endif
 			#if	(HAL_ONEWIRE > 0)
-			OWP_Report(&psC->sRprt);
+			OWP_Report(psR);
 			#endif
 			#if (HAL_PCA9555 > 0)
-			pca9555Report(&psC->sRprt);
+			pca9555Report(psR);
 			#endif
 			#if (HAL_PCF8574 > 0)
-			pcf8574Report(&psC->sRprt);
+			pcf8574Report(psR);
 			#endif
 			#if (HAL_PYCOPROC > 0)
-			pycoprocReportAll(&psC->sRprt);
+			pycoprocReportAll(psR);
 			#endif
 			#if	(HAL_SI70XX > 0)
-			si70xxReportAll(&psC->sRprt);
+			si70xxReportAll(psR);
 			#endif
 			#if	(HAL_SSD1306 > 0)
-			ssd1306Report(&psC->sRprt);
+			ssd1306Report(psR);
 			#endif
-			halWL_TimeoutReport(&psC->sRprt);
-			vUBufReport(&psC->sRprt, psHB);
+			halWL_TimeoutReport(psR);
+			vUBufReport(psR, psHB);
 		}	break;
 		#endif						// (configPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: {
-			psC->sRprt.fForce = 1; 
-			halVARS_ReportFlags(&psC->sRprt); 
-			psC->sRprt.fForce = 0;
+			psR->fForce = 1; 
+			halVARS_ReportFlags(psR); 
+			psR->fForce = 0;
 		}	break;
 
-		case CHR_H: wprintfx(&psC->sRprt, "%s", HelpMessage); break;
+		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
 
 		case CHR_I: {
 			#if	(appUSE_IDENT > 0)
-				vID_Report(&psC->sRprt);
+				vID_Report(psR);
 			#else
-				wprintfx(&psC->sRprt, "No identity support" strNL);
+				wprintfx(psR, "No identity support" strNL);
 			#endif
 		}	break;
 
-		case CHR_L: halVARS_ReportGLinfo(&psC->sRprt); break;
+		case CHR_L: halVARS_ReportGLinfo(psR); break;
 
 		case CHR_M: {
-			psC->sRprt.sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,1,0xFFFFF);
-			halMemoryHistoryReport(&psC->sRprt);
-			halMemorySystemReport(&psC->sRprt);
-//			xRtosReportMemory(&psC->sRprt);
+			psR->sFM.u32Val = makeMASK12x20(0,1,0,1,1,1,1,1,1,0,1,1,0xFFFFF);
+			halMemoryHistoryReport(psR);
+			halMemorySystemReport(psR);
+//			xRtosReportMemory(psR);
 		}	break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_N: xNetReportStats(&psC->sRprt); break;
+		case CHR_N: xNetReportStats(psR); break;
 		#endif
 
-		case CHR_O: vOptionsShow(&psC->sRprt); break;
+		case CHR_O: vOptionsShow(psR); break;
 
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
-		case CHR_P: halFlashReportPartitions(&psC->sRprt); break;
+		case CHR_P: halFlashReportPartitions(psR); break;
 		#endif
 
-		case CHR_R: vRulesDecode(&psC->sRprt); break;
+		case CHR_R: vRulesDecode(psR); break;
 
 		case CHR_S: {
-			psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
-			xTaskSensorsReport(&psC->sRprt);
+			psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
+			xTaskSensorsReport(psR);
 		}	break;
 
 		#if	(configPRODUCTION == 0)
-		case CHR_T: vSysTimerShow(&psC->sRprt, 0xFFFFFFFF); break;
+		case CHR_T: vSysTimerShow(psR, 0xFFFFFFFF); break;
 		#endif
 
 		case CHR_U: {
-			psC->sRprt.sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x007FFFFF);
-			xRtosReportTasks(&psC->sRprt);
+			psR->sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x007FFFFF);
+			xRtosReportTasks(psR);
 		
 		}	break;
 
 		case CHR_V: {
-			halMCU_Report(&psC->sRprt);
-			halWL_ReportLx(&psC->sRprt);
-			vSyslogReport(&psC->sRprt);
+			halMCU_Report(psR);
+			halWL_ReportLx(psR);
+			vSyslogReport(psR);
 			#if (includeTNET_TASK > 0)
-				vTnetReport(&psC->sRprt);
+				vTnetReport(psR);
 			#endif
 			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
-				xEpMBC_ClientReport(&psC->sRprt);
+				xEpMBC_ClientReport(psR);
 			#endif
 
 			#if (buildAEP > 0)
-				psC->sRprt.sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
-				xAEP_Report(&psC->sRprt);
+				psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
+				xAEP_Report(psR);
 			#endif
-			psC->sRprt.sFM.aNL = 1;
-			halVARS_ReportApp(&psC->sRprt);
+			psR->sFM.aNL = 1;
+			halVARS_ReportApp(psR);
 		}	break;
 
-		case CHR_W: halWL_Report(&psC->sRprt); break;
+		case CHR_W: halWL_Report(psR); break;
 
 		#if (halFLASH_FIX_MD5 == 1)
 		case CHR_X: halFlashReportMD5(); break;
@@ -593,7 +594,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_Z: halFlashRestoreMD5(); break;
 		#endif
 
-		default: xCommandBuffer(&psC->sRprt, cCmd, psC->sRprt.fEcho);
+		default: xCommandBuffer(psR, cCmd, psR->fEcho);
 		}
 	}
 	if (iRV < erSUCCESS)
