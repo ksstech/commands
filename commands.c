@@ -513,7 +513,7 @@ static void vCommandInterpret(command_t * psC) {
 			#if	(HAL_SSD1306 > 0)
 			ssd1306Report(psR);
 			#endif
-			#if (halUSE_BSP == 1 && buildGUI == 4)
+			#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
 			psR->sFM = REP_LVGL(0,0,0,0,0,0,0,0,LV_PART_ANY) ;
 			vGuiObjectReport(psR, NULL);
 			#endif
