@@ -515,7 +515,7 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
 			psR->sFM = REP_LVGL(0,0,0,0,0,0,0,0,LV_PART_ANY) ;
-			vGuiObjectReport(psR, NULL);
+			vGuiObjectsReport(psR, NULL, NULL);
 			#endif
 			halWL_TimeoutReport(psR);
 			vUBufReport(psR, psHB);
