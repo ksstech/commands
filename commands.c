@@ -514,8 +514,8 @@ static void vCommandInterpret(command_t * psC) {
 			ssd1306Report(psR);
 			#endif
 			#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
-			psR->sFM = REP_LVGL(0,0,0,0,0,0,0,0,LV_PART_ANY) ;
-			vGuiObjectsReport(psR, NULL, NULL);
+			psR->sFM = REP_LVGL(0,1,1,1,1,1,1,1,LV_PART_ANY) ;
+			vGuiObjectsReport(psR, NULL);
 			#endif
 			halWL_TimeoutReport(psR);
 			vUBufReport(psR, psHB);
