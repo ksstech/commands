@@ -422,13 +422,14 @@ static void vCommandInterpret(command_t * psC) {
 			}
 		}	break;
 
-		#if	(HAL_XXO > 0)
-		case CHR_A:
-			psR->fNoLock = 1;
-			xTaskActuatorReport(psR);
+		case CHR_A: {
+			#if	(HAL_XXO > 0)
+				psR->fNoLock = 1; xTaskActuatorReport(psR);
+			#else
+				PX("No actuators present" strNL);
+			#endif
 			break;
-		#endif
-
+		}
 		case CHR_B: {					// List blobs with contents
 			#define	blobBUFFER_SIZE			1024
 			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
