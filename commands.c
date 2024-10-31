@@ -354,9 +354,9 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_ETX: halFlashSetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
 		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
-		case CHR_DC4: esp_restart(); break;				// c-T Immediate restart
-		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;	// c-U Illegal memory write crash
-		case CHR_SYN:									// c-V Erase VARS blob then reboot
+		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
+		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
+		case CHR_SYN:															// c-V Erase VARS blob then reboot
 			halFlashSetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
 		case CHR_ETB:				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
@@ -527,8 +527,8 @@ static void vCommandInterpret(command_t * psC) {
 			psR->fForce = 1; 
 			halVARS_ReportFlags(psR); 
 			psR->fForce = 0;
-		}	break;
-
+			break;
+		}
 		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
 
 		case CHR_I: {
@@ -537,8 +537,8 @@ static void vCommandInterpret(command_t * psC) {
 			#else
 				wprintfx(psR, "No identity support" strNL);
 			#endif
-		}	break;
-
+			break;
+		}
 		case CHR_L: halVARS_ReportGLinfo(psR); break;
 
 		case CHR_M: {
@@ -546,8 +546,8 @@ static void vCommandInterpret(command_t * psC) {
 			halMemoryHistoryReport(psR);
 			halMemorySystemReport(psR);
 //			xRtosReportMemory(psR);
-		}	break;
-
+			break;
+		}
 		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
 		case CHR_N: xNetReportStats(psR); break;
 		#endif
@@ -563,8 +563,8 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_S: {
 			psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
 			xTaskSensorsReport(psR);
-		}	break;
-
+			break;
+		}
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(psR, 0xFFFFFFFF); break;
 		#endif
@@ -572,9 +572,8 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_U: {
 			psR->sFM.u32Val = makeMASK09x23(1,1,1,1,1,1,1,0,1, 0x007FFFFF);
 			xRtosReportTasks(psR);
-		
-		}	break;
-
+			break;
+		}
 		case CHR_V: {
 			halMCU_Report(psR);
 			halWL_ReportLx(psR);
@@ -592,8 +591,8 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			psR->sFM.aNL = 1;
 			halVARS_ReportApp(psR);
-		}	break;
-
+			break;
+		}
 		case CHR_W: halWL_Report(psR); break;
 
 		#if (halFLASH_FIX_MD5 == 1)
@@ -605,8 +604,7 @@ static void vCommandInterpret(command_t * psC) {
 		default: xCommandBuffer(psR, cCmd, psR->fEcho);
 		}
 	}
-	if (iRV < erSUCCESS)
-		xSyslogError(__FUNCTION__, iRV);
+	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
@@ -626,21 +624,18 @@ int xCommandProcess(command_t * psC) {
 		xStdioBufLock(portMAX_DELAY);
 	#endif
 	// If flag reporting enabled, if any flag(s) have changed since last updated/displayed, update again
-	if (psC->sRprt.fFlags)
-		halVARS_ReportFlags(&psC->sRprt);
+	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
 		vCommandInterpret(psC);
 		++iRV;
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
-	if (iRV > 1)
-		xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
+	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
 	// Process NVS blob changes, check if VARS changed, write to NVS
 	halVARS_CheckChanges();
 	// Again, if enabled, check if flags changed and log if so
-	if (psC->sRprt.fFlags)
-		halVARS_ReportFlags(&psC->sRprt);
+	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);
 	// Unlock STDIO buffer, same rules as earlier locking
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();								// buffering enabled, unlock
