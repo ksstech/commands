@@ -59,7 +59,6 @@
 static const char HelpMessage[] = {
 	#ifdef ESP_PLATFORM
 	"ESP32 Specific:" strNL
-	"\tc-A/B/C Boot OTA #1/2/3 FW as STA" strNL
 	"\tc-E delete 'syslog.txt'" strNL
 	"\tc-P switch Platform & reboot" strNL
 	"\tc-Q Toggle QOS 0->1->2->0" strNL
@@ -349,9 +348,6 @@ static void vCommandInterpret(command_t * psC) {
 		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if defined(ESP_PLATFORM)
-		case CHR_SOH:															// c-A
-		case CHR_STX:															// c-B
-		case CHR_ETX: halFlashSetBootNumber(cCmd, fotaBOOT_REBOOT); break;		// c-C
 		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
