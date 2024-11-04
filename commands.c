@@ -29,8 +29,8 @@
 #include "systiming.h"
 
 #include "x_builddefs.h"
-#include "x_errors_events.h"
-#include "x_string_to_values.h"
+#include "errors_events.h"
+#include "string_to_values.h"
 #if (includeTNET_TASK > 0)
 	#include "tnet_server.h"
 #endif
