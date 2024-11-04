@@ -448,12 +448,14 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 		}
 		case CHR_C: {
+		#if	(halUSE_LITTLEFS == 1)
 			psR->sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
 									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
 									(ioB2GET(ioFSlev) == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
 															  makeMASK08x24(0,1,1,0,0,0,0,0,0) ;
 			halFlashInfoFS(psR, "");
-		}	break;
+		#else
+			wprintfx(psR, "No Little/Smart FS support");
 		#endif
 			break;
 		}
