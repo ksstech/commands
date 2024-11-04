@@ -371,8 +371,8 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_4:
 		case CHR_5:
 		case CHR_6:
-		case CHR_7:
-		{	cCmd -= CHR_0;
+		case CHR_7: {
+			cCmd -= CHR_0;
 			#if (buildPLTFRM == HW_EM1P2)
 			if (cCmd < 3) {
 				m90e26LoadNVSConfig(0, cCmd);
@@ -416,8 +416,8 @@ static void vCommandInterpret(command_t * psC) {
 			{	
 				iRV = erOUT_OF_RANGE; 
 			}
-		}	break;
-
+			break;
+		}
 		case CHR_A: {
 			#if	(HAL_XXO > 0)
 				psR->fNoLock = 1; xTaskActuatorReport(psR);
@@ -445,9 +445,8 @@ static void vCommandInterpret(command_t * psC) {
 				halFlashReportBlob(psR, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 			#endif
 			free(pBuffer);
-		}	break;
-
-		#if	(halUSE_LITTLEFS == 1)
+			break;
+		}
 		case CHR_C: {
 			psR->sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
 									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
@@ -456,9 +455,10 @@ static void vCommandInterpret(command_t * psC) {
 			halFlashInfoFS(psR, "");
 		}	break;
 		#endif
-
-		case CHR_D:
-		{	psR->sFM.aNL = 1;
+			break;
+		}
+		case CHR_D: {
+			psR->sFM.aNL = 1;
 			#if (HAL_GAI > 0)
 			halGAI_Report(psR);
 			#endif
@@ -516,9 +516,9 @@ static void vCommandInterpret(command_t * psC) {
 			#endif
 			halWL_TimeoutReport(psR);
 			vUBufReport(psR, psHB);
-		}	break;
+			break;
+		}
 		#endif						// (configPRODUCTION == 0)
-
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: {
 			psR->fForce = 1; 
