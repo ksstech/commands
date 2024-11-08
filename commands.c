@@ -385,13 +385,13 @@ static void vCommandInterpret(command_t * psC) {
 				m90e36LoadNVSConfig(1, cCmd);
 				m90e36Report();
 			} else
-			#elif (buildPLTFRM==HW_AC00 || buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
+			#elif (buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
 			if (cCmd < HAL_XXO) {
 				u8_t Type = xActuatorGetType(cCmd);
 				switch(Type) {
 				#if (HAL_XDO > 0)
 					case actTYPE_DIG:
-					#if	(buildPLTFRM == HW_AC00 || buildPLTFRM == HW_AC01)
+					#if	(buildPLTFRM == HW_AC01)
 						vActuatorLoad(cCmd, 5, 0, 500, 0, 500);				// LED 0~7
 						vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);			// Relay 0~7
 					#elif (buildPLTFRM == HW_DK41)
