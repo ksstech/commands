@@ -27,7 +27,7 @@
 #include "statistics.h"
 #include "syslog.h"
 #include "systiming.h"
-
+#include "timeoutX.h"
 #include "x_builddefs.h"
 #include "errors_events.h"
 #include "string_to_values.h"
@@ -516,7 +516,7 @@ static void vCommandInterpret(command_t * psC) {
 			psR->sFM = REP_LVGL(0,1,1,1,1,1,1,1,LV_PART_ANY) ;
 			vGuiObjectsReport(psR, NULL);
 			#endif
-			halWL_TimeoutReport(psR);
+//			timeoutReport(psR);
 			vUBufReport(psR, psHB);
 			break;
 		}
@@ -588,6 +588,7 @@ static void vCommandInterpret(command_t * psC) {
 				psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
 				xAEP_Report(psR);
 			#endif
+			timeoutReport(psR);
 			psR->sFM.aNL = 1;
 			halVARS_ReportApp(psR);
 			break;
