@@ -31,9 +31,7 @@
 #include "x_builddefs.h"
 #include "errors_events.h"
 #include "string_to_values.h"
-#if (includeTNET_TASK > 0)
-	#include "tnet_server.h"
-#endif
+#include "tnet_server.h"
 #include "MQTTClient.h"				// QOSx levels
 
 #if (appUSE_RULES > 0)
@@ -281,12 +279,10 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		// ESC[ received, next code is extended/function key....
 		if (cCmd == CHR_A) {							// Cursor UP
 			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx)
-				cmdFlag.his = 1;
+			if (cmdFlag.idx) cmdFlag.his = 1;
 		} else if (cCmd == CHR_B) {						// Cursor DOWN
 			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx)
-				cmdFlag.his = 1;
+			if (cmdFlag.idx) cmdFlag.his = 1;
 		} else if (cCmd == CHR_C) {						// Cursor RIGHT
 			//
 		} else if (cCmd == CHR_D) {						// Cursor LEFT
@@ -303,18 +299,14 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				wprintfx(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
-				if (cmdFlag.his == 0) {					// if new/modified command
-					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
-				}
+				if (cmdFlag.his == 0) vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // new/modified command, save into buffer
 			}
 			cmdFlag.u16 = 0;
 
 		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
 			if (cmdFlag.idx) {							// yes,
 				--cmdFlag.idx;							// step 1 slot back
-				if (cmdFlag.idx == 0) {
-					cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
-				}
+				if (cmdFlag.idx == 0) cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
 			}
 
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
@@ -325,13 +317,10 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho)
-		wprintfx(psR, "\r\033[0K");						// if requested clear line
+	if (bEcho) wprintfx(psR, "\r\033[0K");				// if requested clear line
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho) {
-			wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
-		}
+		if (bEcho)  wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
 	}
 	return iRV;
 }
@@ -589,7 +578,7 @@ static void vCommandInterpret(command_t * psC) {
 				xAEP_Report(psR);
 			#endif
 			timeoutReport(psR);
-			psR->sFM.aNL = 1;
+			psR->sFM.aNL = 1;		// add extra LF at end of output
 			halVARS_ReportApp(psR);
 			break;
 		}
@@ -640,7 +629,7 @@ int xCommandProcess(command_t * psC) {
 	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);
 	// Unlock STDIO buffer, same rules as earlier locking
 	#if (configCONSOLE_UART > (-1))
-		xStdioBufUnLock();								// buffering enabled, unlock
+		xStdioBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
 	return iRV;
 }
