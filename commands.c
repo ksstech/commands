@@ -611,8 +611,6 @@ int xCommandProcess(command_t * psC) {
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufLock(portMAX_DELAY);
 	#endif
-	// If flag reporting enabled, if any flag(s) have changed since last updated/displayed, update again
-	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
 		vCommandInterpret(psC);
@@ -620,11 +618,6 @@ int xCommandProcess(command_t * psC) {
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
-	// Process NVS blob changes, check if VARS changed, write to NVS
-	halVARS_CheckChanges();
-	// Again, if enabled, check if flags changed and log if so
-	if (psC->sRprt.fFlags) halVARS_ReportFlags(&psC->sRprt);
-	// Unlock STDIO buffer, same rules as earlier locking
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
