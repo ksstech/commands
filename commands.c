@@ -512,9 +512,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif						// (configPRODUCTION == 0)
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: {
-			psR->fForce = 1; 
 			halVARS_ReportFlags(psR); 
-			psR->fForce = 0;
 			break;
 		}
 		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
