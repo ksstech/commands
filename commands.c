@@ -544,7 +544,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_P: halFlashReportPartitions(psR); break;
 		#endif
 
-		case CHR_R: vRulesDecode(psR); break;
+		case CHR_R: psR->sFM.aNL = 0; vRulesDecode(psR); break;
 
 		case CHR_S: {
 			psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
