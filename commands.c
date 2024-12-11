@@ -334,7 +334,6 @@ static void vCommandInterpret(command_t * psC) {
 	if (cmdFlag.cli) {
 		xCommandBuffer(psR, cCmd, psR->fEcho);
 	} else {
-		clrSYSFLAGS(sfKEY_EOF);
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if defined(ESP_PLATFORM)
 		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
@@ -350,7 +349,9 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		case CHR_SUB: setSYSFLAGS(sfKEY_EOF); break;
+		#if	(debugAPPL_DIAGS > 0)
+		case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
+		#endif
 
 		#if	(configPRODUCTION == 0)
 		case CHR_0:
