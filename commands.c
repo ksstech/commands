@@ -564,9 +564,7 @@ static void vCommandInterpret(command_t * psC) {
 			halMCU_Report(psR);
 			halWL_ReportLx(psR);
 			vSyslogReport(psR);
-			#if (includeTNET_TASK > 0)
-				vTnetReport(psR);
-			#endif
+			vTnetReport(psR);
 			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
 				xEpMBC_ClientReport(psR);
 			#endif
