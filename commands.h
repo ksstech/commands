@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <stdarg.h>
 #include "printfx.h"
 
 #ifdef __cplusplus
@@ -10,7 +9,9 @@ extern "C" {
 #endif
 
 // ######################################## General MACROs #########################################
+
 // ######################################### enumerations ##########################################
+
 // ########################################## structures ###########################################
 
 typedef struct __attribute__((packed)) command_t {
@@ -19,6 +20,7 @@ typedef struct __attribute__((packed)) command_t {
 } command_t;
 
 // ###################################### Global variables #########################################
+
 // ################################### GLOBAL Function Prototypes ##################################
 
 int xCommandProcess(command_t * psC);
