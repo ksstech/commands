@@ -1,10 +1,13 @@
-// commands.c - Copyright (c) 2017-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
+// commands.c - Copyright (c) 2017-25 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
 #include "hal_platform.h"
+
+#include "commands.h"
 #include "hal_device_includes.h"
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
 #endif
+#include "hal_diags.h"
 #include "hal_flash.h"
 #include "hal_gpio.h"
 #include "hal_mcu.h"				// halMCU_Report()
@@ -13,31 +16,34 @@
 #include "hal_options.h"
 #include "hal_stdio.h"
 #include "hal_usart.h"
-
-#include "actuators.h"
-#include "commands.h"
-#if (appUSE_IDENT > 0)
-	#include "identity.h"
-#endif
 #include "task_aep.h"
-#include "task_sensors.h"
-
 #include "printfx.h"
-#include "rules.h"					// xRulesProcessText
+#if (buildSERVER_TNET == 1)
+	#include "server-tnet.h"
+#endif
 #include "statistics.h"
 #include "syslog.h"
 #include "systiming.h"
 #include "timeoutX.h"
-#include "x_builddefs.h"
+#include "builddefs.h"
 #include "errors_events.h"
 #include "string_to_values.h"
-#include "tnet_server.h"
-#include "MQTTClient.h"				// QOSx levels
-
-#if (appUSE_RULES > 0)
-	#include "rules.h"
+#include "terminalX.h"
+#if (appUSE_ACTUATORS > 0)
+	#include "actuators.h"
 #endif
-
+#if (appUSE_IDENT > 0)
+	#include "identity.h"
+#endif
+#if (appUSE_SENSORS > 0)
+	#include "task_sensors.h"
+#endif
+#if (appUSE_RULES > 0)
+	#include "rules.h"				// xRulesProcessText
+#endif
+#if (buildAEP > 0)
+	#include "MQTTClient.h"			// QOSx levels
+#endif
 #if (buildGUI > 0)
 	#include "gui_main.hpp"
 #endif
@@ -137,14 +143,16 @@ static const char HelpMessage[] = {
 	"\t(P)artitions report" strNL
 	#endif
 	"\t(R)ules display" strNL
+	#if (appUSE_SENSORS > 0)
 	"\t(S)ensors statistics" strNL
+	#endif
 	#if	(configPRODUCTION == 0)
 	"\t(T)imer/Scatter Info" strNL
 	#endif
 	"\t(U)tilization (task) statistics" strNL
 	"\t(V)erbose system info" strNL
 	"\t(W)ifi Stats" strNL
-	#if (halFLASH_FIX_MD5 == 1)
+	#if (appFIX_MD5 == 1)
 	"\t(X)MD5 Report" strNL
 	"\t(Y)MD5 Remove" strNL
 	"\t(Z)MD5 Restore" strNL
@@ -251,7 +259,7 @@ ubuf_t * psHB = NULL;
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(report_t * psR, int cCmd) {
-	wprintfx(psR, "E=%d L=%d H=%d I=%d cCmd=%d" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+	wprintfx(psR, " {E=%d L=%d H=%d I=%d cCmd=x%02X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 }
 
 /**
@@ -294,8 +302,9 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		cmdFlag.esc = 0;
 
 	} else {
-		if (cCmd == CHR_CR || cCmd == CHR_LF) {
-			if (cmdFlag.idx) {							// CR and something in buffer?
+//		if (TST_STDIN_TERM(cCmd)) {						// CLIB defined line terminator(s)?
+		if (cCmd == CHR_LF || cCmd == CHR_CR) {
+			if (cmdFlag.idx) {							// something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				wprintfx(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
@@ -312,7 +321,7 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
 			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
 
-		} else if (cCmd != CHR_LF) {
+		} else if (cCmd != CHR_LF && cCmd != CHR_CR) {
 			xCommandReport(psR, cCmd);
 		}
 		cmdFlag.his = 0;
@@ -335,8 +344,14 @@ static void vCommandInterpret(command_t * psC) {
 		xCommandBuffer(psR, cCmd, psR->fEcho);
 	} else {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
+		case CHR_ENQ:
+		#if	(halUSE_LITTLEFS == 1)
+			unlink("syslog.txt");						/* c-E */
+		#endif
+		case CHR_LF:
+		case CHR_CR:
+			break;
 		#if defined(ESP_PLATFORM)
-		case CHR_ENQ: unlink("syslog.txt"); break;								// c-E
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
@@ -349,7 +364,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		#if	(debugAPPL_DIAGS > 0)
+		#if	(buildDIAGS > 0)
 		case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
 		#endif
 
@@ -439,11 +454,20 @@ static void vCommandInterpret(command_t * psC) {
 		}
 		case CHR_C: {
 		#if	(halUSE_LITTLEFS == 1)
-			psR->sFM.u32Val = (ioB2GET(ioFSlev) == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
-									(ioB2GET(ioFSlev) == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
-									(ioB2GET(ioFSlev) == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
-															  makeMASK08x24(0,1,1,0,0,0,0,0,0) ;
+			#if (appOPTIONS == 1)
+				u8_t Option = ioB2GET(ioFSlev);
+			#else
+				#warning "Options support required for proper functioning!!!"
+				u8_t Option = 2;
+			#endif
+			// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
+//			#if (buildAEP == 2 || (buildPLTFRM == HW_AC01 && buildOPTION > 1))
+			psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
+							  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
+							  (Option == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
+												  		makeMASK08x24(0,1,1,0,0,0,0,0,0);
 			halFlashInfoFS(psR, "");
+//			#endif
 		#else
 			wprintfx(psR, "No Little/Smart FS support");
 		#endif
@@ -512,10 +536,7 @@ static void vCommandInterpret(command_t * psC) {
 		}
 		#endif						// (configPRODUCTION == 0)
 		// ############################ Normal (non-dangerous) options
-		case CHR_F: {
-			halVARS_ReportFlags(psR); 
-			break;
-		}
+		case CHR_F: halEventReportFlags(psR); break;
 		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
 
 		case CHR_I: {
@@ -545,13 +566,20 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_P: halFlashReportPartitions(psR); break;
 		#endif
 
-		case CHR_R: psR->sFM.aNL = 0; vRulesDecode(psR); break;
+		case CHR_R: {
+			psR->sFM.aNL = 0;
+			vRulesDecode(psR);
+			break;
+		}
 
+		#if (appUSE_SENSORS > 0)
 		case CHR_S: {
 			psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
 			xTaskSensorsReport(psR);
 			break;
 		}
+		#endif
+
 		#if	(configPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(psR, 0xFFFFFFFF); break;
 		#endif
@@ -561,11 +589,14 @@ static void vCommandInterpret(command_t * psC) {
 			xRtosReportTasks(psR);
 			break;
 		}
+		
 		case CHR_V: {
 			halMCU_Report(psR);
 			halWL_ReportLx(psR);
 			vSyslogReport(psR);
+		#if defined(buildIRMACS)
 			vTnetReport(psR);
+		#endif
 			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
 				xEpMBC_ClientReport(psR);
 			#endif
@@ -577,17 +608,21 @@ static void vCommandInterpret(command_t * psC) {
 			timeoutReport(psR);
 			psR->sFM.aNL = 1;		// add extra LF at end of output
 			halVARS_ReportApp(psR);
+			#if (buildDIAGS == 1)
+				halDiagsReport();
+			#endif
 			break;
 		}
+
 		case CHR_W: halWL_Report(psR); break;
 
-	#if (configPRODUCTION == 1)
-		case CHR_X: halFlashReportMD5(); break;
-		#if (halFLASH_FIX_MD5 == 1)
-			case CHR_Y: halFlashRemoveMD5(); break;
-			case CHR_Z: halFlashRestoreMD5(); break;
+		#if (configPRODUCTION == 1)
+			case CHR_X: halFlashReportMD5(); break;
+			#if (appFIX_MD5 == 1)
+				case CHR_Y: halFlashRemoveMD5(); break;
+				case CHR_Z: halFlashRestoreMD5(); break;
+			#endif
 		#endif
-	#endif
 
 		default: xCommandBuffer(psR, cCmd, psR->fEcho);
 		}
@@ -604,7 +639,13 @@ int xCommandProcess(command_t * psC) {
 	int iRV = 0;
 	// init history buffer, variable size, blocks of 128 bytes
 	if (psHB == NULL) {
-		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf)+1) << 7, 0);
+		#if (appOPTIONS == 1)
+			u8_t Option = ioB4GET(ioCLIbuf);
+		#else
+			#warning "Options support required for proper functioning!!!"
+			u8_t Option = 2;
+		#endif
+		psHB = psUBufCreate(NULL, NULL, (Option + 1) << 7, 0);
 		psHB->f_history = 1;
 	}
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
@@ -617,7 +658,7 @@ int xCommandProcess(command_t * psC) {
 		++iRV;
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
-	if (iRV > 1) xCommandBuffer(&psC->sRprt, CHR_CR, psC->sRprt.fEcho);
+	if (iRV > 1) xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
 	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
