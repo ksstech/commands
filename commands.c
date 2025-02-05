@@ -44,7 +44,7 @@
 #if (buildAEP > 0)
 	#include "MQTTClient.h"			// QOSx levels
 #endif
-#if (buildGUI > 0)
+#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
 	#include "gui_main.hpp"
 #endif
 
@@ -638,8 +638,8 @@ int xCommandProcess(command_t * psC) {
 		psHB->f_history = 1;
 	}
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
-	#if (configCONSOLE_UART > (-1))
 		xStdioBufLock(portMAX_DELAY);
+	#if (configCONSOLE_UART > -1 && buildWRAP_STDIO == 1)
 	#endif
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
@@ -648,8 +648,8 @@ int xCommandProcess(command_t * psC) {
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1) xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
-	#if (configCONSOLE_UART > (-1))
 		xStdioBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
+	#if (configCONSOLE_UART > -1 && buildWRAP_STDIO == 1)
 	#endif
 	return iRV;
 }
