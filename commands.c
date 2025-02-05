@@ -302,8 +302,8 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		cmdFlag.esc = 0;
 
 	} else {
-//		if (TST_STDIN_TERM(cCmd)) {						// CLIB defined line terminator(s)?
-		if (cCmd == CHR_LF || cCmd == CHR_CR) {
+//		if (TST_STDIN_TERM(cCmd)) {						// c/newLIB defined line terminator(s)?
+		if (cCmd == CHR_CR || cCmd == CHR_LF) {			// 
 			if (cmdFlag.idx) {							// something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				wprintfx(psR, strNL);
