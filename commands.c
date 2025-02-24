@@ -586,29 +586,31 @@ static void vCommandInterpret(command_t * psC) {
 			break;
 		}
 		
-		case CHR_V: {
-			halMCU_Report(psR);
-			halWL_ReportLx(psR);
-			vSyslogReport(psR);
-		#if defined(buildIRMACS)
-			vTnetReport(psR);
+		#if (appPRODUCTION == 0)
+			case CHR_V: {
+				halMCU_Report(psR);
+				halWL_ReportLx(psR);
+				#if defined(appIRMACS)
+					vTnetReport(psR);
+				#endif
+				#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
+					xEpMBC_ClientReport(psR);
+				#endif
+				#if (appAEP > 0)
+					psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
+					xAEP_Report(psR);
+				#endif
+				vSyslogReport(psR);
+				xSntpReport(psR);
+				timeoutReport(psR);
+				psR->sFM.aNL = 1;		// add extra LF at end of output
+				halVARS_ReportApp(psR);
+				#if (appDIAGS == 1)
+					halDiagsReport();
+				#endif
+				break;
+			}
 		#endif
-			#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
-				xEpMBC_ClientReport(psR);
-			#endif
-
-			#if (buildAEP > 0)
-				psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
-				xAEP_Report(psR);
-			#endif
-			timeoutReport(psR);
-			psR->sFM.aNL = 1;		// add extra LF at end of output
-			halVARS_ReportApp(psR);
-			#if (buildDIAGS == 1)
-				halDiagsReport();
-			#endif
-			break;
-		}
 
 		case CHR_W: halWL_Report(psR); break;
 
