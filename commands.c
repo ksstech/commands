@@ -454,8 +454,8 @@ static void vCommandInterpret(command_t * psC) {
 			free(pBuffer);
 			break;
 		}
-		case CHR_C: {
-		#if	(halUSE_LITTLEFS == 1)
+			case CHR_C: {
+				#if	(appLITTLEFS == 1)
 					u8_t Option = ioB2GET(ioFSlev);
 					// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
 					psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
