@@ -18,7 +18,7 @@
 #include "hal_usart.h"
 #include "task_aep.h"
 #include "printfx.h"
-#if (buildSERVER_TNET == 1)
+#if (appSERVER_TNET == 1)
 	#include "server-tnet.h"
 #endif
 #include "statistics.h"
@@ -41,10 +41,10 @@
 #if (appUSE_RULES > 0)
 	#include "rules.h"				// xRulesProcessText
 #endif
-#if (buildAEP > 0)
+#if (appAEP > 0)
 	#include "MQTTClient.h"			// QOSx levels
 #endif
-#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
+#if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
 	#include "gui_main.hpp"
 #endif
 
@@ -67,7 +67,7 @@ static const char HelpMessage[] = {
 	"\tc-P switch Platform & reboot" strNL
 	"\tc-Q Toggle QOS 0->1->2->0" strNL
 	"\tc-R Revert to previous FW" strNL
-	#if (configPRODUCTION == 0)
+	#if (appPRODUCTION == 0)
 	"\tc-T Immediate restart" strNL
 	"\tc-U Generate 'Invalid memory access' crash" strNL
 	#endif
@@ -76,15 +76,15 @@ static const char HelpMessage[] = {
 	#endif
 
 	"General:" strNL
-	#if	(configPRODUCTION == 0) && (HAL_XXO > 0)
+	#if	(appPRODUCTION == 0) && (HAL_XXO > 0)
 	"ACT\t(0-x) Trigger selected actuator" strNL
 	#endif
 	#if	(HAL_XXO > 0)
 	"ACT\t(A)ctuators Report" strNL
 	#endif
-	#if	(configPRODUCTION == 0)
+	#if	(appPRODUCTION == 0)
 	"\t(B)lob report" strNL
-	#if	(halUSE_LITTLEFS == 1)
+	#if	(appLITTLEFS == 1)
 	"\t(C)ontent of LFS" strNL
 	#endif
 	"\t(D)iagnostics ["
@@ -139,14 +139,14 @@ static const char HelpMessage[] = {
 	"\t(M)emory info" strNL
 	"\t(N)etwork (IP4) info" strNL
 	"\t(O)ptions display" strNL
-	#if	(configPRODUCTION == 0)
+	#if	(appPRODUCTION == 0)
 	"\t(P)artitions report" strNL
 	#endif
 	"\t(R)ules display" strNL
 	#if (appUSE_SENSORS > 0)
 	"\t(S)ensors statistics" strNL
 	#endif
-	#if	(configPRODUCTION == 0)
+	#if	(appPRODUCTION == 0)
 	"\t(T)imer/Scatter Info" strNL
 	#endif
 	"\t(U)tilization (task) statistics" strNL
@@ -169,7 +169,7 @@ static const char HelpMessage[] = {
 	"GMAP\tioset 141(nwmo) {0->3} off/sta/ap/sta+ap" strNL
 	"GMAP\tioset 142(wifi) idx (-1 -> 3) ssid(u8 x23) pswd(u8 x23)" strNL
 	"GMAP\tioset 143(mqtt) w.x.y.z port" strNL
-	#if	(configPRODUCTION == 0)
+	#if	(appPRODUCTION == 0)
 		"GMAP\tioset 144(peek) address size" strNL
 		"GMAP\tioset 145(poke) address size" strNL
 	#endif
@@ -202,7 +202,7 @@ static const char HelpMessage[] = {
 		"\t\t8=Delete 'ALL Calibration data'" strNL
 		"\t\t9=WriteReg reg=" toSTR(SOFTRESET) "~" toSTR(CRC_2) " val=0~0xFFFF" strNL
 		#endif
-		#if (configPRODUCTION == 0) && (HAL_MB_ACT > 0 || HAL_MB_SEN > 0)
+		#if (appPRODUCTION == 0) && (HAL_MB_ACT > 0 || HAL_MB_SEN > 0)
 		"\tcmd /mb TBC" strNL
 		#endif
 		#if (HAL_MB_ACT > 0)
@@ -345,22 +345,24 @@ static void vCommandInterpret(command_t * psC) {
 	} else {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		case CHR_ENQ:
-		#if	(halUSE_LITTLEFS == 1)
 			unlink("syslog.txt");						/* c-E */
-		#endif
 		case CHR_LF:
 		case CHR_CR:
 			break;
+			#if	(appLITTLEFS == 1)
+			#endif
 		#if defined(ESP_PLATFORM)
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
 		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
-		case CHR_ETB:				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
+		case CHR_ETB: {				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
 			halFlashSetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
 			break;
-		case CHR_EM:															// c-Y Erase VARS blob then reboot
+		}
+		case CHR_EM: {															// c-Y Erase VARS blob then reboot
 			halFlashSetBootNumber(CurPart, fotaERASE_VARS|fotaBOOT_REBOOT);
 			break;
+		}
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
@@ -551,13 +553,13 @@ static void vCommandInterpret(command_t * psC) {
 //			xRtosReportMemory(psR);
 			break;
 		}
-		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
+		#if	defined(ESP_PLATFORM) && (appPRODUCTION == 0)
 		case CHR_N: xNetReportStats(psR); break;
 		#endif
 
 		case CHR_O: vOptionsShow(psR); break;
 
-		#if	defined(ESP_PLATFORM) && (configPRODUCTION == 0)
+		#if	defined(ESP_PLATFORM) && (appPRODUCTION == 0)
 		case CHR_P: halFlashReportPartitions(psR); break;
 		#endif
 
@@ -575,7 +577,7 @@ static void vCommandInterpret(command_t * psC) {
 		}
 		#endif
 
-		#if	(configPRODUCTION == 0)
+		#if	(appPRODUCTION == 0)
 		case CHR_T: vSysTimerShow(psR, 0xFFFFFFFF); break;
 		#endif
 
@@ -638,7 +640,7 @@ int xCommandProcess(command_t * psC) {
 		psHB->f_history = 1;
 	}
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
-	#if (configCONSOLE_UART > -1 && buildWRAP_STDIO == 1)
+	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
 		xStdOutBufLock(portMAX_DELAY);
 	#endif
 	// Now process the actual character(s)
@@ -648,7 +650,7 @@ int xCommandProcess(command_t * psC) {
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1) xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
-	#if (configCONSOLE_UART > -1 && buildWRAP_STDIO == 1)
+	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
 		xStdOutBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
 	return iRV;
