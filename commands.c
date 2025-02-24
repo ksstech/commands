@@ -470,68 +470,67 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 			break;
 		}
-		case CHR_D: {
-			psR->sFM.aNL = 1;
-			#if (HAL_GAI > 0)
-			halGAI_Report(psR);
-			#endif
-			#if (HAL_GAO > 0)
-			halGAO_Report(psR);
-			#endif
-			#if (HAL_GDI > 0)
-			halGDI_Report(psR);
-			#endif
-			#if (HAL_GDO > 0)
-			halGDO_Report(psR);
-			#endif
-			#if (HAL_ADE7953 > 0)
-			ade7953Report(psR);
-			#endif
-			#if	(HAL_DS1307 > 0)
-			ds1307Report(psR, strNUL);
-			#endif
-			#if	(HAL_LIS2HH12 > 0)
-			lis2hh12ReportAll(psR);
-			#endif
-			#if	(HAL_LTR329ALS > 0)
-			ltr329alsReportAll(psR);
-			#endif
-			#if	(HAL_M90E26 > 0)
-			m90e26Report(psR);
-			#endif
-			#if	(HAL_MCP342X > 0)
-			mcp342xReportAll(psR);
-			#endif
-			#if	(HAL_MPL3115 > 0)
-			mpl3115ReportAll(psR);
-			#endif
-			#if	(HAL_ONEWIRE > 0)
-			OWP_Report(psR);
-			#endif
-			#if (HAL_PCA9555 > 0)
-			pca9555Report(psR);
-			#endif
-			#if (HAL_PCF8574 > 0)
-			pcf8574Report(psR);
-			#endif
-			#if (HAL_PYCOPROC > 0)
-			pycoprocReportAll(psR);
-			#endif
-			#if	(HAL_SI70XX > 0)
-			si70xxReportAll(psR);
-			#endif
-			#if	(HAL_SSD1306 > 0)
-			ssd1306Report(psR);
-			#endif
-			#if (halUSE_BSP == 1 && buildGUI == 4 && buildPLTFRM == HW_EV2)
-			psR->sFM = REP_LVGL(0,1,1,1,1,1,1,1,LV_PART_ANY) ;
-			vGuiObjectsReport(psR, NULL);
-			#endif
-//			timeoutReport(psR);
-			vUBufReport(psR, psHB);
-			break;
-		}
 		#endif						// (configPRODUCTION == 0)
+			case CHR_D: {
+				psR->sFM.aNL = 1;
+				#if (HAL_GAI > 0)
+					halGAI_Report(psR);
+				#endif
+				#if (HAL_GAO > 0)
+					halGAO_Report(psR);
+				#endif
+				#if (HAL_GDI > 0)
+					halGDI_Report(psR);
+				#endif
+				#if (HAL_GDO > 0)
+					halGDO_Report(psR);
+				#endif
+				#if (HAL_ADE7953 > 0)
+					ade7953Report(psR);
+				#endif
+				#if	(HAL_DS1307 > 0)
+					ds1307Report(psR, strNUL);
+				#endif
+				#if	(HAL_LIS2HH12 > 0)
+					lis2hh12ReportAll(psR);
+				#endif
+				#if	(HAL_LTR329ALS > 0)
+					ltr329alsReportAll(psR);
+				#endif
+				#if	(HAL_M90E26 > 0)
+					m90e26Report(psR);
+				#endif
+				#if	(HAL_MCP342X > 0)
+					mcp342xReportAll(psR);
+				#endif
+				#if	(HAL_MPL3115 > 0)
+					mpl3115ReportAll(psR);
+				#endif
+				#if	(HAL_ONEWIRE > 0)
+					OWP_Report(psR);
+				#endif
+				#if (HAL_PCA9555 > 0)
+					pca9555Report(psR);
+				#endif
+				#if (HAL_PCF8574 > 0)
+					pcf8574Report(psR);
+				#endif
+				#if (HAL_PYCOPROC > 0)
+					pycoprocReportAll(psR);
+				#endif
+				#if	(HAL_SI70XX > 0)
+					si70xxReportAll(psR);
+				#endif
+				#if	(HAL_SSD1306 > 0)
+					ssd1306Report(psR);
+				#endif
+				#if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
+					psR->sFM = REP_LVGL(0,1,1,1,1,1,1,1,LV_PART_ANY) ;
+					vGuiObjectsReport(psR, NULL);
+				#endif
+				vUBufReport(psR, psHB);
+				break;
+			}
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: halEventReportFlags(psR); break;
 		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
@@ -624,7 +623,8 @@ static void vCommandInterpret(command_t * psC) {
 		default: xCommandBuffer(psR, cCmd, psR->fEcho);
 		}
 	}
-	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
+	if (iRV < erSUCCESS)
+		xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
