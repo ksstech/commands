@@ -256,7 +256,7 @@ static union {
 		u16_t his:1;				// in HIStory mode, scrolling up (A) or down (B)
 		u16_t idx:12;				// slot in buffer where next key to be stored, 0=empty
 	};
-	u16_t u16;
+	u16_t u16;						// all flags + idx as a single value
 } cmdFlag;
 
 ubuf_t * psHB = NULL;
@@ -313,7 +313,8 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				wprintfx(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
-				if (cmdFlag.his == 0) vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // new/modified command, save into buffer
+				if (cmdFlag.his == 0)					// new/modified command
+					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
 			}
 			cmdFlag.u16 = 0;
 
@@ -331,10 +332,12 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho) wprintfx(psR, "\r\033[0K");				// if requested clear line
+	if (bEcho)											// if requested
+		wprintfx(psR, "\r\033[0K");						// clear line
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho)  wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
+		if (bEcho)
+			wprintfx(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
 	}
 	return iRV;
 }
