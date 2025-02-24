@@ -47,6 +47,9 @@
 #if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
 	#include "gui_main.hpp"
 #endif
+#if (appPRODUCTION == 0)
+	#include "client-sntp.h"
+#endif
 
 // ######################################## Macros ################################################
 
@@ -152,10 +155,12 @@ static const char HelpMessage[] = {
 	"\t(U)tilization (task) statistics" strNL
 	"\t(V)erbose system info" strNL
 	"\t(W)ifi Stats" strNL
-	#if (appFIX_MD5 == 1)
-	"\t(X)MD5 Report" strNL
-	"\t(Y)MD5 Remove" strNL
-	"\t(Z)MD5 Restore" strNL
+	#if	(appPRODUCTION == 0)
+		#if (appFIX_MD5 == 1)
+			"\t(X)MD5 Remove" strNL
+			"\t(Y)MD5 Restore" strNL
+		#endif
+		"\t(Z)MD5 Report" strNL
 	#endif
 	"Extended commands:" strNL
 	"\treboot | register | upgrade | show W0 [... [W23]]" strNL
