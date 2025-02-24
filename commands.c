@@ -613,12 +613,12 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_W: halWL_Report(psR); break;
 
-		#if (configPRODUCTION == 1)
-			case CHR_X: halFlashReportMD5(); break;
+		#if (appPRODUCTION == 0)
 			#if (appFIX_MD5 == 1)
-				case CHR_Y: halFlashRemoveMD5(); break;
-				case CHR_Z: halFlashRestoreMD5(); break;
+				case CHR_X: halFlashRemoveMD5(psR); break;
+				case CHR_Y: halFlashRestoreMD5(psR); break;
 			#endif
+			case CHR_Z: halFlashReportMD5(psR); break;
 		#endif
 
 		default: xCommandBuffer(psR, cCmd, psR->fEcho);
