@@ -354,9 +354,6 @@ static void vCommandInterpret(command_t * psC) {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		case CHR_ENQ:
 			unlink("syslog.txt");						/* c-E */
-		case CHR_LF:
-		case CHR_CR:
-			break;
 			#if	(appLITTLEFS == 1)
 			#endif
 		#if defined(ESP_PLATFORM)
