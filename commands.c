@@ -456,21 +456,19 @@ static void vCommandInterpret(command_t * psC) {
 		}
 		case CHR_C: {
 		#if	(halUSE_LITTLEFS == 1)
-			u8_t Option = ioB2GET(ioFSlev);
-			// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
-//			#if (buildAEP == 2 || (buildPLTFRM == HW_AC01 && buildOPTION > 1))
-			psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
-							  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
-							  (Option == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
+					u8_t Option = ioB2GET(ioFSlev);
+					// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
+					psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
+									  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
+									  (Option == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
 												  		makeMASK08x24(0,1,1,0,0,0,0,0,0);
-			halFlashInfoFS(psR, "");
-//			#endif
-		#else
-			wprintfx(psR, "No Little/Smart FS support");
-		#endif
-			break;
-		}
 		#endif						// (configPRODUCTION == 0)
+					halFlashInfoFS(psR, "");
+				#else
+					wprintfx(psR, "No Little/Smart FS support");
+				#endif
+				break;
+			}
 			case CHR_D: {
 				psR->sFM.aNL = 1;
 				#if (HAL_GAI > 0)
