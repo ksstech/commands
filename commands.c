@@ -372,94 +372,96 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		// ########################### Unusual (possibly dangerous) options
-		#if	(buildDIAGS > 0)
-		case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
-		#endif
-
-		#if	(configPRODUCTION == 0)
-		case CHR_0:
-		case CHR_1:
-		case CHR_2:
-		case CHR_3:
-		case CHR_4:
-		case CHR_5:
-		case CHR_6:
-		case CHR_7: {
-			cCmd -= CHR_0;
-			#if (buildPLTFRM == HW_EM1P2)
-			if (cCmd < 3) {
-				m90e26LoadNVSConfig(0, cCmd);
-				m90e26LoadNVSConfig(1, cCmd);
-			} else
-			#elif (buildPLTFRM == HW_EM3P2)
-			if (cCmd < 3) {
-				m90e36Report();
-				m90e36LoadNVSConfig(0, cCmd);
-				m90e36LoadNVSConfig(1, cCmd);
-				m90e36Report();
-			} else
-			#elif (buildPLTFRM==HW_AC01 || buildPLTFRM==HW_DK41 || buildPLTFRM==HW_KC868A4 || buildPLTFRM==HW_KC868A6 || buildPLTFRM==HW_SP1PM || buildPLTFRM==HW_SP2PM)
-			if (cCmd < HAL_XXO) {
-				u8_t Type = xActuatorGetType(cCmd);
-				switch(Type) {
-				#if (HAL_XDO > 0)
-					case actTYPE_DIG:
-					#if	(buildPLTFRM == HW_AC01)
-						vActuatorLoad(cCmd, 5, 0, 500, 0, 500);				// LED 0~7
-						vActuatorLoad(cCmd + 8, 1, 0, 6000, 0, 0);			// Relay 0~7
-					#elif (buildPLTFRM == HW_DK41)
-						vActuatorLoad(cCmd, 5, 0, 500, 0, 500);				// LED 0~2
-					#elif (buildPLTFRM == HW_KC868A4 || buildPLTFRM == HW_KC868A6)
-						vActuatorLoad(cCmd, 1, 0, 10, 0, 0);				// Relay 0~5
-					#elif (buildPLTFRM == HW_SP1PM || buildPLTFRM == HW_SP2PM)
-						vActuatorLoad(cCmd, 3, 0, 1000, 0, 1000);			// Relay 0~1
-					#endif
-					break;
+		#if	(appPRODUCTION == 0)
+			#if	(appDIAGS > 0)
+				case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
+			#endif
+			case CHR_0:
+			case CHR_1:
+			case CHR_2:
+			case CHR_3:
+			case CHR_4:
+			case CHR_5:
+			case CHR_6:
+			case CHR_7: {
+				cCmd -= CHR_0;
+				#if (appPLTFRM == HW_EM1P2)
+					if (cCmd < m90e26CALIB_NUM) {
+						m90e26LoadNVSConfig(0, cCmd);
+						m90e26LoadNVSConfig(1, cCmd);
+					} else
+				#elif (appPLTFRM == HW_EM3P2)
+					if (cCmd < m90e36CALIB_NUM) {
+						m90e36Report();
+						m90e36LoadNVSConfig(0, cCmd);
+						m90e36LoadNVSConfig(1, cCmd);
+						m90e36Report();
+					} else
+				#elif (appPLTFRM==HW_AC01 || appPLTFRM==HW_DK41 || appPLTFRM==HW_KC868A4 || appPLTFRM==HW_KC868A6 || appPLTFRM==HW_SP1PM || appPLTFRM==HW_SP2PM)
+					if (cCmd < HAL_XXO) {
+						u8_t Type = xActuatorGetType(cCmd);
+						switch(Type) {
+						#if (HAL_XDO > 0)
+							case actTYPE_DIG: {
+								vActuatorLoad(cCmd, 3, 0, 1000, 0, 1000);			// LED/Relay 0~7
+								#if	(appPLTFRM == HW_AC01)
+									vActuatorLoad(cCmd + 8, 3, 0, 1000, 0, 1000);	// Relays 8~15
+								#endif
+								break;
+							}
+						#endif
+						#if (HAL_XPO > 0)
+							case actTYPE_PWM: {
+								vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// PWM 0~?
+								break;
+							}
+						#endif
+						#if (HAL_XAO > 0)
+							case actTYPE_ANA: {
+								vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// DAC 0~?
+								break;
+							}
+						#endif
+						default:
+							break;
+						}
+					} else
 				#endif
-				#if	(buildPLTFRM == HW_KC868A4 || buildPLTFRM == HW_KC868A6)
-					case actTYPE_ANA:
-						vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// DAC 0~1
-						break;
-				#endif
-				default:
+					{	
+						iRV = erOUT_OF_RANGE; 
+					}
 					break;
 				}
-			} else
-			#endif
-			{	
-				iRV = erOUT_OF_RANGE; 
+			case CHR_A: {
+				#if	(HAL_XXO > 0)
+					psR->fNoLock = 1;
+					xTaskActuatorReport(psR);
+				#else
+					PX("No actuators present" strNL);
+				#endif
+				break;
 			}
-			break;
-		}
-		case CHR_A: {
-			#if	(HAL_XXO > 0)
-				psR->fNoLock = 1; xTaskActuatorReport(psR);
-			#else
-				PX("No actuators present" strNL);
-			#endif
-			break;
-		}
-		case CHR_B: {					// List blobs with contents
-			#define	blobBUFFER_SIZE			1024
-			u8_t * pBuffer = malloc(blobBUFFER_SIZE);
-			size_t	SizeBlob = blobBUFFER_SIZE;
-			psR->fNoLock = 1;
-			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
-			SizeBlob = blobBUFFER_SIZE;
-			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
-			SizeBlob = blobBUFFER_SIZE;
-			halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
-			#if	(buildPLTFRM == HW_EM1P2)
+			case CHR_B: {								// List blobs with contents
+				#define	blobBUFFER_SIZE			1024
+				u8_t * pBuffer = malloc(blobBUFFER_SIZE);
+				size_t	SizeBlob = blobBUFFER_SIZE;
+				psR->fNoLock = 1;
+				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 				SizeBlob = blobBUFFER_SIZE;
-				halFlashReportBlob(psR, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
-			#endif
-			#if	(buildPLTFRM == HW_SP2PM)
+				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
 				SizeBlob = blobBUFFER_SIZE;
-				halFlashReportBlob(psR, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
-			#endif
-			free(pBuffer);
-			break;
-		}
+				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
+				#if	(appPLTFRM == HW_EM1P2)
+					SizeBlob = blobBUFFER_SIZE;
+					halFlashReportBlob(psR, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
+				#endif
+				#if	(appPLTFRM == HW_SP2PM)
+					SizeBlob = blobBUFFER_SIZE;
+					halFlashReportBlob(psR, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
+				#endif
+				free(pBuffer);
+				break;
+			}
 			case CHR_C: {
 				#if	(appLITTLEFS == 1)
 					u8_t Option = ioB2GET(ioFSlev);
@@ -468,7 +470,6 @@ static void vCommandInterpret(command_t * psC) {
 									  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
 									  (Option == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
 												  		makeMASK08x24(0,1,1,0,0,0,0,0,0);
-		#endif						// (configPRODUCTION == 0)
 					halFlashInfoFS(psR, "");
 				#else
 					wprintfx(psR, "No Little/Smart FS support");
@@ -535,6 +536,8 @@ static void vCommandInterpret(command_t * psC) {
 				vUBufReport(psR, psHB);
 				break;
 			}
+		#endif						// (appPRODUCTION == 0)
+
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: halEventReportFlags(psR); break;
 		case CHR_H: wprintfx(psR, "%s", HelpMessage); break;
