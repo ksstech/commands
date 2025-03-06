@@ -466,10 +466,10 @@ static void vCommandInterpret(command_t * psC) {
 				#if	(appLITTLEFS == 1)
 					u8_t Option = xOptionGet(ioFSlev);
 					// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
-					psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
-									  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
-									  (Option == 1) ? makeMASK08x24(0,1,1,1,0,0,0,0,0) :
-												  		makeMASK08x24(0,1,1,0,0,0,0,0,0);
+					psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(1,0,1,1,1,1,0,0,0) :
+									  (Option == 2) ? makeMASK08x24(1,0,1,1,1,0,0,0,0) :
+									  (Option == 1) ? makeMASK08x24(1,0,1,1,0,0,0,0,0) :
+												  	  makeMASK08x24(1,0,1,0,0,0,0,0,0);
 					halFlashInfoFS(psR, "");
 				#else
 					wprintfx(psR, "No Little/Smart FS support");
@@ -570,14 +570,13 @@ static void vCommandInterpret(command_t * psC) {
 		#endif
 
 		case CHR_R: {
-			psR->sFM.aNL = 0;
 			vRulesDecode(psR);
 			break;
 		}
 
 		#if (appUSE_SENSORS > 0)
 		case CHR_S: {
-			psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x7FFFFF);
+			psR->sFM.u32Val = makeMASK09x23(0,1,1,1,1,1,1,1,1,0x7FFFFF);
 			xTaskSensorsReport(psR);
 			break;
 		}
@@ -604,13 +603,11 @@ static void vCommandInterpret(command_t * psC) {
 					xEpMBC_ClientReport(psR);
 				#endif
 				#if (appAEP > 0)
-					psR->sFM.u32Val = makeMASK09x23(1,0,1,1,1,1,1,1,1,0x000000);
 					xAEP_Report(psR);
 				#endif
 				vSyslogReport(psR);
 				xSntpReport(psR);
 				timeoutReport(psR);
-				psR->sFM.aNL = 1;		// add extra LF at end of output
 				halVARS_ReportApp(psR);
 				#if (appDIAGS == 1)
 					halDiagsReport();
