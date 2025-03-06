@@ -464,7 +464,7 @@ static void vCommandInterpret(command_t * psC) {
 			}
 			case CHR_C: {
 				#if	(appLITTLEFS == 1)
-					u8_t Option = ioB2GET(ioFSlev);
+					u8_t Option = xOptionGet(ioFSlev);
 					// this exclusion ONLY required whilst migrating v5.x.x motes at 72D
 					psR->sFM.u32Val = (Option == 3) ? makeMASK08x24(0,1,1,1,1,1,0,0,0) :
 									  (Option == 2) ? makeMASK08x24(0,1,1,1,1,0,0,0,0) :
@@ -645,7 +645,7 @@ int xCommandProcess(command_t * psC) {
 	int iRV = 0;
 	// init history buffer, variable size, blocks of 128 bytes
 	if (psHB == NULL) {
-		psHB = psUBufCreate(NULL, NULL, (ioB4GET(ioCLIbuf) + 1) << 7, 0);
+		psHB = psUBufCreate(NULL, NULL, (xOptionGet(ioCLIbuf) + 1) << 7, 0);
 		psHB->f_history = 1;
 	}
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
