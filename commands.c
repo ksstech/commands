@@ -352,11 +352,13 @@ static void vCommandInterpret(command_t * psC) {
 		xCommandBuffer(psR, cCmd, psR->fEcho);
 	} else {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
+		#if	(appLITTLEFS == 1)
 		case CHR_ENQ: {
-			#if	(appLITTLEFS == 1)
-				unlink("syslog.txt");						/* c-E */
-			#endif
+			halFlashFileDisplay(psR, slFILENAME);
+			unlink(slFILENAME);						/* c-E */
+			break;
 		}
+		#endif
 		#if defined(ESP_PLATFORM)
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
 
