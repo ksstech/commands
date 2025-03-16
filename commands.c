@@ -359,8 +359,11 @@ static void vCommandInterpret(command_t * psC) {
 		}
 		#if defined(ESP_PLATFORM)
 		case CHR_DC2: halFlashSetBootNumber(PrvPart, fotaBOOT_REBOOT); break;	// c-R
+
 		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
+
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
+
 		case CHR_ETB: {				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
 			halFlashSetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
 			break;
