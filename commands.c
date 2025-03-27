@@ -479,7 +479,7 @@ static void vCommandInterpret(command_t * psC) {
 												  	  makeMASK08x24(1,0,1,0,0,0,0,0,0);
 					halFlashInfoFS(psR, "");
 				#else
-					wprintfx(psR, "No Little/Smart FS support");
+					report(psR, "No Little/Smart FS support");
 				#endif
 				break;
 			}
@@ -556,7 +556,7 @@ static void vCommandInterpret(command_t * psC) {
 			#if	(appUSE_IDENT > 0)
 				vID_Report(psR);
 			#else
-				wprintfx(psR, "No identity support" strNL);
+				report(psR, "No identity support" strNL);
 			#endif
 			break;
 		}
