@@ -96,6 +96,9 @@ static const char HelpMessage[] = {
 		#if (HAL_ADE7953 > 0)
 		"ade7953\t"
 		#endif
+		#if (HAL_DIGOLE > 0)
+		"digole\t"
+		#endif
 		#if	(HAL_DS18X20 > 0)
 		"ds18x20\t"
 		#endif
@@ -496,6 +499,9 @@ static void vCommandInterpret(command_t * psC) {
 				#endif
 				#if (HAL_ADE7953 > 0)
 					ade7953Report(psR);
+				#endif
+				#if (HAL_DIGOLE > 0)
+					digoleReport(psR);
 				#endif
 				#if	(HAL_DS1307 > 0)
 					ds1307Report(psR, strNUL);
