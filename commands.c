@@ -17,7 +17,6 @@
 #include "hal_stdio.h"
 #include "hal_usart.h"
 #include "task_aep.h"
-#include "printfx.h"
 #if (appSERVER_TNET == 1)
 	#include "server-tnet.h"
 #endif
