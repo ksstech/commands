@@ -323,7 +323,8 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
 			if (cmdFlag.idx) {							// yes,
 				--cmdFlag.idx;							// step 1 slot back
-				if (cmdFlag.idx == 0) cmdFlag.u16 = 0;	// buffer empty, reset to default (non cli/history) mode
+				if (cmdFlag.idx == 0)
+					cmdFlag.u16 = 0;					// buffer empty, reset to default (non cli/history) mode
 			}
 
 		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
@@ -665,7 +666,8 @@ int xCommandProcess(command_t * psC) {
 		++iRV;
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
-	if (iRV > 1) xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
+	if (iRV > 1)
+		xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
 	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
 		xStdOutBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
