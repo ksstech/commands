@@ -336,7 +336,7 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		cmdFlag.his = 0;
 	}
 	if (bEcho)											// if requested
-		report(psR, "\r\033[0K");						// clear line
+		report(psR, "\r\e[0K");							// clear line
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
 		if (bEcho)
