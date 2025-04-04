@@ -46,7 +46,7 @@
 #if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
 	#include "gui_main.hpp"
 #endif
-#if (appPRODUCTION == 0)
+#if (appCLIENT_SNTP > 0)
 	#include "client-sntp.h"
 #endif
 
