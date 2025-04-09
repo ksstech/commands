@@ -391,7 +391,9 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_4:
 			case CHR_5:
 			case CHR_6:
-			case CHR_7: {
+			case CHR_7:
+			case CHR_8:
+			case CHR_9: {
 				cCmd -= CHR_0;
 				#if (appPLTFRM == HW_EM1P2)
 					if (cCmd < m90e26CALIB_NUM) {
@@ -434,10 +436,48 @@ static void vCommandInterpret(command_t * psC) {
 							break;
 						}
 					} else
+					#if (appPLTFRM == HW_KC868A4 || appPLTFRM == HW_KC868A6)
+					if (cCmd == HAL_XXO) {
+					#if 1
+						for (int i = 0; i < HAL_IDO; vActuatorLoad(i++, 3, 0, 150, 0, 1850));		// Relay 0->i
+						for (int i = HAL_IDO; i < HAL_XXO; vActuatorLoad(i++, 60, 45, 5, 45, 5));	// ADC 0~i
+					#elif 0
+						pcf8574DevSetState(1, 0x20, 1);
+						pcf8574DevSetState(1, 0x1E, 1);
+						pcf8574DevSetState(1, 0x01, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x3F, 0);
+					#elif 0
+						pcf8574DevSetState(1, 0x20, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x20, 0);
+						pcf8574DevSetState(1, 0x10, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x10, 0);
+						pcf8574DevSetState(1, 0x08, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x08, 0);
+						pcf8574DevSetState(1, 0x04, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x04, 0);
+						pcf8574DevSetState(1, 0x02, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x02, 0);
+						pcf8574DevSetState(1, 0x01, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x01, 0);
+					#elif 0
+						pcf8574DevSetState(1, 0x38, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x38, 0);
+						pcf8574DevSetState(1, 0x07, 1);
+						vTaskDelay(150);
+						pcf8574DevSetState(1, 0x07, 0);
+					#endif
+					} else
+					#endif
 				#endif
-					{	
-						iRV = erOUT_OF_RANGE; 
-					}
+					{ iRV = erOUT_OF_RANGE; }
 					break;
 				}
 			case CHR_A: {
