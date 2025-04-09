@@ -29,6 +29,8 @@
 #include "errors_events.h"
 #include "string_to_values.h"
 #include "terminalX.h"
+#include "x_ubuf.h"
+
 #if (appUSE_ACTUATORS > 0)
 	#include "actuators.h"
 #endif
