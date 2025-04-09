@@ -3,6 +3,7 @@
 #include "hal_platform.h"
 
 #include "commands.h"
+#include "filesys.h"
 #include "hal_device_includes.h"
 #if (halUSE_I2C > 0)
 	#include "hal_i2c_common.h"
@@ -357,7 +358,7 @@ static void vCommandInterpret(command_t * psC) {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if	(appLITTLEFS == 1)
 		case CHR_ENQ: {
-			halFlashFileDisplay(psR, slFILENAME);
+			xFileSysFileDisplay(psR, slFILENAME);
 			unlink(slFILENAME);						/* c-E */
 			break;
 		}
@@ -518,7 +519,7 @@ static void vCommandInterpret(command_t * psC) {
 									  (Option == 2) ? makeMASK08x24(1,0,1,1,1,0,0,0,0) :
 									  (Option == 1) ? makeMASK08x24(1,0,1,1,0,0,0,0,0) :
 												  	  makeMASK08x24(1,0,1,0,0,0,0,0,0);
-					halFlashInfoFS(psR, "");
+					xFileSysListPartition(psR);
 				#else
 					report(psR, "No Little/Smart FS support");
 				#endif
