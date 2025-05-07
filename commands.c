@@ -269,7 +269,7 @@ ubuf_t * psHB = NULL;
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(report_t * psR, int cCmd) {
-	report(psR, " {E=%d L=%d H=%d I=%d cCmd=x%02X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+	xReport(psR, " {E=%d L=%d H=%d I=%d cCmd=x%02X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
 }
 
 /**
@@ -316,7 +316,7 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		if (cCmd == CHR_CR || cCmd == CHR_LF) {			// 
 			if (cmdFlag.idx) {							// something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
-				report(psR, strNL);
+				xReport(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0)					// new/modified command
 					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
@@ -339,11 +339,11 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		cmdFlag.his = 0;
 	}
 	if (bEcho)											// if requested
-		report(psR, "\r\e[0K");							// clear line
+	xReport(psR, "\r\e[0K");								// clear line
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
 		if (bEcho)
-			report(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// optional refresh whole line
+		xReport(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// refresh whole line
 	}
 	return iRV;
 }
@@ -485,7 +485,6 @@ static void vCommandInterpret(command_t * psC) {
 				}
 			case CHR_A: {
 				#if	(HAL_XXO > 0)
-					psR->fNoLock = 1;
 					xTaskActuatorReport(psR);
 				#else
 					PX("No actuators present" strNL);
@@ -496,7 +495,6 @@ static void vCommandInterpret(command_t * psC) {
 				#define	blobBUFFER_SIZE			1024
 				u8_t * pBuffer = malloc(blobBUFFER_SIZE);
 				size_t	SizeBlob = blobBUFFER_SIZE;
-				psR->fNoLock = 1;
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 				SizeBlob = blobBUFFER_SIZE;
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
@@ -523,7 +521,7 @@ static void vCommandInterpret(command_t * psC) {
 												  	  makeMASK08x24(1,0,1,0,0,0,0,0,0);
 					xFileSysListPartition(psR);
 				#else
-					report(psR, "No Little/Smart FS support");
+					xReport(psR, "No Little/Smart FS support");
 				#endif
 				break;
 			}
@@ -594,13 +592,13 @@ static void vCommandInterpret(command_t * psC) {
 
 		// ############################ Normal (non-dangerous) options
 		case CHR_F: halEventReportFlags(psR); break;
-		case CHR_H: report(psR, "%s", HelpMessage); break;
+		case CHR_H: xReport(psR, "%s", HelpMessage); break;
 
 		case CHR_I: {
 			#if	(appUSE_IDENT > 0)
 				vID_Report(psR);
 			#else
-				report(psR, "No identity support" strNL);
+				xReport(psR, "No identity support" strNL);
 			#endif
 			break;
 		}
