@@ -696,9 +696,6 @@ int xCommandProcess(command_t * psC) {
 		psHB->f_history = 1;
 	}
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
-	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
-		xStdOutBufLock(portMAX_DELAY);
-	#endif
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
 		vCommandInterpret(psC);
@@ -706,9 +703,6 @@ int xCommandProcess(command_t * psC) {
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1)
-	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
-		xStdOutBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
-	#endif
 		xCommandBuffer(&psC->sRprt, termSTDIN_TERM);
 	return iRV;
 }
