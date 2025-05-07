@@ -279,7 +279,7 @@ void xCommandReport(report_t * psR, int cCmd) {
  * @param
  * @return
  */
-int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
+int	xCommandBuffer(report_t * psR, u8_t cCmd) {
 	int iRV = erSUCCESS;
 	if (cCmd == CHR_ESC) {
 		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
@@ -338,11 +338,9 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd, bool bEcho) {
 		}
 		cmdFlag.his = 0;
 	}
-	if (bEcho)											// if requested
 	xReport(psR, "\r\e[0K");								// clear line
 	if (cmdFlag.idx) {									// anything in buffer?
 		cmdFlag.cli = 1;								// ensure flag is set
-		if (bEcho)
 		xReport(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// refresh whole line
 	}
 	return iRV;
@@ -355,7 +353,7 @@ static void vCommandInterpret(command_t * psC) {
 	u8_t cCmd = *psC->pCmd++;
 	report_t * psR = &psC->sRprt;
 	if (cmdFlag.cli) {
-		xCommandBuffer(psR, cCmd, psR->fEcho);
+		xCommandBuffer(psR, cCmd);
 	} else {
 		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if	(appLITTLEFS == 1)
@@ -678,7 +676,7 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_Z: halFlashReportMD5(psR); break;
 		#endif
 
-		default: xCommandBuffer(psR, cCmd, psR->fEcho);
+		default: xCommandBuffer(psR, cCmd);
 		}
 	}
 	if (iRV < erSUCCESS)
@@ -708,9 +706,9 @@ int xCommandProcess(command_t * psC) {
 	}
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1)
-		xCommandBuffer(&psC->sRprt, termSTDIN_TERM, psC->sRprt.fEcho);
 	#if (configCONSOLE_UART > -1 && appWRAP_STDIO == 1)
 		xStdOutBufUnLock();			// Unlock STDIO buffer, same rules as earlier locking
 	#endif
+		xCommandBuffer(&psC->sRprt, termSTDIN_TERM);
 	return iRV;
 }
