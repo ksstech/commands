@@ -268,8 +268,8 @@ ubuf_t * psHB = NULL;
 
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
-void xCommandReport(report_t * psR, int cCmd) {
-	xReport(psR, " {E=%d L=%d H=%d I=%d cCmd=x%02X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, cCmd);
+void xCommandReport(report_t * psR, int iChr) {
+	xReport(psR, " {E=%d L=%d H=%d I=%d Chr=x%X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, iChr);
 }
 
 /**
@@ -279,9 +279,9 @@ void xCommandReport(report_t * psR, int cCmd) {
  * @param
  * @return
  */
-int	xCommandBuffer(report_t * psR, u8_t cCmd) {
+int	xCommandBuffer(report_t * psR, int iChr) {
 	int iRV = erSUCCESS;
-	if (cCmd == CHR_ESC) {
+	if (iChr == CHR_ESC) {
 		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
 			cmdFlag.esc = 1;		// set ESC flag
 			cmdFlag.his = 0;
@@ -289,31 +289,31 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd) {
 			cmdFlag.u16 = 0;		// buffer NOT empty or NOT history mode, reset to default
 		}
 
-	} else if (cmdFlag.esc && cCmd == CHR_L_SQUARE) {
+	} else if (cmdFlag.esc && iChr == CHR_L_SQUARE) {
 		cmdFlag.lsb = 1;			// Left Square Bracket received, set flag
 		cmdFlag.cli = 1;			// force into CLI mode for next key
 
 	} else if (cmdFlag.esc && cmdFlag.lsb) {
 		// ESC[ received, next code is extended/function key....
-		if (cCmd == CHR_A) {							// Cursor UP
+		if (iChr == CHR_A) {							// Cursor UP
 			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
 			if (cmdFlag.idx) cmdFlag.his = 1;
-		} else if (cCmd == CHR_B) {						// Cursor DOWN
+		} else if (iChr == CHR_B) {						// Cursor DOWN
 			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
 			if (cmdFlag.idx) cmdFlag.his = 1;
-		} else if (cCmd == CHR_C) {						// Cursor RIGHT
+		} else if (iChr == CHR_C) {						// Cursor RIGHT
 			//
-		} else if (cCmd == CHR_D) {						// Cursor LEFT
+		} else if (iChr == CHR_D) {						// Cursor LEFT
 			//
 		} else {
-			xCommandReport(psR, cCmd);
+			xCommandReport(psR, iChr);
 		}
 		cmdFlag.lsb = 0;
 		cmdFlag.esc = 0;
 
 	} else {
-//		if (TST_STDIN_TERM(cCmd)) {						// c/newLIB defined line terminator(s)?
-		if (cCmd == CHR_CR || cCmd == CHR_LF) {			// 
+//		if (TST_STDIN_TERM(iChr)) {						// c/newLIB defined line terminator(s)?
+		if (iChr == CHR_CR || iChr == CHR_LF) {			// 
 			if (cmdFlag.idx) {							// something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
 				xReport(psR, strNL);
@@ -323,18 +323,18 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd) {
 			}
 			cmdFlag.u16 = 0;
 
-		} else if (cCmd == CHR_BS || cCmd == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
+		} else if (iChr == CHR_BS || iChr == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
 			if (cmdFlag.idx) {							// yes,
 				--cmdFlag.idx;							// step 1 slot back
 				if (cmdFlag.idx == 0)
 					cmdFlag.u16 = 0;					// buffer empty, reset to default (non cli/history) mode
 			}
 
-		} else if (isprint(cCmd) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
-			cmdBuf[cmdFlag.idx++] = cCmd;				// store character & step index
+		} else if (isprint(iChr) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
+			cmdBuf[cmdFlag.idx++] = iChr;				// store character & step index
 
-		} else if (cCmd != CHR_LF && cCmd != CHR_CR) {
-			xCommandReport(psR, cCmd);
+		} else if (iChr != CHR_LF && iChr != CHR_CR) {
+			xCommandReport(psR, iChr);
 		}
 		cmdFlag.his = 0;
 	}
@@ -350,12 +350,12 @@ int	xCommandBuffer(report_t * psR, u8_t cCmd) {
 
 static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
-	u8_t cCmd = *psC->pCmd++;
+	u8_t iChr = *psC->pCmd++;
 	report_t * psR = &psC->sRprt;
 	if (cmdFlag.cli) {
-		xCommandBuffer(psR, cCmd);
+		xCommandBuffer(psR, iChr);
 	} else {
-		switch (cCmd) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
+		switch (iChr) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
 		#if	(appLITTLEFS == 1)
 		case CHR_ENQ: {
 			xFileSysFileDisplay(psR, slFILENAME);
@@ -395,41 +395,41 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_7:
 			case CHR_8:
 			case CHR_9: {
-				cCmd -= CHR_0;
+				iChr -= CHR_0;
 				#if (appPLTFRM == HW_EM1P2)
-					if (cCmd < m90e26CALIB_NUM) {
-						m90e26LoadNVSConfig(0, cCmd);
-						m90e26LoadNVSConfig(1, cCmd);
+					if (iChr < m90e26CALIB_NUM) {
+						m90e26LoadNVSConfig(0, iChr);
+						m90e26LoadNVSConfig(1, iChr);
 					} else
 				#elif (appPLTFRM == HW_EM3P2)
-					if (cCmd < m90e36CALIB_NUM) {
+					if (iChr < m90e36CALIB_NUM) {
 						m90e36Report();
-						m90e36LoadNVSConfig(0, cCmd);
-						m90e36LoadNVSConfig(1, cCmd);
+						m90e36LoadNVSConfig(0, iChr);
+						m90e36LoadNVSConfig(1, iChr);
 						m90e36Report();
 					} else
 				#elif (appPLTFRM==HW_AC01 || appPLTFRM==HW_DK41 || appPLTFRM==HW_KC868A4 || appPLTFRM==HW_KC868A6 || appPLTFRM==HW_SP1PM || appPLTFRM==HW_SP2PM)
-					if (cCmd < HAL_XXO) {
-						u8_t Type = xActuatorGetType(cCmd);
+					if (iChr < HAL_XXO) {
+						u8_t Type = xActuatorGetType(iChr);
 						switch(Type) {
 						#if (HAL_XDO > 0)
 							case actTYPE_DIG: {
-								vActuatorLoad(cCmd, 3, 0, 1000, 0, 1000);			// LED/Relay 0~7
+								vActuatorLoad(iChr, 3, 0, 1000, 0, 1000);			// LED/Relay 0~7
 								#if	(appPLTFRM == HW_AC01)
-									vActuatorLoad(cCmd + 8, 3, 0, 1000, 0, 1000);	// Relays 8~15
+									vActuatorLoad(iChr + 8, 3, 0, 1000, 0, 1000);	// Relays 8~15
 								#endif
 								break;
 							}
 						#endif
 						#if (HAL_XPO > 0)
 							case actTYPE_PWM: {
-								vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// PWM 0~?
+								vActuatorLoad(iChr, 5, 250, 250, 250, 250);			// PWM 0~?
 								break;
 							}
 						#endif
 						#if (HAL_XAO > 0)
 							case actTYPE_ANA: {
-								vActuatorLoad(cCmd, 5, 250, 250, 250, 250);			// DAC 0~?
+								vActuatorLoad(iChr, 5, 250, 250, 250, 250);			// DAC 0~?
 								break;
 							}
 						#endif
@@ -438,7 +438,7 @@ static void vCommandInterpret(command_t * psC) {
 						}
 					} else
 					#if (appPLTFRM == HW_KC868A4 || appPLTFRM == HW_KC868A6)
-					if (cCmd == HAL_XXO) {
+					if (iChr == HAL_XXO) {
 					#if 1
 						for (int i = 0; i < HAL_IDO; vActuatorLoad(i++, 3, 0, 150, 0, 1850));		// Relay 0->i
 						for (int i = HAL_IDO; i < HAL_XXO; vActuatorLoad(i++, 60, 45, 5, 45, 5));	// ADC 0~i
@@ -676,7 +676,7 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_Z: halFlashReportMD5(psR); break;
 		#endif
 
-		default: xCommandBuffer(psR, cCmd);
+		default: xCommandBuffer(psR, iChr);
 		}
 	}
 	if (iRV < erSUCCESS)
