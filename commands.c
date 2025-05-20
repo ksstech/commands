@@ -14,7 +14,6 @@
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_memory.h"
 #include "hal_network.h"
-#include "hal_options.h"
 #include "hal_stdio.h"
 #include "hal_usart.h"
 #include "task_aep.h"
@@ -644,6 +643,7 @@ static void vCommandInterpret(command_t * psC) {
 		
 		#if (appPRODUCTION == 0)
 			case CHR_V: {
+				psR->sFM.aNL = 1;
 				halMCU_Report(psR);
 				halWL_ReportLx(psR);
 				#if defined(appIRMACS)
@@ -657,7 +657,6 @@ static void vCommandInterpret(command_t * psC) {
 				#endif
 				vSyslogReport(psR);
 				xSntpReport(psR);
-				timeoutReport(psR);
 				halVARS_ReportApp(psR);
 				#if (appDIAGS == 1)
 					halDiagsReport();
