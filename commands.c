@@ -658,7 +658,7 @@ static void vCommandInterpret(command_t * psC) {
 				vSyslogReport(psR);
 				xSntpReport(psR);
 				halVARS_ReportApp(psR);
-				#if (appDIAGS == 1)
+				#if (appDIAGS > 0)
 					halDiagsReport();
 				#endif
 				break;
