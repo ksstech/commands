@@ -30,7 +30,7 @@
 #include "terminalX.h"
 #include "x_ubuf.h"
 
-#if (appUSE_ACTUATORS > 0)
+#if (HAL_XXO > 0)
 	#include "actuators.h"
 #endif
 #if (appUSE_IDENT > 0)
@@ -658,7 +658,7 @@ static void vCommandInterpret(command_t * psC) {
 				vSyslogReport(psR);
 				xSntpReport(psR);
 				halVARS_ReportApp(psR);
-				#if (appDIAGS > 0)
+				#if (appDIAGS == 2)
 					halDiagsReport();
 				#endif
 				break;
