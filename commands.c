@@ -30,7 +30,7 @@
 #include "terminalX.h"
 #include "x_ubuf.h"
 
-#if (HAL_XXO > 0)
+#if (appUSE_ACTUATORS > 0)
 	#include "actuators.h"
 #endif
 #if (appUSE_IDENT > 0)
@@ -80,10 +80,10 @@ static const char HelpMessage[] = {
 	#endif
 
 	"General:" strNL
-	#if	(appPRODUCTION == 0) && (HAL_XXO > 0)
+	#if	(appPRODUCTION == 0) && (appUSE_ACTUATORS > 0)
 	"ACT\t(0-x) Trigger selected actuator" strNL
 	#endif
-	#if	(HAL_XXO > 0)
+	#if	(appUSE_ACTUATORS > 0)
 	"ACT\t(A)ctuators Report" strNL
 	#endif
 	#if	(appPRODUCTION == 0)
@@ -168,7 +168,7 @@ static const char HelpMessage[] = {
 	#endif
 	"Extended commands:" strNL
 	"\treboot | register | upgrade | show W0 [... [W23]]" strNL
-	#if	(HAL_XXO > 0)
+	#if	(appUSE_ACTUATORS > 0)
 	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt" strNL
 	"ACT\tload|update ch# Rpt tFI tON tFO tOFF" strNL
 	"ACT\tadjust ch# stage# Adj" strNL
@@ -240,7 +240,7 @@ static const char HelpMessage[] = {
 		#if	(HAL_GAI > 0)
 		"\tmode /gai idx attn=0~11db width=9~11]" strNL
 		#endif
-		#if	(HAL_XXO > 0)
+		#if	(appUSE_ACTUATORS > 0)
 		"\tmode /act idx TBC" strNL
 		#endif
 	"GMAP\tsense /uri idx Tsns Tlog [s1 [s2 [s3]]]" strNL
@@ -407,7 +407,7 @@ static void vCommandInterpret(command_t * psC) {
 						m90e36LoadNVSConfig(1, iChr);
 						m90e36Report();
 					} else
-				#elif (appPLTFRM==HW_AC01 || appPLTFRM==HW_DK41 || appPLTFRM==HW_KC868A4 || appPLTFRM==HW_KC868A6 || appPLTFRM==HW_SP1PM || appPLTFRM==HW_SP2PM)
+				#elif (appUSE_ACTUATORS > 0)
 					if (iChr < HAL_XXO) {
 						u8_t Type = xActuatorGetType(iChr);
 						switch(Type) {
@@ -481,7 +481,7 @@ static void vCommandInterpret(command_t * psC) {
 					break;
 				}
 			case CHR_A: {
-				#if	(HAL_XXO > 0)
+				#if	(appUSE_ACTUATORS > 0)
 					xTaskActuatorReport(psR);
 				#else
 					PX("No actuators present" strNL);
