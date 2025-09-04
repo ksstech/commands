@@ -14,13 +14,13 @@
 #include "hal_mcu.h"				// halMCU_Report()
 #include "hal_memory.h"
 #include "hal_network.h"
-#include "hal_stdio.h"
 #include "hal_usart.h"
 #include "task_aep.h"
 #if (appSERVER_TNET == 1)
 	#include "server-tnet.h"
 #endif
 #include "statistics.h"
+#include "stdioX.h"
 #include "syslog.h"
 #include "systiming.h"
 #include "timeoutX.h"
@@ -310,7 +310,6 @@ int	xCommandBuffer(report_t * psR, int iChr) {
 		cmdFlag.esc = 0;
 
 	} else {
-//		if (TST_STDIN_TERM(iChr)) {						// c/newLIB defined line terminator(s)?
 		if (iChr == CHR_CR || iChr == CHR_LF) {			// 
 			if (cmdFlag.idx) {							// something in buffer?
 				cmdBuf[cmdFlag.idx] = 0;				// terminate command
