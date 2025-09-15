@@ -41,10 +41,10 @@
 #if (appUSE_RULES > 0)
 	#include "rules.h"				// xRulesProcessText
 #endif
-#if (appAEP > 0)
+#if (cmakeAEP > 0)
 	#include "MQTTClient.h"			// QOSx levels
 #endif
-#if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
+#if (halUSE_BSP == 1 && cmakeGUI == 4 && cmakePLTFRM == HW_EV2)
 	#include "gui_main.hpp"
 #endif
 #if (appCLIENT_SNTP > 0)
@@ -379,7 +379,7 @@ static void vCommandInterpret(command_t * psC) {
 
 		// ########################### Unusual (possibly dangerous) options
 		#if	(appPRODUCTION == 0)
-			#if	(appDIAGS > 0)
+			#if	(cmakeDIAGS > 0)
 				case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
 			#endif
 			case CHR_0:
@@ -393,12 +393,12 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_8:
 			case CHR_9: {
 				iChr -= CHR_0;
-				#if (appPLTFRM == HW_EM1P2)
+				#if (cmakePLTFRM == HW_EM1P2)
 					if (iChr < m90e26CALIB_NUM) {
 						m90e26LoadNVSConfig(0, iChr);
 						m90e26LoadNVSConfig(1, iChr);
 					} else
-				#elif (appPLTFRM == HW_EM3P2)
+				#elif (cmakePLTFRM == HW_EM3P2)
 					if (iChr < m90e36CALIB_NUM) {
 						m90e36Report();
 						m90e36LoadNVSConfig(0, iChr);
@@ -412,7 +412,7 @@ static void vCommandInterpret(command_t * psC) {
 						#if (HAL_XDO > 0)
 							case actTYPE_DIG: {
 								vActuatorLoad(iChr, 3, 0, 1000, 0, 1000);			// LED/Relay 0~7
-								#if	(appPLTFRM == HW_AC01)
+								#if	(cmakePLTFRM == HW_AC01)
 									vActuatorLoad(iChr + 8, 3, 0, 1000, 0, 1000);	// Relays 8~15
 								#endif
 								break;
@@ -434,7 +434,7 @@ static void vCommandInterpret(command_t * psC) {
 							break;
 						}
 					} else
-					#if (appPLTFRM == HW_KC868A4 || appPLTFRM == HW_KC868A6)
+					#if (cmakePLTFRM == HW_KC868A4 || cmakePLTFRM == HW_KC868A6)
 					if (iChr == HAL_XXO) {
 						#if 1
 							for (int i = 0; i < HAL_IDO; vActuatorLoad(i++, 3, 0, 150, 0, 1850));		// Relay 0->i
@@ -497,11 +497,11 @@ static void vCommandInterpret(command_t * psC) {
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
 				SizeBlob = blobBUFFER_SIZE;
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
-				#if	(appPLTFRM == HW_EM1P2)
+				#if	(cmakePLTFRM == HW_EM1P2)
 					SizeBlob = blobBUFFER_SIZE;
 					halFlashReportBlob(psR, halFLASH_STORE, m90e26STORAGE_KEY, pBuffer, &SizeBlob);
 				#endif
-				#if	(appPLTFRM == HW_SP2PM)
+				#if	(cmakePLTFRM == HW_SP2PM)
 					SizeBlob = blobBUFFER_SIZE;
 					halFlashReportBlob(psR, halFLASH_STORE, ade7953STORAGE_KEY, pBuffer, &SizeBlob);
 				#endif
@@ -578,7 +578,7 @@ static void vCommandInterpret(command_t * psC) {
 				#if	(HAL_SSD1306 > 0)
 					ssd1306Report(psR);
 				#endif
-				#if (halUSE_BSP == 1 && appGUI == 4 && appPLTFRM == HW_EV2)
+				#if (halUSE_BSP == 1 && cmakeGUI == 4 && cmakePLTFRM == HW_EV2)
 					psR->sFM = REP_LVGL(0,1,1,1,1,1,1,1,LV_PART_ANY) ;
 					vGuiObjectsReport(psR, NULL);
 				#endif
@@ -646,19 +646,19 @@ static void vCommandInterpret(command_t * psC) {
 				psR->sFM.aNL = 1;
 				halMCU_Report(psR);
 				halWL_ReportLx(psR);
-				#if defined(appIRMACS)
+				#if defined(cmakeIRMACS)
 					vTnetReport(psR);
 				#endif
 				#if (HAL_MB_SEN > 0 || HAL_MB_ACT > 0)
 					xEpMBC_ClientReport(psR);
 				#endif
-				#if (appAEP > 0)
+				#if (cmakeAEP > 0)
 					xAEP_Report(psR);
 				#endif
 				vSyslogReport(psR);
 				xSntpReport(psR);
 				halVARS_ReportApp(psR);
-				#if (appDIAGS == 2)
+				#if (cmakeDIAGS == 2)
 					halDiagsReport();
 				#endif
 				break;
