@@ -412,7 +412,7 @@ static void vCommandInterpret(command_t * psC) {
 						#if (HAL_XDO > 0)
 							case actTYPE_DIG: {
 								vActuatorLoad(iChr, 3, 0, 1000, 0, 1000);			// LED/Relay 0~7
-								#if	(cmakePLTFRM == HW_AC01)
+								#if	(cmakePLTFRM == HW_AC01 || cmakePLTFRM == HW_RS01)
 									vActuatorLoad(iChr + 8, 3, 0, 1000, 0, 1000);	// Relays 8~15
 								#endif
 								break;
