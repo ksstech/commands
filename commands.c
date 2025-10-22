@@ -588,7 +588,7 @@ static void vCommandInterpret(command_t * psC) {
 		#endif						// (appPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
-		case CHR_F: halEventReportFlags(psR); break;
+		case CHR_F: halEventReportFlags(); break;
 		case CHR_H: xReport(psR, "%s", HelpMessage); break;
 
 		case CHR_I: {
