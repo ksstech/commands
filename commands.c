@@ -347,7 +347,7 @@ int	xCommandBuffer(report_t * psR, int iChr) {
 
 static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
-	u8_t iChr = *psC->pCmd++;
+	int iChr = *psC->pCmd++;
 	report_t * psR = &psC->sRprt;
 	if (cmdFlag.cli) {
 		xCommandBuffer(psR, iChr);
