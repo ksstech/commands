@@ -65,73 +65,73 @@
 
 static const char HelpMessage[] = {
 	#ifdef ESP_PLATFORM
-	"ESP32 Specific:" strNL
-	"\tc-E delete 'syslog.txt'" strNL
-	"\tc-P switch Platform & reboot" strNL
-	"\tc-Q Toggle QOS 0->1->2->0" strNL
-	"\tc-R Revert to previous FW" strNL
-	#if (appPRODUCTION == 0)
-	"\tc-T Immediate restart" strNL
-	"\tc-U Generate 'Invalid memory access' crash" strNL
-	#endif
-	"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
-	"\tc-Y Reboot current FW as [AP]STA (delete VARS blob)" strNL
+		"ESP32 Specific:" strNL
+		"\tc-E delete 'syslog.txt'" strNL
+		"\tc-P switch Platform & reboot" strNL
+		"\tc-Q Toggle QOS 0->1->2->0" strNL
+		"\tc-R Revert to previous FW" strNL
+		#if (appPRODUCTION == 0)
+			"\tc-T Immediate restart" strNL
+			"\tc-U Generate 'Invalid memory access' crash" strNL
+		#endif
+		"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
+		"\tc-Y Reboot current FW as [AP]STA (delete VARS blob)" strNL
 	#endif
 
 	"General:" strNL
 	#if	(appPRODUCTION == 0) && (appUSE_ACTUATORS > 0)
-	"ACT\t(0-x) Trigger selected actuator" strNL
+		"ACT\t(0-x) Trigger selected actuator" strNL
 	#endif
 	#if	(appUSE_ACTUATORS > 0)
-	"ACT\t(A)ctuators Report" strNL
+		"ACT\t(A)ctuators Report" strNL
 	#endif
 	#if	(appPRODUCTION == 0)
-	"\t(B)lob report" strNL
-	#if	(appLITTLEFS == 1)
-	"\t(C)ontent of LFS" strNL
-	#endif
-	"\t(D)iagnostics ["
+		"\t(B)lob report" strNL
+		#if	(appLITTLEFS == 1)
+			"\t(C)ontent of LFS" strNL
+		#endif
+		"\t(D)iagnostics ["
 		#if (HAL_GDI > 0)
-		"gpi\t"
+			"gpi\t"
 		#endif
 		#if (HAL_ADE7953 > 0)
-		"ade7953\t"
+			"ade7953\t"
 		#endif
 		#if (HAL_DIGOLE > 0)
-		"digole\t"
+			"digole\t"
 		#endif
 		#if	(HAL_DS18X20 > 0)
-		"ds18x20\t"
+			"ds18x20\t"
 		#endif
 		#if (HAL_LIS2HH12 > 0)
-		"lis2hh\t"
+			"lis2hh\t"
 		#endif
 		#if	(HAL_LTR329ALS > 0)
-		"ltr329\t"
+			"ltr329\t"
 		#endif
 		#if	(HAL_M90E26 > 0)
-		"m90e26\t"
+			"m90e26\t"
 		#endif
 		#if	(HAL_MCP342X > 0)
-		"mcp342x\t"
+			"mcp342x\t"
 		#endif
 		#if	(HAL_MPL3115 > 0)
-		"mpl3115\t"
+			"mpl3115\t"
 		#endif
 		#if	(HAL_ONEWIRE > 0)
-		"1Wire\t"
+			"1Wire\t"
 		#endif
 		#if (HAL_PCA9555 > 0)
-		"pca9555\t"
+			"pca9555\t"
 		#endif
 		#if (HAL_PCF8574 > 0)
-		"pcf8574\t"
+			"pcf8574\t"
 		#endif
 		#if	(HAL_SI70XX > 0)
-		"si70xx\t"
+			"si70xx\t"
 		#endif
 		#if	(HAL_SSD1306 > 0)
-		"ssd1306\t"
+			"ssd1306\t"
 		#endif
 	"]" strNL
 	#endif
@@ -139,21 +139,21 @@ static const char HelpMessage[] = {
 	"\t(F)lags Status" strNL
 	"\t(H)elp screen display" strNL
 	#if	(appUSE_IDENT > 0)
-	"\t(I)dent table" strNL
+		"\t(I)dent table" strNL
 	#endif
 	"\t(L)ocation info" strNL
 	"\t(M)emory info" strNL
 	"\t(N)etwork (IP4) info" strNL
 	"\t(O)ptions display" strNL
 	#if	(appPRODUCTION == 0)
-	"\t(P)artitions report" strNL
+		"\t(P)artitions report" strNL
 	#endif
 	"\t(R)ules display" strNL
 	#if (appUSE_SENSORS > 0)
-	"\t(S)ensors statistics" strNL
+		"\t(S)ensors statistics" strNL
 	#endif
 	#if	(appPRODUCTION == 0)
-	"\t(T)imer/Scatter Info" strNL
+		"\t(T)imer/Scatter Info" strNL
 	#endif
 	"\t(U)tilization (task) statistics" strNL
 	"\t(V)erbose system info" strNL
@@ -168,10 +168,10 @@ static const char HelpMessage[] = {
 	"Extended commands:" strNL
 	"\treboot | register | upgrade | show W0 [... [W23]]" strNL
 	#if	(appUSE_ACTUATORS > 0)
-	"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt" strNL
-	"ACT\tload|update ch# Rpt tFI tON tFO tOFF" strNL
-	"ACT\tadjust ch# stage# Adj" strNL
-	"ACT\tque|seq ch# S0 [... S23]]" strNL
+		"ACT\tdispense ch# fld# Rpt tFI tON tFO tOFF Amt" strNL
+		"ACT\tload|update ch# Rpt tFI tON tFO tOFF" strNL
+		"ACT\tadjust ch# stage# Adj" strNL
+		"ACT\tque|seq ch# S0 [... S23]]" strNL
 	#endif
 	"GMAP\tioset option para1 para2" strNL
 	"GMAP\tioset 141(nwmo) {0->3} off/sta/ap/sta+ap" strNL
