@@ -382,7 +382,7 @@ static void vCommandInterpret(command_t * psC) {
 			#if	(cmakeDIAGS > 0)
 				case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
 			#endif
-			#if (halUSE_I2C > 0 && cmakeI2C_MASTER == 2)
+			#if (halUSE_I2C > 0 && cmakeI2C_MASTER == 2 && I2C_FAULT_INJECT > 0)
 			case CHR_K: halI2C_FaultInject(1); break;	// 'K' = arm 1 I2C fault (recovery-path test)
 			#endif
 			case CHR_0:
