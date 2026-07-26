@@ -1,4 +1,4 @@
-// commands.c - Copyright (c) 2017-25 Andre M. Maree / KSS Technologies (Pty) Ltd.
+// commands.c - Copyright (c) 2017-26 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
 #include "hal_platform.h"
 
@@ -382,9 +382,6 @@ static void vCommandInterpret(command_t * psC) {
 			#if	(cmakeDIAGS > 0)
 				case CHR_SUB: sSysFlags.key_eof = 1; break;	// Ctrl-Z to terminate diags?
 			#endif
-			#if (halUSE_I2C > 0 && cmakeI2C_MASTER == 2 && I2C_FAULT_INJECT > 0)
-			case CHR_K: halI2C_FaultInject(1); break;	// 'K' = arm 1 I2C fault (recovery-path test)
-			#endif
 			case CHR_0:
 			case CHR_1:
 			case CHR_2:
@@ -588,6 +585,12 @@ static void vCommandInterpret(command_t * psC) {
 				vUBufReport(psR, psHB);
 				break;
 			}
+			#if (halUSE_I2C > 0 && cmakeI2C_MASTER > 0 && I2C_FAULT_INJECT > 0)
+			case CHR_K: {								// 'K' = arm 1 I2C fault (recovery-path test)
+				halI2C_FaultInject(1);
+				break;
+			}
+			#endif
 		#endif						// (appPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
