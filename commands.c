@@ -159,6 +159,7 @@ static const char HelpMessage[] = {
 	"\t(V)erbose system info" strNL
 	"\t(W)ifi Stats" strNL
 	#if	(appPRODUCTION == 0)
+		"\t(Q)printfx dual core stress test" strNL
 		#if (appFIX_MD5 == 1)
 			"\t(X)MD5 Remove" strNL
 			"\t(Y)MD5 Restore" strNL
@@ -352,7 +353,7 @@ static void vCommandInterpret(command_t * psC) {
 	if (cmdFlag.cli) {
 		xCommandBuffer(psR, iChr);
 	} else {
-		switch (iChr) {	// CHR_E CHR_G CHR_J CHR_K CHR_Q CHR_X CHR_Y CHR_Z
+		switch (iChr) {	// CHR_E CHR_G CHR_J CHR_K CHR_X CHR_Y CHR_Z
 		#if	(appLITTLEFS == 1)
 		case CHR_ENQ: {
 			xFileSysFileDisplay(psR, slFILENAME);
@@ -680,6 +681,7 @@ static void vCommandInterpret(command_t * psC) {
 		case CHR_W: halWL_Report(psR); break;
 
 		#if (appPRODUCTION == 0)
+			case CHR_Q: vPrintfStressTest(0); break;	// 0 = default duration, returns immediately
 			#if (appFIX_MD5 == 1)
 				case CHR_X: halFlashRemoveMD5(psR); break;
 				case CHR_Y: halFlashRestoreMD5(psR); break;
