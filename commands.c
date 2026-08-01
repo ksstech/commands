@@ -15,6 +15,7 @@
 #include "hal_memory.h"
 #include "hal_network.h"
 #include "hal_usart.h"
+#include "esp_phy_init.h"			// esp_phy_erase_cal_data_in_nvs()
 #include "task_aep.h"
 #if (appSERVER_TNET == 1)
 	#include "server-tnet.h"
@@ -75,6 +76,7 @@ static const char HelpMessage[] = {
 			"\tc-U Generate 'Invalid memory access' crash" strNL
 		#endif
 		"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
+		"\tc-X Erase PHY RF calibration & reboot (forces full recalibration)" strNL
 		"\tc-Y Reboot current FW as [AP]STA (delete VARS blob)" strNL
 	#endif
 
@@ -370,6 +372,20 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_ETB: {				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
 			halFlashSetBootNumber(CurPart, fotaERASE_WIFI|fotaERASE_VARS|fotaERASE_DEVNVS|fotaBOOT_REBOOT);
+			break;
+		}
+		/* PHY RF calibration is written to the "phy" NVS namespace on first boot and then persists
+		 * INDEFINITELY. If that first calibration was taken in poor RF/thermal conditions the mote
+		 * is permanently handicapped on TRANSMIT, silently: the data loads without error, nothing
+		 * reports it, and RSSI cannot show it because RSSI is a RECEIVE measurement. Observed on
+		 * 30aea432c71c - DHCP took 29.7s vs 1.43s for a mote 15cm away on the same AP; erasing and
+		 * recalibrating fixed it outright, at 10dB WORSE signal. See analysis/uart-console-io-flow.md
+		 * 33. esp_phy_erase_cal_data_in_nvs() erases ONLY the "phy" namespace, so credentials, all
+		 * ioset options, otadata and littlefs survive - unlike a full chip erase. */
+		case CHR_CAN: {															// c-X Erase PHY RF calibration then reboot
+			int iRV1 = esp_phy_erase_cal_data_in_nvs();
+			xReport(psR, "PHY calibration erased (%d), restarting to force full recalibration" strNL, iRV1);
+			esp_restart();
 			break;
 		}
 		case CHR_EM: {															// c-Y Erase VARS blob then reboot
