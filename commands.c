@@ -698,10 +698,12 @@ static void vCommandInterpret(command_t * psC) {
 
 		case CHR_W: halWL_Report(psR); break;
 
-		#if (appPRODUCTION == 0)
+		#if (printfxTESTS > 0)
 			case CHR_E: vPrintfEdgeTest(); break;		// value conversion boundary tests
 			case CHR_G: vPrintfSpeedTest(0); break;		// conversion + console speed benchmark
 			case CHR_Q: vPrintfStressTest(0); break;	// 0 = default duration, returns immediately
+		#endif
+		#if (appPRODUCTION == 0)
 			#if (appFIX_MD5 == 1)
 				case CHR_X: halFlashRemoveMD5(psR); break;
 				case CHR_Y: halFlashRestoreMD5(psR); break;
