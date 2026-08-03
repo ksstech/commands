@@ -160,10 +160,12 @@ static const char HelpMessage[] = {
 	"\t(U)tilization (task) statistics" strNL
 	"\t(V)erbose system info" strNL
 	"\t(W)ifi Stats" strNL
-	#if	(appPRODUCTION == 0)
+	#if (printfxTESTS > 0)
 		"\t(E)printfx value conversion edge tests" strNL
 		"\t(G)printfx speed benchmark" strNL
 		"\t(Q)printfx dual core stress test" strNL
+	#endif
+	#if	(appPRODUCTION == 0)
 		#if (appFIX_MD5 == 1)
 			"\t(X)MD5 Remove" strNL
 			"\t(Y)MD5 Restore" strNL
