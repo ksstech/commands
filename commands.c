@@ -520,7 +520,16 @@ static void vCommandInterpret(command_t * psC) {
 				size_t	SizeBlob = blobBUFFER_SIZE;
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_PART, pBuffer, &SizeBlob);
 				SizeBlob = blobBUFFER_SIZE;
-				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
+				/* The 'wifi' blob holds the PSK in CLEAR. With ioTNETauth at its default 0 the
+				 * telnet port is unauthenticated by deliberate choice (emergency access), which
+				 * makes that PSK the only access control the fleet has - so a single keystroke
+				 * must not print it. Shown only to a PRIVILEGED issuer: the UART console, or a
+				 * telnet session that actually authenticated. */
+				if (psC->Priv) {
+					halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_WIFI, pBuffer, &SizeBlob);
+				} else {
+					xReport(psR, "%s\t: present, contents need privileged access (UART or authenticated telnet)" strNL, halFLASH_KEY_WIFI);
+				}
 				SizeBlob = blobBUFFER_SIZE;
 				halFlashReportBlob(psR, halFLASH_STORE, halFLASH_KEY_VARS, pBuffer, &SizeBlob);
 				#if	(cmakePLTFRM == HW_EM1P2)
