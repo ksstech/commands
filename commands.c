@@ -376,7 +376,12 @@ static void vCommandInterpret(command_t * psC) {
 		#if (appPRODUCTION == 0)
 		case CHR_DC4: esp_restart(); break;										// c-T Immediate restart
 
+		/* c-U has no field use whatsoever - it exists solely to prove the crash/coredump path on a
+		 * bench unit. appPRODUCTION cannot exclude it (field builds ARE appPRODUCTION == 0), so it
+		 * now hangs off the bench umbrella and is genuinely absent from a release image. */
+		#if (benchTEST_CRASH)
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
+		#endif
 		#endif
 
 		case CHR_ETB: {				// c-W Erase VARS,WIFI M90E26/ADE7953 blobs then reboot
