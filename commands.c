@@ -257,16 +257,20 @@ static const char HelpMessage[] = {
 // #################################### Public variables ##########################################
 
 static u8_t cmdBuf[128]= { 0 };
+static u8_t DrawnLen = 0;			// characters WE last painted on the current row
 
 static union {
 	struct __attribute__((packed)) {
-		u16_t esc:1;
-		u16_t lsb:1;				// 1=Left Square Bracket (LSB) received, multi char key start
-		u16_t cli:1;				// 1= non single char UC command buffer mode
-		u16_t his:1;				// in HIStory mode, scrolling up (A) or down (B)
-		u16_t idx:12;				// slot in buffer where next key to be stored, 0=empty
+		u32_t esc:1;
+		u32_t lsb:1;				// 1=CSI '[' or SS3 'O' received, multi char key in progress
+		u32_t cli:1;				// 1= non single char UC command buffer mode
+		u32_t his:1;				// in HIStory mode, scrolling up (A) or down (B)
+		u32_t len:8;				// characters currently held in cmdBuf
+		u32_t cur:8;				// cursor/insertion point, 0 -> len
+		u32_t par:8;				// CSI parameter: 5=Ctrl (ESC[1;5D) 3=Option/Del 1,4,7,8=Home/End
+		u32_t spare:4;
 	};
-	u16_t u16;						// all flags + idx as a single value
+	u32_t u32;						// all flags + indices as a single value
 } cmdFlag;
 
 ubuf_t * psHB = NULL;
@@ -274,8 +278,49 @@ ubuf_t * psHB = NULL;
 // ############################### UART/TNET/HTTP Command interpreter ##############################
 
 void xCommandReport(report_t * psR, int iChr) {
-	xReport(psR, " {E=%d L=%d H=%d I=%d Chr=x%X}" strNL, cmdFlag.esc, cmdFlag.lsb, cmdFlag.his, cmdFlag.idx, iChr);
+	xReport(psR, " {E=%d L=%d H=%d l=%d c=%d P=%d Chr=x%X}" strNL, cmdFlag.esc, cmdFlag.lsb,
+			cmdFlag.his, cmdFlag.len, cmdFlag.cur, cmdFlag.par, iChr);
 }
+
+/**
+ * @brief	insert a character AT the cursor, shifting the tail right
+ * @note	cmdBuf is NOT NUL terminated while editing - cmdFlag.len is the authority and the
+ *			terminator is written only on submit.
+ */
+static void vCommandInsert(int iChr) {
+	if (cmdFlag.len >= (sizeof(cmdBuf) - 1))
+		return;										// full, ignore silently
+	if (cmdFlag.cur < cmdFlag.len)					// opening a gap mid line?
+		memmove(&cmdBuf[cmdFlag.cur + 1], &cmdBuf[cmdFlag.cur], cmdFlag.len - cmdFlag.cur);
+	cmdBuf[cmdFlag.cur++] = iChr;
+	++cmdFlag.len;
+}
+
+/**
+ * @brief	delete the character AT the cursor, shifting the tail left
+ */
+static void vCommandDelete(void) {
+	if (cmdFlag.cur >= cmdFlag.len)
+		return;										// nothing to the right of the cursor
+	memmove(&cmdBuf[cmdFlag.cur], &cmdBuf[cmdFlag.cur + 1], cmdFlag.len - cmdFlag.cur - 1);
+	--cmdFlag.len;
+}
+
+/**
+ * @brief	delete everything LEFT of the cursor, the tail becomes the whole line (Option-LEFT)
+ */
+static void vCommandKillLeft(void) {
+	if (cmdFlag.cur == 0)
+		return;
+	memmove(&cmdBuf[0], &cmdBuf[cmdFlag.cur], cmdFlag.len - cmdFlag.cur);
+	cmdFlag.len -= cmdFlag.cur;
+	cmdFlag.cur = 0;
+}
+
+/**
+ * @brief	delete from the cursor to the end of the line (Option-RIGHT)
+ */
+static void vCommandKillRight(void) { cmdFlag.len = cmdFlag.cur; }
 
 /**
  * @brief
@@ -287,66 +332,124 @@ void xCommandReport(report_t * psR, int iChr) {
 int	xCommandBuffer(report_t * psR, int iChr) {
 	int iRV = erSUCCESS;
 	if (iChr == CHR_ESC) {
-		if ((cmdFlag.idx && cmdFlag.his) || (cmdFlag.idx == 0 && cmdFlag.his == 0)) {
-			cmdFlag.esc = 1;		// set ESC flag
-			cmdFlag.his = 0;
-		} else {
-			cmdFlag.u16 = 0;		// buffer NOT empty or NOT history mode, reset to default
-		}
-
-	} else if (cmdFlag.esc && iChr == CHR_L_SQUARE) {
-		cmdFlag.lsb = 1;			// Left Square Bracket received, set flag
-		cmdFlag.cli = 1;			// force into CLI mode for next key
+		/* Start of an escape sequence, almost always a cursor key, so PRESERVE the buffer. The old
+		 * condition kept state only when the line was empty OR already in history mode, so pressing
+		 * an arrow after typing anything silently discarded the line AND dropped out of CLI mode -
+		 * which is why the cursor keys appeared not to work. */
+		cmdFlag.esc = 1;
 
 	} else if (cmdFlag.esc && cmdFlag.lsb) {
-		// ESC[ received, next code is extended/function key....
-		if (iChr == CHR_A) {							// Cursor UP
-			cmdFlag.idx = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) cmdFlag.his = 1;
-		} else if (iChr == CHR_B) {						// Cursor DOWN
-			cmdFlag.idx = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
-			if (cmdFlag.idx) cmdFlag.his = 1;
-		} else if (iChr == CHR_C) {						// Cursor RIGHT
-			//
-		} else if (iChr == CHR_D) {						// Cursor LEFT
-			//
-		} else {
-			xCommandReport(psR, iChr);
+		/* Digits accumulate a parameter, ';' starts the next one. Ctrl-LEFT arrives as ESC[1;5D
+		 * and older terminals send ESC[5D - resetting on ';' makes "par == 5" the Ctrl test for
+		 * BOTH, and "par == 3" the Option test. Returning early avoids redrawing mid sequence. */
+		if (isdigit(iChr)) {
+			cmdFlag.par = (cmdFlag.par * 10) + (iChr - '0');
+			return iRV;
+		}
+		if (iChr == CHR_SEMICOLON) {					// the NEXT parameter is the modifier
+			cmdFlag.par = 0;
+			return iRV;
+		}
+		switch (iChr) {
+		case CHR_A: {									// UP, older entry
+			int xLen = xUBufStringNxt(psHB, cmdBuf, sizeof(cmdBuf));
+			if (xLen) {									// 0 = at the oldest, leave the line alone
+				cmdFlag.len = cmdFlag.cur = xLen;
+				cmdFlag.his = 1;
+			}
+			break;
+		}
+		case CHR_B: {									// DOWN, newer entry
+			int xLen = xUBufStringPrv(psHB, cmdBuf, sizeof(cmdBuf));
+			cmdFlag.len = cmdFlag.cur = xLen;			// 0 = past the newest, back to an empty line
+			cmdFlag.his = xLen ? 1 : 0;
+			break;
+		}
+		case CHR_C:										// RIGHT
+			if (cmdFlag.par == 5)					cmdFlag.cur = cmdFlag.len;	// Ctrl = to END
+			else if (cmdFlag.par == 3)				vCommandKillRight();		// Option = KILL right
+			else if (cmdFlag.cur < cmdFlag.len)		++cmdFlag.cur;				// plain = 1 right
+			break;
+		case CHR_D:										// LEFT
+			if (cmdFlag.par == 5)					cmdFlag.cur = 0;			// Ctrl = to START
+			else if (cmdFlag.par == 3)				vCommandKillLeft();			// Option = KILL left
+			else if (cmdFlag.cur)					--cmdFlag.cur;				// plain = 1 left
+			break;
+		case CHR_H: cmdFlag.cur = 0; break;				// HOME (fn-LEFT), xterm/SS3 form
+		case CHR_F: cmdFlag.cur = cmdFlag.len; break;	// END (fn-RIGHT), xterm/SS3 form
+		case CHR_TILDE:									// VT style ESC[<par>~
+			if (cmdFlag.par == 1 || cmdFlag.par == 7)		cmdFlag.cur = 0;			// HOME
+			else if (cmdFlag.par == 4 || cmdFlag.par == 8)	cmdFlag.cur = cmdFlag.len;	// END
+			else if (cmdFlag.par == 3)						vCommandDelete();			// fn-delete
+			else											xCommandReport(psR, iChr);
+			break;
+		default: xCommandReport(psR, iChr);
 		}
 		cmdFlag.lsb = 0;
 		cmdFlag.esc = 0;
+		cmdFlag.par = 0;
+
+	} else if (cmdFlag.esc && (iChr == CHR_L_SQUARE || iChr == CHR_O)) {
+		cmdFlag.lsb = 1;			// CSI '[' or SS3 'O' received, a key sequence is in progress
+		cmdFlag.cli = 1;			// force into CLI mode for next key
+
+	} else if (cmdFlag.esc) {
+		/* ESC followed by anything that is NOT '[' or 'O' is the META/Alt form. macOS sends
+		 * ESC b / ESC f for Option-LEFT/RIGHT (Terminal.app "Option as Meta", iTerm2 "Esc+")
+		 * rather than the CSI form above. Consume it either way - falling through would INSERT
+		 * the letter, so a stray escape used to corrupt the line. */
+		cmdFlag.cli = 1;
+		if (iChr == CHR_b)			vCommandKillLeft();		// Option-LEFT, Meta form
+		else if (iChr == CHR_f)		vCommandKillRight();	// Option-RIGHT, Meta form
+		else						xCommandReport(psR, iChr);
+		cmdFlag.esc = 0;
 
 	} else {
-		if (iChr == CHR_CR || iChr == CHR_LF) {			// 
-			if (cmdFlag.idx) {							// something in buffer?
-				cmdBuf[cmdFlag.idx] = 0;				// terminate command
+		if (iChr == CHR_CR || iChr == CHR_LF) {			//
+			if (cmdFlag.len) {							// something in buffer?
+				cmdBuf[cmdFlag.len] = 0;				// terminate command
 				xReport(psR, strNL);
 				iRV = xRulesProcessText((char *)cmdBuf);// then execute
 				if (cmdFlag.his == 0)					// new/modified command
-					vUBufStringAdd(psHB, cmdBuf, cmdFlag.idx); // save into buffer
+					vUBufStringAdd(psHB, cmdBuf, cmdFlag.len); // save into buffer
 			}
-			cmdFlag.u16 = 0;
+			cmdFlag.u32 = 0;
+			DrawnLen = 0;			// strNL + the command's output moved us on, the row is not ours
 
-		} else if (iChr == CHR_BS || iChr == CHR_DEL) {	// BS (macOS screen DEL) to remove previous character
-			if (cmdFlag.idx) {							// yes,
-				--cmdFlag.idx;							// step 1 slot back
-				if (cmdFlag.idx == 0)
-					cmdFlag.u16 = 0;					// buffer empty, reset to default (non cli/history) mode
+		} else if (iChr == CHR_BS || iChr == CHR_DEL) {	// BS (macOS 'delete' sends DEL) remove char to the LEFT
+			if (cmdFlag.cur) {							// anything LEFT of the cursor?
+				--cmdFlag.cur;							// step back over it, then delete forward
+				vCommandDelete();
+				if (cmdFlag.len == 0)
+					cmdFlag.u32 = 0;					// buffer empty, reset to default (non cli/history) mode
 			}
 
-		} else if (isprint(iChr) && (cmdFlag.idx < (sizeof(cmdBuf) - 1))) {	// printable and space in buffer
-			cmdBuf[cmdFlag.idx++] = iChr;				// store character & step index
+		} else if (isprint(iChr)) {						// printable, INSERT at the cursor
+			vCommandInsert(iChr);						//  (bounds checked inside)
 
 		} else if (iChr != CHR_LF && iChr != CHR_CR) {
 			xCommandReport(psR, iChr);
 		}
-		cmdFlag.his = 0;
+		cmdFlag.his = 0;			// typing anything makes this a new/modified command
+	}								//  (esc is already 0 here, every ESC case is handled above)
+	/* cli follows "the buffer has content", EXCEPT while a sequence is in progress: after '[' the
+	 * buffer is empty but the next byte must still reach us rather than the command switch. */
+	if (cmdFlag.len)								cmdFlag.cli = 1;
+	else if (cmdFlag.esc == 0 && cmdFlag.lsb == 0)	cmdFlag.cli = 0;
+
+	/* Only touch the row if WE have something on it. The erase was unconditional, so a keystroke
+	 * that changed nothing - DELETE on an empty buffer is the clearest case - still wiped whatever
+	 * was on the current row, and the same erase after ENTER removed the last line of the command's
+	 * own output whenever that output did not end in a newline. */
+	if (cmdFlag.len || DrawnLen) {
+		xReport(psR, "\r\e[0K");							// clear line
+		if (cmdFlag.len) {								// anything in buffer?
+			xReport(psR, "%.*s", cmdFlag.len, cmdBuf);	// refresh whole line, then park the cursor
+			if (cmdFlag.cur < cmdFlag.len)				//  where it actually belongs
+				xReport(psR, "\e[%dD", cmdFlag.len - cmdFlag.cur);
+		}
 	}
-	xReport(psR, "\r\e[0K");								// clear line
-	if (cmdFlag.idx) {									// anything in buffer?
-		cmdFlag.cli = 1;								// ensure flag is set
-		xReport(psR, "%.*s \b", cmdFlag.idx, cmdBuf);	// refresh whole line
-	}
+	DrawnLen = cmdFlag.len;
 	return iRV;
 }
 
@@ -356,7 +459,7 @@ static void vCommandInterpret(command_t * psC) {
 	int iRV = erSUCCESS;
 	int iChr = *psC->pCmd++;
 	report_t * psR = &psC->sRprt;
-	if (cmdFlag.cli) {
+	if (cmdFlag.cli || cmdFlag.esc) {	// mid-sequence bytes belong to the editor, not the switch
 		xCommandBuffer(psR, iChr);
 	} else {
 		switch (iChr) {	// CHR_J CHR_K CHR_X CHR_Y CHR_Z
@@ -381,6 +484,12 @@ static void vCommandInterpret(command_t * psC) {
 		 * now hangs off the bench umbrella and is genuinely absent from a release image. */
 		#if (benchTEST_CRASH)
 		case CHR_NAK: *((char *)0xFFFFFFFF)=1; break;							// c-U Illegal memory write crash
+		#endif
+
+		/* c-F fills the AEP TX queue with synthetic alerts, reports the cost, then PURGES them.
+		 * Refuses unless MQTT is disconnected, so the fictitious records can never be published. */
+		#if (benchAEP_QFILL_OK)
+		case CHR_ACK: vAEP_TestQueueFill(psR); break;							// c-F AEP queue fill test
 		#endif
 		#endif
 
