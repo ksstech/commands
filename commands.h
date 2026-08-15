@@ -12,6 +12,17 @@ extern "C" {
 
 // ######################################### enumerations ##########################################
 
+/* WHO issued the command. Used to decide how loudly a SYNTAX error is reported to the host:
+ * an operator typo is not a device fault and the operator already saw the error echoed on their
+ * own console, whereas a malformed command the HOST sent has nobody watching it.
+ * cmdSRC_UNKNOWN is 0 so a caller that never sets the field keeps the loudest behaviour. */
+enum {
+	cmdSRC_UNKNOWN,					// not identified - treated as a device-level fault (ERROR)
+	cmdSRC_UART,					// console, operator physically present - NOT logged to host
+	cmdSRC_TNET,					// telnet session - NOTICE
+	cmdSRC_RPC,						// ThingsBoard RPC, ie from the host itself - NOTICE
+};
+
 // ########################################## structures ###########################################
 
 typedef struct __attribute__((packed)) command_t {
@@ -27,6 +38,7 @@ typedef struct __attribute__((packed)) command_t {
 	 * NOTE with ioTNETauth at its default 0 no telnet session is ever privileged, so the PSK is
 	 * readable over UART only. Set ioTNETauth 1 on a mote to regain it remotely. */
 	u8_t Priv;
+	u8_t Src;						// cmdSRC_xxx, see above - who issued this command
 } command_t;
 
 // ###################################### Global variables #########################################

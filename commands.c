@@ -751,6 +751,13 @@ int xCommandProcess(command_t * psC) {
 		psHB = psUBufCreate(NULL, NULL, (xOptionGet(ioCLIbuf) + 1) << 7, 0);
 		psHB->f_history = 1;
 	}
+	/* Tell the parser how loudly to report a syntax error, based on WHO is typing. A typo is not a
+	 * device fault: the console operator is standing there and already saw the error echoed, and a
+	 * remote operator saw it in their own session, so raising either as an ERROR to the host only
+	 * dilutes the real ones. Restored to SL_SEV_ERROR below so a malformed HOST-pushed rule - which
+	 * nobody is watching - still reports as the device-level fault it is. */
+	vRulesSetErrSev(psC->Src == cmdSRC_UART ? rulesERR_SEV_NONE :
+					psC->Src == cmdSRC_UNKNOWN ? SL_SEV_ERROR : SL_SEV_NOTICE);
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
@@ -760,5 +767,6 @@ int xCommandProcess(command_t * psC) {
 	// if >1 character supplied/processed, add CR to route through RULES engine
 	if (iRV > 1)
 		xCommandBuffer(&psC->sRprt, termSTDIN_TERM);
+	vRulesSetErrSev(SL_SEV_ERROR);					// back to the default for host-pushed rules
 	return iRV;
 }
