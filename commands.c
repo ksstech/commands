@@ -74,6 +74,9 @@ static const char HelpMessage[] = {
 		#if (appPRODUCTION == 0)
 			"\tc-T Immediate restart" strNL
 			"\tc-U Generate 'Invalid memory access' crash" strNL
+			#if (benchTEST_PCF_STRESS)
+			"\tc-V KC868 pulse stress E2E (relay->opto loopback, BLOCKS ~50s)" strNL
+			#endif
 		#endif
 		"\tc-W Reboot current FW as APSTA (delete WIFI & VARS blobs)" strNL
 		"\tc-X Erase PHY RF calibration & reboot (forces full recalibration)" strNL
@@ -490,6 +493,13 @@ static void vCommandInterpret(command_t * psC) {
 		 * Refuses unless MQTT is disconnected, so the fictitious records can never be published. */
 		#if (benchAEP_QFILL_OK)
 		case CHR_ACK: vAEP_TestQueueFill(psR); break;							// c-F AEP queue fill test
+		#endif
+
+		/* c-V runs the KC868 relay->opto pulse stress END-TO-END: capture, Events, per-event
+		 * publish and the sumX reset all live, so the HOST total proves the whole value chain
+		 * (cycles x channels x scale). Blocks this task for the duration (~cycles x (tON+tOFF)). */
+		#if (benchTEST_PCF_STRESS)
+		case CHR_SYN: pcf8574StressTest(psR, 1); break;							// c-V pulse E2E stress
 		#endif
 		#endif
 
