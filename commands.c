@@ -756,6 +756,14 @@ static void vCommandInterpret(command_t * psC) {
 				break;
 			}
 			#endif
+			#if (HAL_DS248X > 0 && benchTEST_DS248X_INJECT > 0)
+			case CHR_FF: {								// c-L = TOGGLE DS248x 0xFF-read storm (wedge-path test)
+				void ds248xFaultInject(u32_t Count);	// local decl, same idiom as ds18x20StepThreeRead
+				static bool bArmed = 0;
+				ds248xFaultInject((bArmed ^= 1) ? 5000 : 0);
+				break;
+			}
+			#endif
 		#endif						// (appPRODUCTION == 0)
 
 		// ############################ Normal (non-dangerous) options
