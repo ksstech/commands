@@ -542,6 +542,10 @@ static void vCommandInterpret(command_t * psC) {
 			case CHR_7:
 			case CHR_8:
 			case CHR_9: {
+				if (psC->Priv == 0) {				// drives relays directly, same bar as the sim tag
+					xReport(psR, "Privileged: UART or authenticated telnet" strNL);
+					break;
+				}
 				iChr -= CHR_0;
 				#if (cmakePLTFRM == HW_EM1P2)
 					if (iChr < m90e26CALIB_NUM) {
