@@ -884,6 +884,7 @@ int xCommandProcess(command_t * psC) {
 	 * has to stay <= slShowMax anyway. Restored to SL_SEV_ERROR below so a malformed HOST-pushed
 	 * rule - which nobody is watching - still reports as the device-level fault it is. */
 	vRulesSetErrSev(psC->Src == cmdSRC_UNKNOWN ? SL_SEV_ERROR : SL_SEV_NOTICE);
+	vRulesSetIssuer(psC->Priv, psC->Src);			// carry the issuer into the parse
 	// If we have some form of console, lock the STDIO buffer (just in case nothing connected/active)
 	// Now process the actual character(s)
 	while (psC->pCmd && *psC->pCmd) {
@@ -894,5 +895,6 @@ int xCommandProcess(command_t * psC) {
 	if (iRV > 1)
 		xCommandBuffer(&psC->sRprt, termSTDIN_TERM);
 	vRulesSetErrSev(SL_SEV_ERROR);					// back to the default for host-pushed rules
+	vRulesSetIssuer(0, cmdSRC_UNKNOWN);				// ditto - a HOST-pushed rule is never privileged
 	return iRV;
 }
